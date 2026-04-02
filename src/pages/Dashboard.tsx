@@ -71,14 +71,12 @@ const Dashboard: React.FC = () => {
                         }}
                     >
                         {heroCourse?.thumbnailUrl ? (
-                            <img src={heroCourse.thumbnailUrl} className="w-full h-full object-cover opacity-100 brightness-[0.7] contrast-[1.1]" alt="" />
+                            <img src={heroCourse.thumbnailUrl} className="w-full h-full object-cover opacity-100 brightness-[0.9] contrast-[1.05]" alt="" />
                         ) : (
                             <div className="absolute inset-0 bg-primary opacity-5 blur-[120px] rounded-full scale-125"></div>
                         )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#030303] via-transparent to-transparent"></div>
-                        <div className="absolute inset-0 bg-gradient-to-b from-[#030303] via-transparent to-transparent"></div>
-                        <div className="absolute inset-0 bg-gradient-to-r from-[#030303] via-transparent to-[#030303]"></div>
-                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,#030303_100%)]"></div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#030303] via-[#030303]/40 to-transparent"></div>
+                        <div className="absolute inset-[10%] bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(3,3,3,0.8)_100%)]"></div>
                     </motion.div>
 
                     <div className="relative z-10 flex flex-col items-center text-center space-y-4 w-full max-w-5xl pt-16 pb-0 md:py-24">
