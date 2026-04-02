@@ -67,7 +67,7 @@ const VideoLesson: React.FC = () => {
     return (
         <div className="bg-[#030303] min-h-screen text-white font-body selection:bg-primary selection:text-black relative">
             <div className="fixed inset-0 z-0">
-                <div className="absolute top-1/2 left-1/4 w-[50%] h-[50%] rounded-full bg-primary/5 blur-[150px] pointer-events-none"></div>
+                <div className="absolute top-1/2 left-1/4 w-[50%] h-[50%] rounded-full bg-primary/5 blur-3xl pointer-events-none"></div>
                 <div className="dot-grid absolute inset-0 opacity-[0.02]"></div>
             </div>
 

@@ -16,8 +16,8 @@ const Login: React.FC = () => {
             {/* Immersive background layer */}
             <div className="fixed inset-0 z-0 flex items-center justify-center">
                 <div className="absolute inset-0 bg-[#030303]"></div>
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/10 rounded-full blur-[150px] pointer-events-none opacity-60"></div>
-                <div className="absolute w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-[150px] pointer-events-none left-0 bottom-0"></div>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/10 rounded-full blur-3xl pointer-events-none opacity-60"></div>
+                <div className="absolute w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-3xl pointer-events-none left-0 bottom-0"></div>
                 <div className="dot-grid absolute inset-0 opacity-[0.03]"></div>
             </div>
 

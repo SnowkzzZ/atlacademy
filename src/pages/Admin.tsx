@@ -126,7 +126,7 @@ const Admin: React.FC = () => {
             <div className="bg-[#030303] min-h-screen relative flex items-center justify-center font-body selection:bg-white selection:text-black">
                 <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none">
                     <div className="absolute inset-0 bg-[#030303]"></div>
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-red-500/10 rounded-full blur-[120px] opacity-60"></div>
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-red-500/10 rounded-full blur-3xl opacity-60"></div>
                     <div className="dot-grid absolute inset-0 opacity-[0.03]"></div>
                 </div>
 
@@ -174,8 +174,8 @@ const Admin: React.FC = () => {
         <div className="bg-[#030303] text-white/90 min-h-screen font-body relative pb-32">
             <div className="fixed inset-0 z-0 pointer-events-none">
                 <div className="absolute inset-0 bg-[#030303]"></div>
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/5 blur-[120px]"></div>
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-500/5 blur-[120px]"></div>
+                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/5 blur-3xl"></div>
+                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-500/5 blur-3xl"></div>
                 <div className="dot-grid absolute inset-0 opacity-[0.03]"></div>
             </div>
 

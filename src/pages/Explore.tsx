@@ -21,8 +21,8 @@ const Explore: React.FC = () => {
         <div className="font-body text-white/90 min-h-screen relative bg-[#030303]">
             <div className="fixed inset-0 z-0">
                 <div className="absolute inset-0 bg-[#030303]"></div>
-                <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-primary/5 blur-[120px]"></div>
-                <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-purple-500/5 blur-[120px]"></div>
+                <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-primary/5 blur-3xl"></div>
+                <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-purple-500/5 blur-3xl"></div>
                 <div className="dot-grid absolute inset-0 opacity-[0.02]"></div>
             </div>
 

@@ -7,8 +7,8 @@ const Profile: React.FC = () => {
         <div className="font-body text-white/90 min-h-screen relative bg-[#030303]">
             <div className="fixed inset-0 z-0">
                 <div className="absolute inset-0 bg-[#030303]"></div>
-                <div className="absolute top-1/4 right-1/4 w-[40%] h-[40%] rounded-full bg-primary/5 blur-[120px]"></div>
-                <div className="absolute bottom-1/4 left-1/4 w-[40%] h-[40%] rounded-full bg-blue-500/5 blur-[120px]"></div>
+                <div className="absolute top-1/4 right-1/4 w-[40%] h-[40%] rounded-full bg-primary/5 blur-3xl"></div>
+                <div className="absolute bottom-1/4 left-1/4 w-[40%] h-[40%] rounded-full bg-blue-500/5 blur-3xl"></div>
                 <div className="dot-grid absolute inset-0 opacity-[0.02]"></div>
             </div>
 
@@ -17,7 +17,7 @@ const Profile: React.FC = () => {
             <main className="relative z-10 max-w-4xl mx-auto px-6 md:px-10 py-32 space-y-16">
                 <div className="liquid-glass-soft p-12 md:p-16 flex flex-col md:flex-row gap-16 items-center md:items-start relative overflow-hidden">
                     {/* Dynamic glass glow */}
-                    <div className="absolute top-0 right-0 w-80 h-80 bg-primary/10 rounded-full blur-[100px] pointer-events-none"></div>
+                    <div className="absolute top-0 right-0 w-80 h-80 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
 
                     <div className="w-48 h-48 rounded-[40px] border border-white/10 p-2 overflow-hidden shrink-0 relative flex items-center justify-center bg-white/[0.02] backdrop-blur-3xl shadow-2xl">
                         <span className="material-symbols-outlined text-white/40 text-[100px] drop-shadow-xl">person</span>

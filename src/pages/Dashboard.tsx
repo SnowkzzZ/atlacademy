@@ -45,8 +45,8 @@ const Dashboard: React.FC = () => {
         <div className="font-body text-white/90 selection:bg-primary selection:text-black min-h-screen relative bg-[#030303] overflow-x-hidden">
             <div className="fixed inset-0 z-0">
                 <div className="absolute inset-0 bg-[#030303]"></div>
-                <div className="absolute top-[-20%] left-[-10%] w-[80%] h-[80%] rounded-full bg-primary/5 blur-[150px]"></div>
-                <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-blue-500/5 blur-[150px]"></div>
+                <div className="absolute top-[-20%] left-[-10%] w-[80%] h-[80%] rounded-full bg-primary/5 blur-3xl"></div>
+                <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-blue-500/5 blur-3xl"></div>
                 <div className="dot-grid absolute inset-0 opacity-[0.02]"></div>
             </div>
 
@@ -64,7 +64,7 @@ const Dashboard: React.FC = () => {
                     {heroCourse?.thumbnailUrl ? (
                         <img src={heroCourse.thumbnailUrl} className="w-full h-full object-cover opacity-60 brightness-[0.5] grayscale contrast-125 mix-blend-luminosity object-center" alt="" />
                     ) : (
-                        <div className="absolute inset-0 bg-primary opacity-5 blur-[120px] rounded-full scale-125"></div>
+                        <div className="absolute inset-0 bg-primary opacity-5 blur-3xl rounded-full scale-125"></div>
                     )}
                 </div>
             </div>
@@ -79,7 +79,7 @@ const Dashboard: React.FC = () => {
                 <section className="pt-0 relative flex flex-col items-center justify-start min-h-[auto] md:min-h-[50vh] mt-2 md:mt-8">
                     <div className="relative z-10 flex flex-col items-center text-center space-y-4 w-full max-w-5xl pt-16 pb-0 md:py-16">
                         <motion.div variants={itemVariants} className="relative mt-2 mb-4 flex flex-col items-center">
-                            <div className="absolute inset-0 bg-primary opacity-20 blur-[120px] rounded-full scale-125"></div>
+                            <div className="absolute inset-0 bg-primary opacity-20 blur-3xl rounded-full scale-125"></div>
                             <img src={logoBase64} alt="ATL Logo" className="drop-shadow-[0_0_60px_rgba(255,255,255,0.4)] relative z-10 w-auto h-[120px] md:h-[180px]" />
                         </motion.div>
 
@@ -203,7 +203,7 @@ const Dashboard: React.FC = () => {
                                                     <div className="absolute inset-0 bg-gradient-to-r from-[#030303]/60 via-transparent to-transparent"></div>
                                                 </div>
                                             ) : (
-                                                <div className={`absolute top-0 right-0 w-72 h-72 ${cName}/10 rounded-full blur-[100px] group-hover:${cName}/20 transition-colors duration-1000`}></div>
+                                                <div className={`absolute top-0 right-0 w-72 h-72 ${cName}/10 rounded-full blur-3xl group-hover:${cName}/20 transition-colors duration-1000`}></div>
                                             )}
 
                                             <div className="w-20 h-20 rounded-[28px] bg-white/[0.03] border border-white/10 flex items-center justify-center relative z-10 backdrop-blur-xl group-hover:scale-110 transition-all duration-700 shadow-2xl">
