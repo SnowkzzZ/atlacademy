@@ -64,10 +64,10 @@ const Dashboard: React.FC = () => {
                         initial={{ scale: 1.05, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ duration: 1.5, ease: "easeOut" }}
-                        className="absolute inset-0 z-0 h-full pointer-events-none"
+                        className="absolute top-0 left-1/2 -translate-x-1/2 w-[100vw] z-0 h-full pointer-events-none"
                         style={{
-                            maskImage: 'radial-gradient(ellipse 80% 90% at 50% 40%, black 0%, transparent 100%)',
-                            WebkitMaskImage: 'radial-gradient(ellipse 80% 90% at 50% 40%, black 0%, transparent 100%)'
+                            maskImage: 'radial-gradient(ellipse 60% 80% at 50% 50%, black 0%, transparent 100%)',
+                            WebkitMaskImage: 'radial-gradient(ellipse 60% 80% at 50% 50%, black 0%, transparent 100%)'
                         }}
                     >
                         {heroCourse?.thumbnailUrl ? (
