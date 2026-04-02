@@ -181,7 +181,7 @@ const Admin: React.FC = () => {
 
             <Navbar />
 
-            <main className="relative z-10 max-w-[1440px] mx-auto px-4 md:px-10 py-10 md:py-16 space-y-10 md:space-y-12">
+            <main className="relative z-10 max-w-[1440px] mx-auto px-4 md:px-10 py-24 md:py-32 space-y-10 md:space-y-12">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-white/10 pb-6 md:pb-8">
                     <div className="space-y-1 md:space-y-2 text-center md:text-left">
                         <h1 className="font-headline text-3xl md:text-5xl font-bold uppercase tracking-tight text-white/90">Central de Comando</h1>
