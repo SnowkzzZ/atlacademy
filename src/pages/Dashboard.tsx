@@ -61,31 +61,29 @@ const Dashboard: React.FC = () => {
                 {/* Cinematic Liquid Glass Hero */}
                 <section className="pt-0 relative flex flex-col items-center justify-start min-h-[auto] md:min-h-[70vh] mt-2 md:mt-8">
                     <motion.div
-                        initial={{ scale: 1.1, opacity: 0 }}
+                        initial={{ scale: 1.05, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ duration: 1.5, ease: "easeOut" }}
-                        className="absolute inset-0 z-0"
-                        style={{
-                            maskImage: 'radial-gradient(circle, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 40%, rgba(0,0,0,0) 85%)',
-                            WebkitMaskImage: 'radial-gradient(circle, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 40%, rgba(0,0,0,0) 85%)'
-                        }}
+                        className="absolute inset-0 z-0 h-full overflow-hidden"
                     >
                         {heroCourse?.thumbnailUrl ? (
-                            <img src={heroCourse.thumbnailUrl} className="w-full h-full object-cover opacity-100 brightness-[0.9] contrast-[1.05]" alt="" />
+                            <img src={heroCourse.thumbnailUrl} className="w-full h-full object-cover opacity-100 brightness-110 contrast-105 object-center" alt="" />
                         ) : (
                             <div className="absolute inset-0 bg-primary opacity-5 blur-[120px] rounded-full scale-125"></div>
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-[#030303] via-[#030303]/40 to-transparent"></div>
-                        <div className="absolute inset-[10%] bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(3,3,3,0.8)_100%)]"></div>
+                        <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-[#030303] to-transparent"></div>
+                        <div className="absolute inset-y-0 left-0 w-1/4 md:w-1/3 bg-gradient-to-r from-[#030303] to-transparent"></div>
+                        <div className="absolute inset-y-0 right-0 w-1/4 md:w-1/3 bg-gradient-to-l from-[#030303] to-transparent"></div>
                     </motion.div>
 
-                    <div className="relative z-10 flex flex-col items-center text-center space-y-4 w-full max-w-5xl pt-16 pb-0 md:py-24">
+                    <div className="relative z-10 flex flex-col items-center text-center space-y-4 w-full max-w-5xl pt-16 pb-0 md:py-16">
                         <motion.div variants={itemVariants} className="relative mt-2 mb-4 flex flex-col items-center">
                             <div className="absolute inset-0 bg-primary opacity-20 blur-[120px] rounded-full scale-125"></div>
-                            <img src={logoBase64} alt="ATL Logo" className="drop-shadow-[0_0_60px_rgba(255,255,255,0.4)] relative z-10 w-auto h-[120px] md:h-[220px]" />
+                            <img src={logoBase64} alt="ATL Logo" className="drop-shadow-[0_0_60px_rgba(255,255,255,0.4)] relative z-10 w-auto h-[120px] md:h-[180px]" />
                         </motion.div>
 
-                        <motion.div variants={itemVariants} className="space-y-4 md:space-y-8 relative z-20">
+                        <motion.div variants={itemVariants} className="space-y-4 md:space-y-6 relative z-20">
                             <div className="inline-flex premium-pill items-center gap-2 md:gap-3">
                                 <span className="w-1.5 h-1.5 bg-primary rounded-full shadow-[0_0_12px_#00FD86] animate-pulse"></span>
                                 <span className="text-[10px] tracking-[0.2em]">ÁREA DO MEMBRO EXCLUSIVO</span>
@@ -93,11 +91,11 @@ const Dashboard: React.FC = () => {
 
                             <h1
                                 className="font-headline font-bold tracking-tight uppercase text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-white/30 drop-shadow-2xl w-full text-center"
-                                style={{ fontSize: 'clamp(1.75rem, 8vw, 7rem)', lineHeight: 1.05, wordBreak: 'break-word', padding: '0 1rem' }}
+                                style={{ fontSize: 'clamp(1.75rem, 5vw, 6rem)', lineHeight: 1.05, wordBreak: 'break-word', padding: '0 1rem' }}
                             >
                                 {heroCourse ? heroCourse.title.split(':')[0] : 'Bem-vindo à ATL'}
                                 {heroCourse && heroCourse.title.includes(':') && (
-                                    <><br /><span className="text-white/20 font-light" style={{ fontSize: '0.7em' }}>{heroCourse.title.split(':')[1]}</span></>
+                                    <><br /><span className="text-white/20 font-light" style={{ fontSize: '0.6em' }}>{heroCourse.title.split(':')[1]}</span></>
                                 )}
                             </h1>
                         </motion.div>
