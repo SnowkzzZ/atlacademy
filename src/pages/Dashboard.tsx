@@ -57,8 +57,8 @@ const Dashboard: React.FC = () => {
                 <div 
                     className="w-full h-full"
                     style={{
-                        maskImage: 'radial-gradient(ellipse 70% 90% at 50% 40%, black 0%, transparent 100%)',
-                        WebkitMaskImage: 'radial-gradient(ellipse 70% 90% at 50% 40%, black 0%, transparent 100%)'
+                        maskImage: 'radial-gradient(ellipse 70% 90% at 50% 40%, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%)',
+                        WebkitMaskImage: 'radial-gradient(ellipse 70% 90% at 50% 40%, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%)'
                     }}
                 >
                     {heroCourse?.thumbnailUrl ? (

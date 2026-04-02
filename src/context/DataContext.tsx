@@ -45,7 +45,7 @@ interface DataContextType {
 }
 
 const defaultCourses: Course[] = [
-    { id: '1', title: 'Modernização de Sistemas Estruturais', instructor: 'Dr. Julian Vance', duration: '00h 00m', icon: 'architecture', progress: 0, thumbnailUrl: '/thumbnails/hero.png', watchedSeconds: 0, totalSeconds: 0, lastWatchedAt: 0, videoUrl: 'https://archive.org/download/BigBuckBunny_124/Content/big_buck_bunny_720p_surround.mp4' },
+    { id: '1', title: 'Modernização de Sistemas Estruturais', instructor: 'Dr. Julian Vance', duration: '00h 00m', icon: 'architecture', progress: 0, thumbnailUrl: '/thumbnails/hero.png', watchedSeconds: 0, totalSeconds: 0, lastWatchedAt: 0, videoUrl: 'https://cdn.pixabay.com/video/2021/08/04/83906-584732168_tiny.mp4' },
     { id: '2', title: 'Rede Estratégica de Inteligência', instructor: 'Sarah Chen', duration: '00h 00m', icon: 'hub', progress: 0, thumbnailUrl: '/thumbnails/course_2.png', watchedSeconds: 0, totalSeconds: 0, lastWatchedAt: 0 },
     { id: '3', title: 'Operações Neurais Nível 4', instructor: 'Marcus Thorne', duration: '00h 00m', icon: 'psychology', progress: 0, thumbnailUrl: '/thumbnails/course_3.png', watchedSeconds: 0, totalSeconds: 0, lastWatchedAt: 0 },
     { id: '4', title: 'Sistemas de Iluminação', instructor: 'Elias Thorne', duration: '00h 00m', icon: 'lightbulb', progress: 0, watchedSeconds: 0, totalSeconds: 0, lastWatchedAt: 0 },
