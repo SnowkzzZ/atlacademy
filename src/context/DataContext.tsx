@@ -45,37 +45,37 @@ interface DataContextType {
 }
 
 const defaultCourses: Course[] = [
-    { id: '1', title: 'Modernização de Sistemas Estruturais', instructor: 'Dr. Julian Vance', duration: '00h 00m', icon: 'architecture', progress: 0, thumbnailUrl: '/thumbnails/hero.png', watchedSeconds: 0, totalSeconds: 0, lastWatchedAt: 0, videoUrl: 'https://cdn.pixabay.com/video/2021/08/04/83906-584732168_tiny.mp4' },
-    { id: '2', title: 'Rede Estratégica de Inteligência', instructor: 'Sarah Chen', duration: '00h 00m', icon: 'hub', progress: 0, thumbnailUrl: '/thumbnails/course_2.png', watchedSeconds: 0, totalSeconds: 0, lastWatchedAt: 0 },
-    { id: '3', title: 'Operações Neurais Nível 4', instructor: 'Marcus Thorne', duration: '00h 00m', icon: 'psychology', progress: 0, thumbnailUrl: '/thumbnails/course_3.png', watchedSeconds: 0, totalSeconds: 0, lastWatchedAt: 0 },
-    { id: '4', title: 'Sistemas de Iluminação', instructor: 'Elias Thorne', duration: '00h 00m', icon: 'lightbulb', progress: 0, watchedSeconds: 0, totalSeconds: 0, lastWatchedAt: 0 },
-    { id: '5', title: 'Operações Globais e Escala', instructor: 'Elena Rostova', duration: '00h 00m', icon: 'public', progress: 0, watchedSeconds: 0, totalSeconds: 0, lastWatchedAt: 0 },
-    { id: '6', title: 'Estratégia Cyber: Arquitetura', instructor: 'Elias Thorne', duration: '00h 00m', icon: 'terminal', progress: 0, watchedSeconds: 0, totalSeconds: 0, lastWatchedAt: 0 },
+    { id: '00000000-0000-0000-0000-000000000001', title: 'Modernização de Sistemas Estruturais', instructor: 'Dr. Julian Vance', duration: '00h 00m', icon: 'architecture', progress: 0, thumbnailUrl: '/thumbnails/hero.png', watchedSeconds: 0, totalSeconds: 0, lastWatchedAt: 0, videoUrl: 'https://cdn.pixabay.com/video/2021/08/04/83906-584732168_tiny.mp4' },
+    { id: '00000000-0000-0000-0000-000000000002', title: 'Rede Estratégica de Inteligência', instructor: 'Sarah Chen', duration: '00h 00m', icon: 'hub', progress: 0, thumbnailUrl: '/thumbnails/course_2.png', watchedSeconds: 0, totalSeconds: 0, lastWatchedAt: 0 },
+    { id: '00000000-0000-0000-0000-000000000003', title: 'Operações Neurais Nível 4', instructor: 'Marcus Thorne', duration: '00h 00m', icon: 'psychology', progress: 0, thumbnailUrl: '/thumbnails/course_3.png', watchedSeconds: 0, totalSeconds: 0, lastWatchedAt: 0 },
+    { id: '00000000-0000-0000-0000-000000000004', title: 'Sistemas de Iluminação', instructor: 'Elias Thorne', duration: '00h 00m', icon: 'lightbulb', progress: 0, watchedSeconds: 0, totalSeconds: 0, lastWatchedAt: 0 },
+    { id: '00000000-0000-0000-0000-000000000005', title: 'Operações Globais e Escala', instructor: 'Elena Rostova', duration: '00h 00m', icon: 'public', progress: 0, watchedSeconds: 0, totalSeconds: 0, lastWatchedAt: 0 },
+    { id: '00000000-0000-0000-0000-000000000006', title: 'Estratégia Cyber: Arquitetura', instructor: 'Elias Thorne', duration: '00h 00m', icon: 'terminal', progress: 0, watchedSeconds: 0, totalSeconds: 0, lastWatchedAt: 0 },
 ];
 
 const defaultSectors: Sector[] = [
-    { id: 's1', name: 'Estratégia Empresarial' },
-    { id: 's2', name: 'Liderança' },
-    { id: 's3', name: 'Finanças' },
-    { id: 's4', name: 'Marketing' },
-    { id: 's5', name: 'Habilidades Tech' },
-    { id: 's6', name: 'Psicologia e Mindset' },
-    { id: 's7', name: 'Produtividade' },
-    { id: 's8', name: 'Cíber-Segurança' },
+    { id: '00000000-0000-0000-0000-000000000011', name: 'Estratégia Empresarial' },
+    { id: '00000000-0000-0000-0000-000000000012', name: 'Liderança' },
+    { id: '00000000-0000-0000-0000-000000000013', name: 'Finanças' },
+    { id: '00000000-0000-0000-0000-000000000014', name: 'Marketing' },
+    { id: '00000000-0000-0000-0000-000000000015', name: 'Habilidades Tech' },
+    { id: '00000000-0000-0000-0000-000000000016', name: 'Psicologia e Mindset' },
+    { id: '00000000-0000-0000-0000-000000000017', name: 'Produtividade' },
+    { id: '00000000-0000-0000-0000-000000000018', name: 'Cíber-Segurança' },
 ];
 
 const defaultArticles: Article[] = [
     {
-        id: 'a1',
-        sectorId: 's1',
+        id: '00000000-0000-0000-0000-000000000021',
+        sectorId: '00000000-0000-0000-0000-000000000011',
         title: 'Os 5 Pilares da Estratégia Empresarial Moderna',
         content: `A estratégia empresarial eficaz se baseia em cinco pilares fundamentais que sustentam qualquer organização de alto desempenho.\n\n**1. Visão Clara**\nUma visão bem definida orienta todas as decisões táticas e estratégicas. Sem visão, a empresa navega sem rumo.\n\n**2. Análise de Mercado**\nConhecer profundamente o mercado, concorrentes e oportunidades é essencial para posicionamento competitivo.\n\n**3. Execução Disciplinada**\nA melhor estratégia sem execução vale zero. Times de elite executam com velocidade, precisão e accountability.\n\n**4. Adaptabilidade**\nMercados mudam. Empresas que dominam a arte da adaptação sobrevivem e prosperam em ciclos de disrupção.\n\n**5. Cultura de Performance**\nCultura come estratégia no café da manhã. Construir equipes motivadas e alinhadas é o diferencial real.`,
         author: 'ATL Academy',
         createdAt: Date.now() - 86400000 * 2,
     },
     {
-        id: 'a2',
-        sectorId: 's2',
+        id: '00000000-0000-0000-0000-000000000022',
+        sectorId: '00000000-0000-0000-0000-000000000012',
         title: 'Liderança Situacional: Adapte seu Estilo',
         content: `Líderes de alto impacto não têm apenas um estilo de liderança — eles se adaptam ao contexto e à maturidade de cada colaborador.\n\n**O que é Liderança Situacional?**\nÉ a capacidade de identificar o nível de desenvolvimento de cada pessoa e aplicar o estilo de liderança mais adequado: diretivo, treinador, apoiador ou delegador.\n\n**Na Prática:**\n- Com iniciantes: seja diretivo, dê instruções claras\n- Com aprendizes intermediários: combine direção com suporte emocional\n- Com competentes mas inseguros: apoio emocional com menos monitoramento técnico\n- Com especialistas: delegue e confie\n\n**Resultado:** Times mais engajados, produtivos e autônomos.`,
         author: 'ATL Academy',
@@ -113,7 +113,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, []);
 
     const addCourse = async (course: Omit<Course, 'id'>) => {
-        const tempId = Date.now().toString();
+        const tempId = crypto.randomUUID();
         const newCourse = { ...course, id: tempId };
         setCourses(prev => [...prev, newCourse]); // Optimistic Update
 
@@ -144,7 +144,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const addSector = async (name: string) => {
-        const tempId = Date.now().toString();
+        const tempId = crypto.randomUUID();
         const newSector = { id: tempId, name };
         setSectors(prev => [...prev, newSector]);
 
@@ -172,7 +172,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const addArticle = async (article: Omit<Article, 'id' | 'createdAt'>) => {
-        const tempId = Date.now().toString();
+        const tempId = crypto.randomUUID();
         const newArticle: Article = { ...article, id: tempId, createdAt: Date.now() };
         setArticles(prev => [newArticle, ...prev]);
 
