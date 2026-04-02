@@ -81,8 +81,8 @@ const Explore: React.FC = () => {
                             {/* Card Background / Thumbnail */}
                             {course.thumbnailUrl ? (
                                 <div className="absolute inset-0 z-0">
-                                    <img src={course.thumbnailUrl} className="w-full h-full object-cover opacity-20 group-hover:opacity-40 transition-all duration-700 mix-blend-luminosity grayscale group-hover:grayscale-0 group-hover:scale-110" alt="" />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-[#030303] via-[#030303]/40 to-transparent"></div>
+                                    <img src={course.thumbnailUrl} className="w-full h-full object-cover opacity-40 group-hover:opacity-60 transition-all duration-700 mix-blend-overlay grayscale-[30%] group-hover:grayscale-0 group-hover:scale-110" alt="" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-[#030303] via-[#030303]/60 to-transparent"></div>
                                 </div>
                             ) : (
                                 <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/20 rounded-full blur-[60px] opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>

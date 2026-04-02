@@ -202,9 +202,9 @@ const Dashboard: React.FC = () => {
                                         <div className="flex-1 p-10 flex flex-col justify-between relative overflow-hidden">
                                             {course.thumbnailUrl ? (
                                                 <div className="absolute inset-0 z-0">
-                                                    <img src={course.thumbnailUrl} className="w-full h-full object-cover opacity-20 group-hover:opacity-40 transition-all duration-1000 mix-blend-luminosity grayscale group-hover:grayscale-0 group-hover:scale-110" alt="" />
-                                                    <div className="absolute inset-0 bg-gradient-to-t from-[#030303] via-[#030303]/20 to-transparent"></div>
-                                                    <div className="absolute inset-0 bg-gradient-to-r from-[#030303]/40 via-transparent to-transparent"></div>
+                                                    <img src={course.thumbnailUrl} className="w-full h-full object-cover opacity-50 group-hover:opacity-70 transition-all duration-1000 mix-blend-overlay grayscale-[30%] group-hover:grayscale-0 group-hover:scale-110" alt="" />
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-[#030303] via-[#030303]/40 to-transparent"></div>
+                                                    <div className="absolute inset-0 bg-gradient-to-r from-[#030303]/60 via-transparent to-transparent"></div>
                                                 </div>
                                             ) : (
                                                 <div className={`absolute top-0 right-0 w-72 h-72 ${cName}/10 rounded-full blur-[100px] group-hover:${cName}/20 transition-colors duration-1000`}></div>

@@ -12,8 +12,8 @@ const compressImage = (file: File): Promise<string> => {
             img.src = event.target?.result as string;
             img.onload = () => {
                 const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 800;
-                const MAX_HEIGHT = 600;
+                const MAX_WIDTH = 1600;
+                const MAX_HEIGHT = 900;
                 let width = img.width;
                 let height = img.height;
 
@@ -33,7 +33,7 @@ const compressImage = (file: File): Promise<string> => {
                 const ctx = canvas.getContext('2d');
                 if (ctx) {
                     ctx.drawImage(img, 0, 0, width, height);
-                    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
                     resolve(dataUrl);
                 } else {
                     resolve(event.target?.result as string);
