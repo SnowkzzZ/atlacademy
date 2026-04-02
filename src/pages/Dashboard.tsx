@@ -65,16 +65,17 @@ const Dashboard: React.FC = () => {
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ duration: 1.5, ease: "easeOut" }}
                         className="absolute inset-0 z-0 h-full overflow-hidden"
+                        style={{
+                            maskImage: 'radial-gradient(ellipse at center, rgba(0,0,0,1) 30%, rgba(0,0,0,0) 80%)',
+                            WebkitMaskImage: 'radial-gradient(ellipse at center, rgba(0,0,0,1) 30%, rgba(0,0,0,0) 80%)'
+                        }}
                     >
                         {heroCourse?.thumbnailUrl ? (
-                            <img src={heroCourse.thumbnailUrl} className="w-full h-full object-cover opacity-100 brightness-110 contrast-105 object-center" alt="" />
+                            <img src={heroCourse.thumbnailUrl} className="w-full h-full object-cover opacity-100 brightness-105 object-center" alt="" />
                         ) : (
                             <div className="absolute inset-0 bg-primary opacity-5 blur-[120px] rounded-full scale-125"></div>
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-[#030303] via-[#030303]/40 to-transparent"></div>
-                        <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-[#030303] to-transparent"></div>
-                        <div className="absolute inset-y-0 left-0 w-1/4 md:w-1/3 bg-gradient-to-r from-[#030303] to-transparent"></div>
-                        <div className="absolute inset-y-0 right-0 w-1/4 md:w-1/3 bg-gradient-to-l from-[#030303] to-transparent"></div>
                     </motion.div>
 
                     <div className="relative z-10 flex flex-col items-center text-center space-y-4 w-full max-w-5xl pt-16 pb-0 md:py-16">
