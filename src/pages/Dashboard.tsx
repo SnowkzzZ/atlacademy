@@ -71,9 +71,9 @@ const Dashboard: React.FC = () => {
                         ) : (
                             <div className="absolute inset-0 bg-primary opacity-5 blur-[120px] rounded-full scale-125"></div>
                         )}
-                        <div className="absolute inset-y-0 left-0 w-1/2 md:w-1/3 bg-gradient-to-r from-[#030303] via-[#030303]/60 to-transparent"></div>
-                        <div className="absolute inset-y-0 right-0 w-1/2 md:w-1/3 bg-gradient-to-l from-[#030303] via-[#030303]/60 to-transparent"></div>
-                        <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-[#030303] via-[#030303]/80 to-transparent"></div>
+                        <div className="absolute inset-0 shadow-[inset_0_0_150px_100px_#030303] pointer-events-none"></div>
+                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,#030303_100%)] pointer-events-none"></div>
+                        <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-[#030303] via-[#030303]/80 to-transparent pointer-events-none"></div>
                     </motion.div>
 
                     <div className="relative z-10 flex flex-col items-center text-center space-y-4 w-full max-w-5xl pt-16 pb-0 md:py-16">
