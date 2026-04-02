@@ -89,11 +89,15 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [courses, setCourses] = useState<Course[]>(defaultCourses);
     const [sectors, setSectors] = useState<Sector[]>(defaultSectors);
     const [articles, setArticles] = useState<Article[]>(defaultArticles);
+    const [isLoading, setIsLoading] = useState(true);
 
     // Initial Fetch from Supabase
     useEffect(() => {
         const fetchData = async () => {
-            if (!isSupabaseConfigured) return; // Se nao tiver URL configurada, aborta
+            if (!isSupabaseConfigured) {
+                setIsLoading(false);
+                return; // Se nao tiver URL configurada, aborta
+            }
             
             try {
                 const [coursesRes, sectorsRes, articlesRes] = await Promise.all([
@@ -127,6 +131,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 }
             } catch (err) {
                 console.error("Error fetching data from Supabase:", err);
+            } finally {
+                setIsLoading(false);
             }
         };
         fetchData();
@@ -233,6 +239,14 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             await supabase.from('articles').delete().eq('id', id);
         }
     };
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-[#030303] flex items-center justify-center">
+                <div className="w-16 h-16 rounded-full border-t-2 border-primary border-r-2 animate-spin"></div>
+            </div>
+        );
+    }
 
     return (
         <DataContext.Provider value={{
