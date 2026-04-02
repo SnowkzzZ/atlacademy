@@ -128,7 +128,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const updateCourse = async (id: string, updatedFields: Partial<Course>) => {
         setCourses(prev => prev.map(c => c.id === id ? { ...c, ...updatedFields } : c));
         if (isSupabaseConfigured) {
-            await supabase.from('courses').update(updatedFields).eq('id', id);
+            const { error } = await supabase.from('courses').update(updatedFields).eq('id', id);
+            if (error) {
+                console.error("Supabase Save Error:", error);
+                alert("Falha ao salvar no banco. A capa é muito pesada ou há instabilidade de rede.");
+            }
         }
     };
 
