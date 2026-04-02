@@ -64,16 +64,17 @@ const Dashboard: React.FC = () => {
                         initial={{ scale: 1.05, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ duration: 1.5, ease: "easeOut" }}
-                        className="absolute inset-0 z-0 h-full overflow-hidden bg-[#030303]"
+                        className="absolute inset-0 z-0 h-full pointer-events-none"
+                        style={{
+                            maskImage: 'radial-gradient(ellipse 80% 90% at 50% 40%, black 0%, transparent 100%)',
+                            WebkitMaskImage: 'radial-gradient(ellipse 80% 90% at 50% 40%, black 0%, transparent 100%)'
+                        }}
                     >
                         {heroCourse?.thumbnailUrl ? (
                             <img src={heroCourse.thumbnailUrl} className="w-full h-full object-cover opacity-60 brightness-[0.5] grayscale contrast-125 mix-blend-luminosity object-center" alt="" />
                         ) : (
                             <div className="absolute inset-0 bg-primary opacity-5 blur-[120px] rounded-full scale-125"></div>
                         )}
-                        <div className="absolute inset-0 shadow-[inset_0_0_150px_100px_#030303] pointer-events-none"></div>
-                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,#030303_100%)] pointer-events-none"></div>
-                        <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-[#030303] via-[#030303]/80 to-transparent pointer-events-none"></div>
                     </motion.div>
 
                     <div className="relative z-10 flex flex-col items-center text-center space-y-4 w-full max-w-5xl pt-16 pb-0 md:py-16">
