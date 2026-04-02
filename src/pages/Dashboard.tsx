@@ -52,6 +52,23 @@ const Dashboard: React.FC = () => {
 
             <Navbar />
 
+            {/* FULL BLEED BACKGROUND HERO */}
+            <div className="absolute top-0 left-0 right-0 w-full h-[60vh] md:h-[80vh] z-0 overflow-hidden pointer-events-none">
+                <div 
+                    className="w-full h-full"
+                    style={{
+                        maskImage: 'radial-gradient(ellipse 70% 90% at 50% 40%, black 0%, transparent 100%)',
+                        WebkitMaskImage: 'radial-gradient(ellipse 70% 90% at 50% 40%, black 0%, transparent 100%)'
+                    }}
+                >
+                    {heroCourse?.thumbnailUrl ? (
+                        <img src={heroCourse.thumbnailUrl} className="w-full h-full object-cover opacity-60 brightness-[0.5] grayscale contrast-125 mix-blend-luminosity object-center" alt="" />
+                    ) : (
+                        <div className="absolute inset-0 bg-primary opacity-5 blur-[120px] rounded-full scale-125"></div>
+                    )}
+                </div>
+            </div>
+
             <motion.main
                 initial="hidden"
                 animate="visible"
@@ -59,24 +76,7 @@ const Dashboard: React.FC = () => {
                 className="relative z-10 max-w-[1440px] mx-auto px-6 md:px-10 pb-8 md:pb-32 space-y-8 md:space-y-24"
             >
                 {/* Cinematic Liquid Glass Hero */}
-                <section className="pt-0 relative flex flex-col items-center justify-start min-h-[auto] md:min-h-[70vh] mt-2 md:mt-8">
-                    <motion.div
-                        initial={{ scale: 1.05, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ duration: 1.5, ease: "easeOut" }}
-                        className="absolute top-0 left-1/2 -translate-x-1/2 w-[100vw] z-0 h-full pointer-events-none"
-                        style={{
-                            maskImage: 'radial-gradient(ellipse 60% 80% at 50% 50%, black 0%, transparent 100%)',
-                            WebkitMaskImage: 'radial-gradient(ellipse 60% 80% at 50% 50%, black 0%, transparent 100%)'
-                        }}
-                    >
-                        {heroCourse?.thumbnailUrl ? (
-                            <img src={heroCourse.thumbnailUrl} className="w-full h-full object-cover opacity-60 brightness-[0.5] grayscale contrast-125 mix-blend-luminosity object-center" alt="" />
-                        ) : (
-                            <div className="absolute inset-0 bg-primary opacity-5 blur-[120px] rounded-full scale-125"></div>
-                        )}
-                    </motion.div>
-
+                <section className="pt-0 relative flex flex-col items-center justify-start min-h-[auto] md:min-h-[50vh] mt-2 md:mt-8">
                     <div className="relative z-10 flex flex-col items-center text-center space-y-4 w-full max-w-5xl pt-16 pb-0 md:py-16">
                         <motion.div variants={itemVariants} className="relative mt-2 mb-4 flex flex-col items-center">
                             <div className="absolute inset-0 bg-primary opacity-20 blur-[120px] rounded-full scale-125"></div>
