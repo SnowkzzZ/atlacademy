@@ -102,9 +102,29 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     supabase.from('articles').select('*')
                 ]);
 
-                if (coursesRes.data && coursesRes.data.length > 0) setCourses(coursesRes.data);
-                if (sectorsRes.data && sectorsRes.data.length > 0) setSectors(sectorsRes.data);
-                if (articlesRes.data && articlesRes.data.length > 0) setArticles(articlesRes.data);
+                if (coursesRes.data) {
+                    setCourses(prev => {
+                        const dbIds = coursesRes.data.map((r: any) => r.id);
+                        const localOnly = prev.filter(p => !dbIds.includes(p.id));
+                        return [...coursesRes.data, ...localOnly];
+                    });
+                }
+                
+                if (sectorsRes.data) {
+                    setSectors(prev => {
+                        const dbIds = sectorsRes.data.map((r: any) => r.id);
+                        const localOnly = prev.filter(p => !dbIds.includes(p.id));
+                        return [...sectorsRes.data, ...localOnly];
+                    });
+                }
+
+                if (articlesRes.data) {
+                    setArticles(prev => {
+                        const dbIds = articlesRes.data.map((r: any) => r.id);
+                        const localOnly = prev.filter(p => !dbIds.includes(p.id));
+                        return [...articlesRes.data, ...localOnly];
+                    });
+                }
             } catch (err) {
                 console.error("Error fetching data from Supabase:", err);
             }
@@ -126,12 +146,16 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const updateCourse = async (id: string, updatedFields: Partial<Course>) => {
-        setCourses(prev => prev.map(c => c.id === id ? { ...c, ...updatedFields } : c));
+        const currentLocal = courses.find(c => c.id === id);
+        const fullUpdatedCourse = { ...currentLocal, ...updatedFields } as Course;
+        
+        setCourses(prev => prev.map(c => c.id === id ? fullUpdatedCourse : c));
+        
         if (isSupabaseConfigured) {
-            const { error } = await supabase.from('courses').update(updatedFields).eq('id', id);
+            const { error } = await supabase.from('courses').upsert(fullUpdatedCourse);
             if (error) {
                 console.error("Supabase Save Error:", error);
-                alert("Falha ao salvar no banco. A capa é muito pesada ou há instabilidade de rede.");
+                alert("Falha ao salvar no banco. Certifique-se de que a conexão está ativa.");
             }
         }
     };
@@ -157,9 +181,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const updateSector = async (id: string, name: string) => {
-        setSectors(prev => prev.map(s => s.id === id ? { ...s, name } : s));
+        const currentLocal = sectors.find(s => s.id === id);
+        const fullSector = { ...currentLocal, name } as Sector;
+        
+        setSectors(prev => prev.map(s => s.id === id ? fullSector : s));
         if (isSupabaseConfigured) {
-            await supabase.from('sectors').update({ name }).eq('id', id);
+            await supabase.from('sectors').upsert(fullSector);
         }
     };
 
@@ -191,9 +218,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const updateArticle = async (id: string, updated: Partial<Article>) => {
-        setArticles(prev => prev.map(a => a.id === id ? { ...a, ...updated } : a));
+        const currentLocal = articles.find(a => a.id === id);
+        const fullArticle = { ...currentLocal, ...updated } as Article;
+        
+        setArticles(prev => prev.map(a => a.id === id ? fullArticle : a));
         if (isSupabaseConfigured) {
-            await supabase.from('articles').update(updated).eq('id', id);
+            await supabase.from('articles').upsert(fullArticle);
         }
     };
 
