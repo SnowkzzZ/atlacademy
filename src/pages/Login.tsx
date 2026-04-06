@@ -184,8 +184,8 @@ const Login: React.FC = () => {
                                         </div>
                                         <input
                                             className="w-full bg-transparent px-4 py-4 md:py-[22px] text-white placeholder:text-white/20 focus:outline-none font-body text-sm md:text-base selection:bg-primary/30"
-                                            placeholder="Identificação (E-mail)"
-                                            type="email"
+                                            placeholder="Identificação (E-mail ou Usuário)"
+                                            type="text"
                                             required
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}

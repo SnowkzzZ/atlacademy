@@ -22,7 +22,7 @@ function App() {
             <Route path="/lesson/:id" element={<ProtectedRoute><VideoLesson /></ProtectedRoute>} />
             <Route path="/explore" element={<ProtectedRoute><Explore /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-            <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
+            <Route path="/painel" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
             <Route path="/intel" element={<ProtectedRoute><Intelligence /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
