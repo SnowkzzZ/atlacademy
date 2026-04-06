@@ -1,13 +1,21 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { useData } from '../context/DataContext';
 import { loadYouTubeAPI, getYouTubeId, fmtDuration } from '../lib/youtube';
 
+const fmtTime = (secs: number) => {
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    const s = Math.floor(secs % 60);
+    return h > 0 ? `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}` : `${m}:${String(s).padStart(2,'0')}`;
+};
+
 const VideoLesson: React.FC = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { courses, updateCourse } = useData();
+    const { courses, updateCourse, updateProgress } = useData();
+    const [showResume, setShowResume] = useState(false);
     const videoRef = useRef<HTMLVideoElement>(null);
 
     const course = courses.find(c => c.id === id) || courses[0];
@@ -18,7 +26,13 @@ const VideoLesson: React.FC = () => {
     const progressIntervalRef = useRef<number | null>(null);
 
     useEffect(() => {
-        if (course) updateCourse(course.id, { lastWatchedAt: Date.now() });
+        if (course) {
+            updateCourse(course.id, { lastWatchedAt: Date.now() });
+            // Show resume banner if watched more than 30s but not completed
+            if ((course.watchedSeconds ?? 0) > 30 && course.progress < 100) {
+                setShowResume(true);
+            }
+        }
     }, [course?.id]);
 
     // YouTube IFrame API Player lifecycle
@@ -62,7 +76,7 @@ const VideoLesson: React.FC = () => {
                     onStateChange: (event: any) => {
                         if (event.data === 0 && course) { // ENDED
                             stopPoll();
-                            updateCourse(course.id, { progress: 100 });
+                            updateProgress(course.id, ytPlayerRef.current?.getDuration?.() ?? 0, 100);
                         }
                     }
                 }
@@ -85,7 +99,7 @@ const VideoLesson: React.FC = () => {
         if (isNaN(duration)) return;
         if (Math.abs(currentTime - (course.watchedSeconds || 0)) > 2 || currentTime === duration) {
             const progress = Math.min(Math.round((currentTime / duration) * 100), 100);
-            updateCourse(course.id, { watchedSeconds: currentTime, progress, totalSeconds: duration });
+            updateProgress(course.id, currentTime, progress, duration);
         }
     };
 
@@ -144,6 +158,33 @@ const VideoLesson: React.FC = () => {
                                             <span className="material-symbols-outlined text-white/20 text-4xl">play_circle</span>
                                         </div>
                                         <p className="text-white/20 font-label text-xs tracking-[6px] uppercase">Sinal de Vídeo Offline</p>
+                                    </div>
+                                )}
+
+                                {/* Resume Banner */}
+                                {showResume && (
+                                    <div className="absolute bottom-4 left-4 right-4 z-20 flex items-center justify-between gap-4 bg-black/80 backdrop-blur-xl border border-primary/30 rounded-2xl px-5 py-3.5 shadow-[0_0_30px_rgba(0,255,135,0.15)]">
+                                        <div className="flex items-center gap-3">
+                                            <span className="material-symbols-outlined text-primary">history</span>
+                                            <div>
+                                                <p className="text-white font-label text-xs uppercase tracking-widest">Continuar de onde parou</p>
+                                                <p className="text-primary/70 font-label text-[10px]">{fmtTime(course.watchedSeconds ?? 0)} assistido · {course.progress}% completo</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2 shrink-0">
+                                            <button
+                                                onClick={() => {
+                                                    const secs = course.watchedSeconds ?? 0;
+                                                    if (ytPlayerRef.current) ytPlayerRef.current.seekTo(secs, true);
+                                                    else if (videoRef.current) videoRef.current.currentTime = secs;
+                                                    setShowResume(false);
+                                                }}
+                                                className="bg-primary text-black font-headline font-bold text-[10px] uppercase tracking-[2px] px-5 py-2.5 rounded-xl hover:bg-white transition-all"
+                                            >Retomar</button>
+                                            <button onClick={() => setShowResume(false)} className="text-white/40 hover:text-white transition-colors">
+                                                <span className="material-symbols-outlined text-xl">close</span>
+                                            </button>
+                                        </div>
                                     </div>
                                 )}
                             </div>

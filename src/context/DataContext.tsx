@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { useAuth } from './AuthContext';
 
 export interface Course {
     id: string;
@@ -45,8 +46,10 @@ interface DataContextType {
     addArticle: (article: Omit<Article, 'id' | 'createdAt'>) => void;
     updateArticle: (id: string, updated: Partial<Article>) => void;
     deleteArticle: (id: string) => void;
+    updateProgress: (courseId: string, watchedSeconds: number, newProgress: number, totalSeconds?: number) => void;
 }
 
+// Default content — used ONLY if Supabase returns 0 rows (first-time setup)
 const defaultCourses: Course[] = [
     { id: '00000000-0000-0000-0000-000000000001', title: 'Modernização de Sistemas Estruturais', instructor: 'Dr. Julian Vance', duration: '00h 00m', icon: 'architecture', progress: 0, thumbnailUrl: '/thumbnails/hero.png', watchedSeconds: 0, totalSeconds: 0, lastWatchedAt: 0, videoUrl: 'https://cdn.pixabay.com/video/2021/08/04/83906-584732168_tiny.mp4' },
     { id: '00000000-0000-0000-0000-000000000002', title: 'Rede Estratégica de Inteligência', instructor: 'Sarah Chen', duration: '00h 00m', icon: 'hub', progress: 0, thumbnailUrl: '/thumbnails/course_2.png', watchedSeconds: 0, totalSeconds: 0, lastWatchedAt: 0 },
@@ -89,92 +92,100 @@ const defaultArticles: Article[] = [
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const { user } = useAuth();
+    const userId = user?.id ?? null;
+
     const [courses, setCourses] = useState<Course[]>(defaultCourses);
     const [sectors, setSectors] = useState<Sector[]>(defaultSectors);
     const [articles, setArticles] = useState<Article[]>(defaultArticles);
     const [isLoading, setIsLoading] = useState(true);
 
-    // Initial Fetch from Supabase
+    // ── Initial Fetch ──────────────────────────────────────────────────────
     useEffect(() => {
         const fetchData = async () => {
-            if (!isSupabaseConfigured) {
-                setIsLoading(false);
-                return; // Se nao tiver URL configurada, aborta
-            }
-            
+            if (!isSupabaseConfigured) { setIsLoading(false); return; }
+
             try {
                 const [coursesRes, sectorsRes, articlesRes] = await Promise.all([
                     supabase.from('courses').select('*'),
                     supabase.from('sectors').select('*'),
-                    supabase.from('articles').select('*')
+                    supabase.from('articles').select('*'),
                 ]);
 
-                if (coursesRes.data) {
-                    setCourses(prev => {
-                        const dbIds = coursesRes.data.map((r: any) => r.id);
-                        const localOnly = prev.filter(p => !dbIds.includes(p.id));
-                        return [...coursesRes.data, ...localOnly];
-                    });
+                // ── Courses: DB is authoritative. Only fall back to defaults if DB is empty.
+                if (coursesRes.data && coursesRes.data.length > 0) {
+                    setCourses(coursesRes.data);
                 }
-                
-                if (sectorsRes.data) {
-                    setSectors(prev => {
-                        const dbIds = sectorsRes.data.map((r: any) => r.id);
-                        const localOnly = prev.filter(p => !dbIds.includes(p.id));
-                        return [...sectorsRes.data, ...localOnly];
-                    });
+                // If 0 rows: keep defaultCourses so admin has something to start with
+
+                if (sectorsRes.data && sectorsRes.data.length > 0) {
+                    setSectors(sectorsRes.data);
                 }
 
-                if (articlesRes.data) {
-                    setArticles(prev => {
-                        const dbIds = articlesRes.data.map((r: any) => r.id);
-                        const localOnly = prev.filter(p => !dbIds.includes(p.id));
-                        return [...articlesRes.data, ...localOnly];
-                    });
+                if (articlesRes.data && articlesRes.data.length > 0) {
+                    setArticles(articlesRes.data);
+                }
+
+                // ── Load per-user progress and merge into courses ──────────
+                if (userId && coursesRes.data && coursesRes.data.length > 0) {
+                    const { data: progressRows } = await supabase
+                        .from('user_progress')
+                        .select('*')
+                        .eq('user_id', userId);
+
+                    if (progressRows && progressRows.length > 0) {
+                        setCourses(prev => prev.map(course => {
+                            const p = progressRows.find((r: any) => r.course_id === course.id);
+                            if (!p) return course;
+                            return {
+                                ...course,
+                                progress: p.progress ?? course.progress,
+                                watchedSeconds: p.watched_seconds ?? course.watchedSeconds,
+                                lastWatchedAt: p.last_watched_at ?? course.lastWatchedAt,
+                            };
+                        }));
+                    }
                 }
             } catch (err) {
-                console.error("Error fetching data from Supabase:", err);
+                console.error('Error fetching data from Supabase:', err);
             } finally {
                 setIsLoading(false);
             }
         };
-        fetchData();
-    }, []);
 
+        fetchData();
+    }, [userId]); // Re-fetch when user changes (login/logout)
+
+    // ── Courses CRUD ───────────────────────────────────────────────────────
     const addCourse = async (course: Omit<Course, 'id'>) => {
         const tempId = crypto.randomUUID();
         const newCourse = { ...course, id: tempId };
-        setCourses(prev => [...prev, newCourse]); // Optimistic Update
+        setCourses(prev => [...prev, newCourse]);
 
         if (isSupabaseConfigured) {
-           const { data, error } = await supabase.from('courses').insert([{ ...course }]).select().single();
-           if (!error && data) {
-               setCourses(prev => prev.map(c => c.id === tempId ? data : c));
-           }
+            const { data, error } = await supabase.from('courses').insert([{ ...course }]).select().single();
+            if (!error && data) {
+                setCourses(prev => prev.map(c => c.id === tempId ? data : c));
+            }
         }
     };
 
     const updateCourse = async (id: string, updatedFields: Partial<Course>) => {
         const currentLocal = courses.find(c => c.id === id);
         const fullUpdatedCourse = { ...currentLocal, ...updatedFields } as Course;
-        
         setCourses(prev => prev.map(c => c.id === id ? fullUpdatedCourse : c));
-        
+
         if (isSupabaseConfigured) {
-            // Strip undefined values and only include known schema columns
-            // This prevents errors if new optional columns haven't been migrated yet
-            const knownFields = ['id','title','instructor','instructorTitle','duration','icon','progress',
-                'videoUrl','thumbnailUrl','watchedSeconds','totalSeconds','lastWatchedAt','description','tags'];
+            // Only send content fields — progress is managed via user_progress table
+            const contentFields = ['id', 'title', 'instructor', 'instructorTitle', 'duration', 'icon',
+                'videoUrl', 'thumbnailUrl', 'description', 'tags'];
             const payload: Record<string, unknown> = {};
-            for (const key of knownFields) {
+            for (const key of contentFields) {
                 const val = (fullUpdatedCourse as unknown as Record<string, unknown>)[key];
                 if (val !== undefined) payload[key] = val;
             }
             const { error } = await supabase.from('courses').upsert(payload);
-            if (error) {
-                // Silent failure — never interrupt the user with a popup during playback
-                console.warn('Supabase updateCourse (non-critical):', error.message);
-            }
+            if (error) console.warn('updateCourse error:', error.message);
         }
     };
 
@@ -185,71 +196,81 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
+    // ── Per-user progress tracking ─────────────────────────────────────────
+    // Progress: always keep the maximum reached (never go backward when rewinding)
+    const updateProgress = async (courseId: string, watchedSeconds: number, newProgress: number, totalSeconds?: number) => {
+        setCourses(prev => prev.map(c => {
+            if (c.id !== courseId) return c;
+            const maxProgress = Math.max(c.progress ?? 0, newProgress); // Never decrease
+            return {
+                ...c,
+                watchedSeconds,
+                progress: maxProgress,
+                lastWatchedAt: Date.now(),
+                ...(totalSeconds ? { totalSeconds } : {}),
+            };
+        }));
+
+        // Persist to user_progress table (per-user, not global)
+        if (isSupabaseConfigured && userId) {
+            const currentProgress = courses.find(c => c.id === courseId)?.progress ?? 0;
+            const maxProgress = Math.max(currentProgress, newProgress);
+            const { error } = await supabase.from('user_progress').upsert({
+                user_id: userId,
+                course_id: courseId,
+                watched_seconds: watchedSeconds,
+                progress: maxProgress,
+                last_watched_at: Date.now(),
+            }, { onConflict: 'user_id,course_id' });
+            if (error) console.warn('updateProgress error:', error.message);
+        }
+    };
+
+    // ── Sectors CRUD ───────────────────────────────────────────────────────
     const addSector = async (name: string) => {
         const tempId = crypto.randomUUID();
-        const newSector = { id: tempId, name };
-        setSectors(prev => [...prev, newSector]);
-
+        setSectors(prev => [...prev, { id: tempId, name }]);
         if (isSupabaseConfigured) {
             const { data, error } = await supabase.from('sectors').insert([{ name }]).select().single();
-            if (!error && data) {
-                setSectors(prev => prev.map(s => s.id === tempId ? data : s));
-            }
+            if (!error && data) setSectors(prev => prev.map(s => s.id === tempId ? data : s));
         }
     };
 
     const updateSector = async (id: string, name: string) => {
-        const currentLocal = sectors.find(s => s.id === id);
-        const fullSector = { ...currentLocal, name } as Sector;
-        
-        setSectors(prev => prev.map(s => s.id === id ? fullSector : s));
-        if (isSupabaseConfigured) {
-            await supabase.from('sectors').upsert(fullSector);
-        }
+        const full = { ...sectors.find(s => s.id === id), name } as Sector;
+        setSectors(prev => prev.map(s => s.id === id ? full : s));
+        if (isSupabaseConfigured) await supabase.from('sectors').upsert(full);
     };
 
     const deleteSector = async (id: string) => {
         setSectors(prev => prev.filter(s => s.id !== id));
         setArticles(prev => prev.filter(a => a.sectorId !== id));
-        if (isSupabaseConfigured) {
-            await supabase.from('sectors').delete().eq('id', id);
-        }
+        if (isSupabaseConfigured) await supabase.from('sectors').delete().eq('id', id);
     };
 
+    // ── Articles CRUD ──────────────────────────────────────────────────────
     const addArticle = async (article: Omit<Article, 'id' | 'createdAt'>) => {
         const tempId = crypto.randomUUID();
         const newArticle: Article = { ...article, id: tempId, createdAt: Date.now() };
         setArticles(prev => [newArticle, ...prev]);
-
         if (isSupabaseConfigured) {
-            const { data, error } = await supabase.from('articles').insert([{ 
-                sectorId: article.sectorId,
-                title: article.title,
-                content: article.content,
-                author: article.author,
-                createdAt: newArticle.createdAt
+            const { data, error } = await supabase.from('articles').insert([{
+                sectorId: article.sectorId, title: article.title,
+                content: article.content, author: article.author, createdAt: newArticle.createdAt
             }]).select().single();
-            if (!error && data) {
-                 setArticles(prev => prev.map(a => a.id === tempId ? data : a));
-            }
+            if (!error && data) setArticles(prev => prev.map(a => a.id === tempId ? data : a));
         }
     };
 
     const updateArticle = async (id: string, updated: Partial<Article>) => {
-        const currentLocal = articles.find(a => a.id === id);
-        const fullArticle = { ...currentLocal, ...updated } as Article;
-        
-        setArticles(prev => prev.map(a => a.id === id ? fullArticle : a));
-        if (isSupabaseConfigured) {
-            await supabase.from('articles').upsert(fullArticle);
-        }
+        const full = { ...articles.find(a => a.id === id), ...updated } as Article;
+        setArticles(prev => prev.map(a => a.id === id ? full : a));
+        if (isSupabaseConfigured) await supabase.from('articles').upsert(full);
     };
 
     const deleteArticle = async (id: string) => {
         setArticles(prev => prev.filter(a => a.id !== id));
-        if (isSupabaseConfigured) {
-            await supabase.from('articles').delete().eq('id', id);
-        }
+        if (isSupabaseConfigured) await supabase.from('articles').delete().eq('id', id);
     };
 
     if (isLoading) {
@@ -266,6 +287,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             addCourse, updateCourse, deleteCourse,
             addSector, updateSector, deleteSector,
             addArticle, updateArticle, deleteArticle,
+            updateProgress,
         }}>
             {children}
         </DataContext.Provider>

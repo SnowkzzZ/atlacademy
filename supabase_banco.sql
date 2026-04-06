@@ -36,3 +36,21 @@ CREATE TABLE articles (
 -- ALTER TABLE courses ADD COLUMN IF NOT EXISTS "instructorTitle" text DEFAULT 'Especialista ATL';
 -- ALTER TABLE courses ADD COLUMN IF NOT EXISTS description text;
 -- ALTER TABLE courses ADD COLUMN IF NOT EXISTS tags text[] DEFAULT '{}';
+
+-- Per-user progress table (create this if it doesn't exist)
+CREATE TABLE IF NOT EXISTS user_progress (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id text NOT NULL,
+    course_id text NOT NULL,
+    watched_seconds float DEFAULT 0,
+    progress integer DEFAULT 0,
+    last_watched_at bigint DEFAULT 0,
+    UNIQUE(user_id, course_id)
+);
+-- Allow authenticated users to manage their own progress rows
+ALTER TABLE user_progress ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "users_own_progress" ON user_progress
+    FOR ALL TO authenticated
+    USING (user_id = auth.uid()::text)
+    WITH CHECK (user_id = auth.uid()::text);
+
