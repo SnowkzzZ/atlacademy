@@ -78,22 +78,40 @@ const VideoLesson: React.FC = () => {
 
                     {/* Main Content Area: Video and Course Info */}
                     <div className="flex-1 space-y-6 md:space-y-10">
-                        {/* Video Player Section with cinematic backdrop */}
+        {/* Video Player Section with cinematic backdrop */}
                         <div className="relative group">
                             <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-primary/5 to-transparent blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
                             <div className="relative aspect-video bg-black rounded-2xl md:rounded-[2.5rem] overflow-hidden border border-white/5 shadow-2xl">
-                                {course.videoUrl ? (
-                                    <video
-                                        key={course.videoUrl}
-                                        ref={videoRef}
-                                        src={course.videoUrl}
-                                        className="w-full h-full object-contain"
-                                        controls
-                                        autoPlay
-                                        onTimeUpdate={handleTimeUpdate}
-                                        onLoadedMetadata={handleLoadedMetadata}
-                                    />
-                                ) : (
+                                {course.videoUrl ? (() => {
+                                    // Detect YouTube URL and convert to embed
+                                    const ytMatch = course.videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
+                                    if (ytMatch) {
+                                        const videoId = ytMatch[1];
+                                        return (
+                                            <iframe
+                                                key={course.videoUrl}
+                                                src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`}
+                                                className="w-full h-full"
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                allowFullScreen
+                                                title={course.title}
+                                            />
+                                        );
+                                    }
+                                    // Regular video file
+                                    return (
+                                        <video
+                                            key={course.videoUrl}
+                                            ref={videoRef}
+                                            src={course.videoUrl}
+                                            className="w-full h-full object-contain"
+                                            controls
+                                            autoPlay
+                                            onTimeUpdate={handleTimeUpdate}
+                                            onLoadedMetadata={handleLoadedMetadata}
+                                        />
+                                    );
+                                })() : (
                                     <div className="w-full h-full flex flex-col items-center justify-center space-y-6">
                                         <div className="w-20 h-20 rounded-full border border-white/10 flex items-center justify-center bg-white/[0.02] shadow-inner">
                                             <span className="material-symbols-outlined text-white/20 text-4xl">play_circle</span>
