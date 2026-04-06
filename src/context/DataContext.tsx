@@ -161,10 +161,19 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setCourses(prev => prev.map(c => c.id === id ? fullUpdatedCourse : c));
         
         if (isSupabaseConfigured) {
-            const { error } = await supabase.from('courses').upsert(fullUpdatedCourse);
+            // Strip undefined values and only include known schema columns
+            // This prevents errors if new optional columns haven't been migrated yet
+            const knownFields = ['id','title','instructor','instructorTitle','duration','icon','progress',
+                'videoUrl','thumbnailUrl','watchedSeconds','totalSeconds','lastWatchedAt','description','tags'];
+            const payload: Record<string, unknown> = {};
+            for (const key of knownFields) {
+                const val = (fullUpdatedCourse as unknown as Record<string, unknown>)[key];
+                if (val !== undefined) payload[key] = val;
+            }
+            const { error } = await supabase.from('courses').upsert(payload);
             if (error) {
-                console.error("Supabase Save Error:", error);
-                alert("Falha ao salvar no banco. Certifique-se de que a conexão está ativa.");
+                // Silent failure — never interrupt the user with a popup during playback
+                console.warn('Supabase updateCourse (non-critical):', error.message);
             }
         }
     };
