@@ -158,8 +158,7 @@ const Login: React.FC = () => {
                                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-12 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent"></div>
                                 
                                 <h1 className="flex flex-col gap-2">
-                                    <span className="font-label text-xs md:text-xs tracking-[0.5em] text-primary/80 uppercase shadow-[0_0_10px_rgba(0,255,135,0.3)]">Acesso Estratégico</span>
-                                    <span className="font-headline text-4xl md:text-5xl font-bold tracking-tight text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.15)]">
+                                    <span className="font-headline text-4xl md:text-5xl font-bold tracking-tight text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.15)] mt-4">
                                         ATL Academy
                                     </span>
                                 </h1>
