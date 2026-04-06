@@ -1,8 +1,21 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+import { useAuth } from '../context/AuthContext';
+import { supabase } from '../lib/supabase';
 
 const Profile: React.FC = () => {
+    const { user } = useAuth();
+    const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        await supabase.auth.signOut();
+        navigate('/login');
+    };
+
+    // Extract username from email
+    const username = user?.email ? user.email.split('@')[0] : 'Usuário';
+
     return (
         <div className="font-body text-white/90 min-h-screen relative bg-[#030303]">
             <div className="fixed inset-0 z-0">
@@ -27,7 +40,7 @@ const Profile: React.FC = () => {
                     <div className="space-y-8 flex-1 text-center md:text-left pt-4">
                         <div>
                             <div className="inline-flex premium-pill mb-6">ID_MEMBRO: #8942-ATL</div>
-                            <h1 className="font-headline text-6xl md:text-7xl font-bold tracking-tight text-white mb-4 shadow-black drop-shadow-lg">Agente_X</h1>
+                            <h1 className="font-headline text-6xl md:text-7xl font-bold tracking-tight text-white mb-4 shadow-black drop-shadow-lg">{username}</h1>
                             <p className="text-white/60 font-body text-xl">Arquiteto de Inteligência Cibernética</p>
                         </div>
 
@@ -35,10 +48,10 @@ const Profile: React.FC = () => {
                             <button className="px-8 py-4 bg-white text-black rounded-full font-headline font-bold text-sm tracking-[2px] transition-all hover:scale-105 shadow-[0_0_30px_rgba(255,255,255,0.2)] uppercase">
                                 EDITAR PERFIL
                             </button>
-                            <Link to="/login" className="px-8 py-4 liquid-glass-soft rounded-full font-headline text-sm tracking-[2px] transition-all hover:bg-white/10 hover:border-white/20 uppercase flex items-center gap-3">
+                            <button onClick={handleLogout} className="px-8 py-4 liquid-glass-soft rounded-full font-headline text-sm tracking-[2px] transition-all hover:bg-white/10 hover:border-white/20 uppercase flex items-center gap-3">
                                 <span className="material-symbols-outlined text-[20px]">logout</span>
                                 Sair
-                            </Link>
+                            </button>
                         </div>
                     </div>
                 </div>
