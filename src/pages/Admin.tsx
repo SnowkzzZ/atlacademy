@@ -49,13 +49,7 @@ const Admin: React.FC = () => {
     const { courses, sectors, articles, addCourse, updateCourse, deleteCourse, addSector, updateSector, deleteSector, addArticle, updateArticle, deleteArticle } = useData();
     const navigate = useNavigate();
 
-    // Auth State
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
-
-    // Course Form State
+    // Component State
     const [isEditingCourse, setIsEditingCourse] = useState(false);
     const [currentCourse, setCurrentCourse] = useState<Partial<Course>>({});
 
@@ -67,16 +61,6 @@ const Admin: React.FC = () => {
     // Article Form State
     const [isEditingArticle, setIsEditingArticle] = useState(false);
     const [currentArticle, setCurrentArticle] = useState<{ id?: string; sectorId: string; title: string; content: string; author: string }>({ sectorId: '', title: '', content: '', author: 'ATL Academy' });
-
-    const handleLogin = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (username === 'juliano.atl' && password === 'Temp482*') {
-            setIsAuthenticated(true);
-            setError('');
-        } else {
-            setError('Credenciais inválidas. Acesso negado.');
-        }
-    };
 
     const handleSaveCourse = (e: React.FormEvent) => {
         e.preventDefault();
@@ -120,55 +104,6 @@ const Admin: React.FC = () => {
         setIsEditingArticle(false);
         setCurrentArticle({ sectorId: '', title: '', content: '', author: 'ATL Academy' });
     };
-
-    if (!isAuthenticated) {
-        return (
-            <div className="bg-[#030303] min-h-screen relative flex items-center justify-center font-body selection:bg-white selection:text-black">
-                <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none">
-                    <div className="absolute inset-0 bg-[#030303]"></div>
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-red-500/10 rounded-full blur-3xl opacity-60"></div>
-                    <div className="dot-grid absolute inset-0 opacity-[0.03]"></div>
-                </div>
-
-                <div className="relative z-10 w-full max-w-[400px] p-6">
-                    <div className="liquid-glass p-10 flex flex-col items-center space-y-8 border-red-500/20 shadow-[0_20px_60px_rgba(255,0,0,0.1)]">
-                        <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20">
-                            <span className="material-symbols-outlined text-red-500 text-3xl">admin_panel_settings</span>
-                        </div>
-
-                        <div className="text-center space-y-2">
-                            <h1 className="font-headline text-2xl font-bold text-white tracking-tight">Área Restrita</h1>
-                            <p className="text-white/40 text-xs font-label tracking-widest uppercase">Acesso Nível Administrador</p>
-                        </div>
-
-                        <form onSubmit={handleLogin} className="w-full space-y-4">
-                            {error && <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-lg text-xs text-center">{error}</div>}
-
-                            <input
-                                className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-red-500/50 transition-all font-body text-sm"
-                                placeholder="Usuário Master"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
-                                required
-                            />
-                            <input
-                                className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-red-500/50 transition-all font-body text-sm"
-                                placeholder="Senha de Acesso"
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                            />
-
-                            <button type="submit" className="w-full bg-white text-black font-headline font-bold py-4 rounded-xl text-xs tracking-[2px] hover:bg-red-500 hover:text-white transition-all uppercase mt-4">
-                                Verificar Credenciais
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        );
-    }
 
     return (
         <div className="bg-[#030303] text-white/90 min-h-screen font-body relative pb-32">

@@ -9,6 +9,7 @@ const Profile: React.FC = () => {
     const navigate = useNavigate();
 
     const handleLogout = async () => {
+        localStorage.removeItem('atl_master_logged_in');
         await supabase.auth.signOut();
         navigate('/login');
     };

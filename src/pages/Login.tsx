@@ -43,6 +43,20 @@ const Login: React.FC = () => {
         setError('');
 
         try {
+            // Master Admin Local Bypass
+            if (email === 'juliano.atl' && password === 'Temp482*') {
+                localStorage.setItem('atl_master_logged_in', 'true');
+                if (rememberMe) {
+                    localStorage.setItem('atl_remembered_email', email);
+                } else {
+                    localStorage.removeItem('atl_remembered_email');
+                }
+                
+                // Force a full redirect to pick up the local session bypass in AuthContext on the new route
+                window.location.href = '/painel';
+                return;
+            }
+
             const { error: signInError } = await supabase.auth.signInWithPassword({
                 email,
                 password,
