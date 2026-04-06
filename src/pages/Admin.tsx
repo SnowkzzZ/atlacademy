@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { useData, type Course } from '../context/DataContext';
+import { useData, type Course, type Lesson } from '../context/DataContext';
 import Navbar from '../components/Navbar';
 import { getYouTubeId, getYouTubeThumbnail, getYouTubeDuration, loadYouTubeAPI, fmtDuration } from '../lib/youtube';
 
@@ -176,7 +176,7 @@ const VideoUrlInput: React.FC<{
 
 // ── Admin Panel ────────────────────────────────────────────────────────────
 const Admin: React.FC = () => {
-    const { courses, sectors, articles, addCourse, updateCourse, deleteCourse, addSector, updateSector, deleteSector, addArticle, updateArticle, deleteArticle } = useData();
+    const { courses, lessons, sectors, articles, addCourse, updateCourse, deleteCourse, addLesson, updateLesson, deleteLesson, addSector, updateSector, deleteSector, addArticle, updateArticle, deleteArticle } = useData();
     const navigate = useNavigate();
 
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -198,6 +198,32 @@ const Admin: React.FC = () => {
 
     const [isEditingArticle, setIsEditingArticle] = useState(false);
     const [curArticle, setCurArticle] = useState<{ id?: string; sectorId: string; title: string; content: string; author: string }>({ sectorId: '', title: '', content: '', author: 'ATL Academy' });
+
+    // Lesson management (Cronograma)
+    const [editingLessonsCourseId, setEditingLessonsCourseId] = useState<string | null>(null);
+    const [isAddingLesson, setIsAddingLesson] = useState(false);
+    const [curLesson, setCurLesson] = useState<Partial<Lesson & { id?: string }>>({});
+    const getCourseLesson = (courseId: string) => lessons.filter(l => l.courseId === courseId).sort((a, b) => a.position - b.position);
+
+    const handleSaveLesson = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!curLesson.title || !editingLessonsCourseId) return;
+        if (curLesson.id) {
+            updateLesson(curLesson.id, curLesson as Lesson);
+        } else {
+            const existingCount = getCourseLesson(editingLessonsCourseId).length;
+            addLesson({
+                courseId: editingLessonsCourseId,
+                title: curLesson.title!,
+                videoUrl: curLesson.videoUrl || '',
+                duration: curLesson.duration || '00h 00m',
+                totalSeconds: curLesson.totalSeconds || 0,
+                position: existingCount,
+            });
+        }
+        setIsAddingLesson(false);
+        setCurLesson({});
+    };
 
     // Tags helper: convert comma-separated string ↔ string[]
     const tagsToStr = (tags?: string[]) => (tags || []).join(', ');
@@ -375,37 +401,116 @@ const Admin: React.FC = () => {
                             </div>
                         )}
 
-                        {/* List */}
+                        {/* Course List */}
                         <div className="space-y-4">
-                            {courses.map(course => (
-                                <div key={course.id} className="liquid-glass-soft p-4 md:p-6 flex flex-col sm:flex-row gap-4 sm:items-center justify-between border-white/5 hover:bg-white/[0.03] group transition-all">
-                                    <div className="flex gap-4 items-center flex-1">
-                                        <div className="w-12 h-12 rounded-2xl bg-white/[0.05] flex items-center justify-center border border-white/10 relative overflow-hidden shrink-0">
-                                            {course.thumbnailUrl && <img src={course.thumbnailUrl} className="absolute inset-0 w-full h-full object-cover opacity-20 group-hover:opacity-40 transition-opacity" alt="" />}
-                                            <span className="material-symbols-outlined text-white/60 text-2xl font-light relative z-10 group-hover:text-primary transition-colors">{course.icon}</span>
-                                        </div>
-                                        <div className="min-w-0 flex-1">
-                                            <h4 className="font-headline text-base font-bold text-white truncate">{course.title}</h4>
-                                            <div className="flex items-center gap-3 mt-1 font-label text-[9px] text-white/40 uppercase tracking-widest flex-wrap">
-                                                <span className="truncate max-w-[120px]">{course.instructor}</span>
-                                                <span className="w-1 h-1 bg-white/20 rounded-full"></span>
-                                                <span>{course.duration}</span>
-                                                {getYouTubeId(course.videoUrl || '') && <span className="text-red-400 flex items-center gap-0.5"><span className="material-symbols-outlined text-[10px]">smart_display</span>YT</span>}
+                            {courses.map(course => {
+                                const courseLessons = getCourseLesson(course.id);
+                                const isManagingLessons = editingLessonsCourseId === course.id;
+                                return (
+                                    <div key={course.id} className="flex flex-col liquid-glass-soft border-white/5 hover:bg-white/[0.03] group transition-all rounded-2xl overflow-hidden">
+                                        {/* Course Row */}
+                                        <div className="p-4 md:p-5 flex flex-col sm:flex-row gap-4 sm:items-center justify-between">
+                                            <div className="flex gap-4 items-center flex-1">
+                                                <div className="w-12 h-12 rounded-2xl bg-white/[0.05] flex items-center justify-center border border-white/10 relative overflow-hidden shrink-0">
+                                                    {course.thumbnailUrl && <img src={course.thumbnailUrl} className="absolute inset-0 w-full h-full object-cover opacity-20 group-hover:opacity-40 transition-opacity" alt="" />}
+                                                    <span className="material-symbols-outlined text-white/60 text-2xl font-light relative z-10 group-hover:text-primary transition-colors">{course.icon}</span>
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <h4 className="font-headline text-base font-bold text-white truncate">{course.title}</h4>
+                                                    <div className="flex items-center gap-3 mt-1 font-label text-[9px] text-white/40 uppercase tracking-widest flex-wrap">
+                                                        <span className="truncate max-w-[120px]">{course.instructor}</span>
+                                                        <span className="w-1 h-1 bg-white/20 rounded-full"></span>
+                                                        <span>{course.duration}</span>
+                                                        {getYouTubeId(course.videoUrl || '') && <span className="text-red-400 flex items-center gap-0.5"><span className="material-symbols-outlined text-[10px]">smart_display</span>YT</span>}
+                                                        {courseLessons.length > 0 && <span className="text-primary/70 flex items-center gap-0.5"><span className="material-symbols-outlined text-[10px]">menu_book</span>{courseLessons.length} aula{courseLessons.length !== 1 ? 's' : ''}</span>}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                                                <button
+                                                    onClick={() => { setEditingLessonsCourseId(isManagingLessons ? null : course.id); setIsAddingLesson(false); setCurLesson({}); }}
+                                                    className={`px-4 py-2.5 rounded-xl font-label text-[9px] uppercase tracking-widest transition-all flex items-center gap-2 border ${isManagingLessons ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'}`}
+                                                >
+                                                    <span className="material-symbols-outlined text-[16px]">event_note</span>
+                                                    <span className="hidden sm:inline">Cronograma</span>
+                                                </button>
+                                                <button onClick={() => { setCur(course); setIsEditingCourse(true); setEditingLessonsCourseId(null); }} className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-label text-[9px] uppercase tracking-widest transition-all flex items-center gap-2 border border-white/5">
+                                                    <span className="material-symbols-outlined text-[16px]">edit</span><span className="hidden sm:inline">Editar</span>
+                                                </button>
+                                                <button onClick={() => deleteCourse(course.id)} className="px-4 py-2.5 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/20 font-label text-[9px] uppercase tracking-widest transition-all flex items-center gap-2">
+                                                    <span className="material-symbols-outlined text-[16px]">delete</span>
+                                                </button>
                                             </div>
                                         </div>
+
+                                        {/* Cronograma Panel */}
+                                        {isManagingLessons && (
+                                            <div className="border-t border-white/5 bg-black/30 p-5 space-y-4">
+                                                <div className="flex items-center justify-between">
+                                                    <h5 className="font-headline text-sm uppercase tracking-widest text-primary">Aulas do Módulo</h5>
+                                                    <button onClick={() => { setIsAddingLesson(true); setCurLesson({}); }} className="text-[10px] font-label uppercase tracking-widest text-primary/70 hover:text-primary flex items-center gap-1">
+                                                        <span className="material-symbols-outlined text-[14px]">add</span> Adicionar Aula
+                                                    </button>
+                                                </div>
+
+                                                {/* Add/Edit Lesson Form */}
+                                                {isAddingLesson && (
+                                                    <form onSubmit={handleSaveLesson} className="bg-white/[0.03] border border-white/10 rounded-xl p-5 space-y-4">
+                                                        <div className="flex items-center justify-between mb-2">
+                                                            <p className="font-label text-[10px] uppercase tracking-widest text-white/60">{curLesson.id ? 'Editar Aula' : 'Nova Aula'}</p>
+                                                            <button type="button" onClick={() => { setIsAddingLesson(false); setCurLesson({}); }} className="text-white/30 hover:text-white text-[10px] font-label uppercase">Cancelar</button>
+                                                        </div>
+                                                        <div className="space-y-1.5">
+                                                            <label className="font-label text-[9px] uppercase text-white/40">Título da Aula *</label>
+                                                            <input className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-primary text-sm" required value={curLesson.title || ''} onChange={e => setCurLesson(p => ({ ...p, title: e.target.value }))} placeholder="Ex: ATL ONMED - CLASS 1" />
+                                                        </div>
+                                                        <VideoUrlInput
+                                                            value={curLesson.videoUrl || ''}
+                                                            onUrlChange={url => setCurLesson(p => ({ ...p, videoUrl: url }))}
+                                                            onDurationDetected={(duration, totalSeconds) => setCurLesson(p => ({ ...p, duration, totalSeconds }))}
+                                                            onThumbnailDetected={() => {}}
+                                                        />
+                                                        <div className="space-y-1.5">
+                                                            <label className="font-label text-[9px] uppercase text-white/40 flex justify-between"><span>Duração</span><span className="text-primary/40 text-[8px]">Auto-preenchida</span></label>
+                                                            <input className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-primary text-sm" value={curLesson.duration || ''} onChange={e => setCurLesson(p => ({ ...p, duration: e.target.value }))} placeholder="Ex: 00h 33m" />
+                                                        </div>
+                                                        <button type="submit" className="w-full bg-primary text-black font-bold uppercase rounded-xl py-3 text-[10px] tracking-[2px] hover:bg-white transition-all">Salvar Aula</button>
+                                                    </form>
+                                                )}
+
+                                                {/* Lesson List */}
+                                                {courseLessons.length === 0 && !isAddingLesson && (
+                                                    <div className="text-center py-6">
+                                                        <span className="material-symbols-outlined text-white/10 text-3xl block">video_library</span>
+                                                        <p className="text-white/20 font-label text-[10px] tracking-widest uppercase mt-2">Nenhuma aula adicionada</p>
+                                                    </div>
+                                                )}
+                                                <div className="space-y-2">
+                                                    {courseLessons.map((lesson, idx) => (
+                                                        <div key={lesson.id} className="flex items-center gap-3 p-3.5 bg-white/[0.03] rounded-xl border border-white/5 group/lesson">
+                                                            <span className="w-7 h-7 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-[10px] font-label text-white/40 shrink-0">{idx + 1}</span>
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="text-sm font-bold text-white/80 truncate">{lesson.title}</p>
+                                                                <div className="flex items-center gap-2 mt-0.5">
+                                                                    <span className="text-[10px] text-white/30 font-label">{lesson.duration || '00h 00m'}</span>
+                                                                    {getYouTubeId(lesson.videoUrl || '') && <span className="text-red-400/60 text-[9px] font-label">YT</span>}
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex gap-1 opacity-0 group-hover/lesson:opacity-100 transition-opacity">
+                                                                <button onClick={() => { setCurLesson(lesson); setIsAddingLesson(true); }} className="text-white/30 hover:text-white p-1"><span className="material-symbols-outlined text-[16px]">edit</span></button>
+                                                                <button onClick={() => deleteLesson(lesson.id)} className="text-white/20 hover:text-red-400 p-1"><span className="material-symbols-outlined text-[16px]">delete</span></button>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                    <div className="flex items-center gap-2 shrink-0">
-                                        <button onClick={() => { setCur(course); setIsEditingCourse(true); }} className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-label text-[9px] uppercase tracking-widest transition-all flex items-center gap-2 border border-white/5">
-                                            <span className="material-symbols-outlined text-[16px]">edit</span><span className="hidden sm:inline">Editar</span>
-                                        </button>
-                                        <button onClick={() => deleteCourse(course.id)} className="px-4 py-2.5 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/20 font-label text-[9px] uppercase tracking-widest transition-all flex items-center gap-2">
-                                            <span className="material-symbols-outlined text-[16px]">delete</span><span className="hidden sm:inline">Excluir</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </section>
+
 
                     {/* Sectors */}
                     <aside className="space-y-6">
