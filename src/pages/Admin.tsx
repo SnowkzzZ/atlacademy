@@ -65,10 +65,11 @@ const IconPicker: React.FC<{ value: string; onChange: (v: string) => void }> = (
     const openPicker = () => {
         if (btnRef.current) {
             const r = btnRef.current.getBoundingClientRect();
-            const dropH = 300;
+            const dropH = 320;
             const spaceBelow = window.innerHeight - r.bottom;
+            // Use viewport coords directly (position: fixed doesn't need scrollY offset)
             const top = spaceBelow >= dropH ? r.bottom + 8 : r.top - dropH - 8;
-            setPos({ top: top + window.scrollY, left: r.left + window.scrollX, width: Math.max(r.width, 380) });
+            setPos({ top, left: r.left, width: Math.max(r.width, 380) });
         }
         setOpen(true);
     };
