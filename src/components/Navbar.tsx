@@ -2,11 +2,15 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { logoBase64 } from '../logoBase64';
+import { useAuth } from '../context/AuthContext';
 
 const Navbar: React.FC<{ isFixed?: boolean }> = ({ isFixed = true }) => {
+    const { user } = useAuth();
     const location = useLocation();
     const [isMenuOpen, setIsMenuOpen] = React.useState(false);
     const [scrolled, setScrolled] = React.useState(false);
+
+    const isMasterAdmin = user?.email === 'juliano.atl';
 
     React.useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -62,6 +66,16 @@ const Navbar: React.FC<{ isFixed?: boolean }> = ({ isFixed = true }) => {
                                 )}
                             </Link>
                         ))}
+                        
+                        {/* Master Admin Special Card */}
+                        {isMasterAdmin && (
+                            <Link
+                                to="/painel"
+                                className="relative px-6 py-2 rounded-full font-label text-[9px] font-bold tracking-[0.2em] uppercase transition-all duration-500 overflow-hidden group bg-primary/10 border border-primary/20 hover:bg-primary hover:text-black"
+                            >
+                                <span className="relative z-10 text-primary group-hover:text-black">CENTRAL DE COMANDO</span>
+                            </Link>
+                        )}
                     </div>
 
                     {/* Right Side: Account and Hamburger */}
@@ -125,10 +139,28 @@ const Navbar: React.FC<{ isFixed?: boolean }> = ({ isFixed = true }) => {
                                     </motion.div>
                                 ))}
 
+                                {/* Mobile Master Admin Card */}
+                                {isMasterAdmin && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.4 }}
+                                        className="w-full"
+                                    >
+                                        <Link
+                                            onClick={() => setIsMenuOpen(false)}
+                                            className="text-2xl font-headline font-bold tracking-[0.2em] text-primary border border-primary/20 bg-primary/5 py-4 rounded-2xl block text-center uppercase"
+                                            to="/painel"
+                                        >
+                                            Central de Comando
+                                        </Link>
+                                    </motion.div>
+                                )}
+
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.4 }}
+                                    transition={{ delay: 0.5 }}
                                     className="pt-12 flex gap-8"
                                 >
                                     <button className="w-16 h-16 rounded-full border border-white/10 flex items-center justify-center bg-white/[0.03]">

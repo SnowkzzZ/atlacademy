@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData, type Course } from '../context/DataContext';
 import Navbar from '../components/Navbar';
@@ -55,6 +55,14 @@ const Admin: React.FC = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
 
+    // Persistence Check on Mount
+    useEffect(() => {
+        const isMaster = localStorage.getItem('atl_admin_is_master') === 'true';
+        if (isMaster) {
+            setIsAuthenticated(true);
+        }
+    }, []);
+
     // Course Form State
     const [isEditingCourse, setIsEditingCourse] = useState(false);
     const [currentCourse, setCurrentCourse] = useState<Partial<Course>>({});
@@ -71,11 +79,19 @@ const Admin: React.FC = () => {
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
         if (username === 'juliano.atl' && password === 'Temp482*') {
+            localStorage.setItem('atl_admin_is_master', 'true');
             setIsAuthenticated(true);
             setError('');
+            // Optional: window.location.reload() if needed, but local state is enough for this page
         } else {
             setError('Credenciais inválidas. Acesso negado.');
         }
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem('atl_admin_is_master');
+        setIsAuthenticated(false);
+        navigate('/login');
     };
 
     const handleSaveCourse = (e: React.FormEvent) => {
@@ -187,7 +203,7 @@ const Admin: React.FC = () => {
                         <h1 className="font-headline text-3xl md:text-5xl font-bold uppercase tracking-tight text-white/90">Central de Comando</h1>
                         <p className="font-label text-[9px] md:text-xs text-white/40 tracking-[3px] md:tracking-[4px] uppercase">Gerenciamento de Conteúdo Global</p>
                     </div>
-                    <button onClick={() => navigate('/')} className="w-full md:w-auto px-6 py-3.5 rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/10 transition-colors uppercase font-label text-[10px] tracking-[2px] flex items-center justify-center gap-2">
+                    <button onClick={handleLogout} className="w-full md:w-auto px-6 py-3.5 rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/10 transition-colors uppercase font-label text-[10px] tracking-[2px] flex items-center justify-center gap-2">
                         <span className="material-symbols-outlined text-[16px]">exit_to_app</span> Sair do Painel
                     </button>
                 </div>
