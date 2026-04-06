@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { logoBase64 } from '../logoBase64';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
@@ -17,9 +18,19 @@ const Login: React.FC = () => {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [isSignUp, setIsSignUp] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [rememberMe, setRememberMe] = useState(false);
 
+    // Initial load: check for remembered email
+    useEffect(() => {
+        const savedEmail = localStorage.getItem('atl_remembered_email');
+        if (savedEmail) {
+            setEmail(savedEmail);
+            setRememberMe(true);
+        }
+    }, []);
+
+    // Redirect if already authenticated
     useEffect(() => {
         if (user) {
             navigate(from, { replace: true });
@@ -32,26 +43,23 @@ const Login: React.FC = () => {
         setError('');
 
         try {
-            if (isSignUp) {
-                const { error: signUpError } = await supabase.auth.signUp({
-                    email,
-                    password,
-                });
-                if (signUpError) throw signUpError;
-                
-                alert("Conta criada com sucesso! Faça login para continuar.");
-                setIsSignUp(false);
-                setPassword('');
+            const { error: signInError } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
+            
+            if (signInError) throw signInError;
+            
+            // Handle Remember Me
+            if (rememberMe) {
+                localStorage.setItem('atl_remembered_email', email);
             } else {
-                const { error: signInError } = await supabase.auth.signInWithPassword({
-                    email,
-                    password,
-                });
-                if (signInError) throw signInError;
-                // Se der sucesso, o AuthContext receberá o novo usuário e o useEffect fará o redirect
+                localStorage.removeItem('atl_remembered_email');
             }
+            
+            // If successful, onAuthStateChange will trigger and user state will update
         } catch (err: any) {
-            setError(err.message || 'Ocorreu um erro na autenticação.');
+            setError(err.message || 'Credenciais inválidas. Tente novamente.');
         } finally {
             setLoading(false);
         }
@@ -61,45 +69,54 @@ const Login: React.FC = () => {
         <div className="bg-[#030303] text-on-surface font-body selection:bg-white selection:text-black min-h-screen relative flex items-center justify-center overflow-hidden">
 
             {/* Immersive background layer */}
-            <div className="fixed inset-0 z-0 flex items-center justify-center">
+            <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none">
                 <div className="absolute inset-0 bg-[#030303]"></div>
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/10 rounded-full blur-3xl pointer-events-none opacity-60"></div>
-                <div className="absolute w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-3xl pointer-events-none left-0 bottom-0"></div>
-                <div className="dot-grid absolute inset-0 opacity-[0.03]"></div>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-primary/5 rounded-full blur-[120px] opacity-60"></div>
+                <div className="absolute w-[800px] h-[800px] bg-blue-500/5 rounded-full blur-[120px] left-[-10%] bottom-[-10%]"></div>
+                <div className="dot-grid absolute inset-0 opacity-[0.02]"></div>
             </div>
 
-            <main className="relative z-10 w-full max-w-[480px] p-6">
-                {/* Apple Style Liquid Glass Floating Card */}
-                <div className="liquid-glass p-12 flex flex-col items-center space-y-10 group relative">
-
+            <main className="relative z-10 w-full max-w-[440px] px-6 py-12">
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                    className="liquid-glass p-10 md:p-14 flex flex-col items-center space-y-10 group relative rounded-[2.5rem] shadow-2xl border border-white/10"
+                >
                     {/* Subtle inner top highlight */}
-                    <div className="absolute top-0 left-10 right-10 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+                    <div className="absolute top-0 left-12 right-12 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-50"></div>
 
-                    <div className="w-full flex flex-col items-center justify-center text-center space-y-6">
-                        <img src={logoBase64} alt="ATL Logo" className="h-20 drop-shadow-[0_0_30px_rgba(255,255,255,0.2)] pb-4 border-b border-white/5 w-full object-contain" />
+                    <div className="w-full flex flex-col items-center justify-center text-center space-y-8">
+                        <motion.img 
+                            whileHover={{ scale: 1.05 }}
+                            src={logoBase64} 
+                            alt="ATL Logo" 
+                            className="h-28 md:h-32 drop-shadow-[0_0_40px_rgba(255,255,255,0.15)] object-contain" 
+                        />
 
-                        <div className="space-y-2 pt-2">
-                            <h1 className="font-headline text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-br from-white to-white/60 tracking-tight">
-                                {isSignUp ? "Novo Acesso" : "Login Seguro"}
+                        <div className="space-y-1 w-full border-t border-white/5 pt-8">
+                            <h1 className="font-headline text-4xl font-bold text-white tracking-tight drop-shadow-md">
+                                Login
                             </h1>
-                            <p className="text-white/40 text-sm font-label tracking-widest uppercase">
-                                {isSignUp ? "Cadastro de Membro" : "Acesso Autorizado Somente"}
-                            </p>
                         </div>
                     </div>
 
                     <form className="w-full space-y-6" onSubmit={handleAuth}>
                         {error && (
-                            <div className="bg-red-500/20 border border-red-500/50 text-red-200 text-sm p-3 rounded-lg text-center backdrop-blur-sm">
+                            <motion.div 
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="bg-red-500/10 border border-red-500/20 text-red-200 text-xs tracking-wide p-4 rounded-2xl text-center backdrop-blur-sm"
+                            >
                                 {error}
-                            </div>
+                            </motion.div>
                         )}
                         <div className="space-y-4">
                             <div className="relative group/input">
-                                <div className="absolute inset-0 bg-white/5 rounded-2xl blur-md opacity-0 group-focus-within/input:opacity-100 transition-opacity duration-500"></div>
+                                <div className="absolute inset-0 bg-white/5 rounded-2xl blur-lg opacity-0 group-focus-within/input:opacity-100 transition-opacity duration-500"></div>
                                 <input
-                                    className="relative w-full bg-white/[0.03] border border-white/10 rounded-2xl px-6 py-4 text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 focus:bg-white/[0.05] transition-all duration-300 font-body text-base backdrop-blur-md shadow-inner"
-                                    placeholder="Seu e-mail profissional"
+                                    className="relative w-full bg-black/40 border border-white/10 rounded-2xl px-6 py-4 text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 focus:bg-white/[0.05] transition-all duration-300 font-body text-base backdrop-blur-md shadow-inner"
+                                    placeholder="Seu Email"
                                     type="email"
                                     required
                                     value={email}
@@ -108,68 +125,65 @@ const Login: React.FC = () => {
                             </div>
 
                             <div className="relative group/input">
-                                <div className="absolute inset-0 bg-white/5 rounded-2xl blur-md opacity-0 group-focus-within/input:opacity-100 transition-opacity duration-500"></div>
+                                <div className="absolute inset-0 bg-white/5 rounded-2xl blur-lg opacity-0 group-focus-within/input:opacity-100 transition-opacity duration-500"></div>
                                 <input
-                                    className="relative w-full bg-white/[0.03] border border-white/10 rounded-2xl px-6 py-4 text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 focus:bg-white/[0.05] transition-all duration-300 font-body text-base backdrop-blur-md shadow-inner"
-                                    placeholder="Chave de segurança (Senha)"
+                                    className="relative w-full bg-black/40 border border-white/10 rounded-2xl px-6 py-4 text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 focus:bg-white/[0.05] transition-all duration-300 font-body text-base backdrop-blur-md shadow-inner"
+                                    placeholder="Senha"
                                     type={showPassword ? "text" : "password"}
                                     required
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                 />
                                 <button 
-                                    className="absolute right-6 top-1/2 -translate-y-1/2 text-white/30 hover:text-white transition-colors duration-200 z-10" 
+                                    className="absolute right-6 top-1/2 -translate-y-1/2 text-white/30 hover:text-white transition-colors duration-200 z-10 p-2" 
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
                                 >
-                                    <span className="material-symbols-outlined text-xl">
+                                    <span className="material-symbols-outlined text-[20px] block">
                                         {showPassword ? 'visibility_off' : 'visibility'}
                                     </span>
                                 </button>
                             </div>
                         </div>
 
-                        {!isSignUp && (
-                            <div className="flex justify-between items-center px-1">
-                                <label className="flex items-center gap-3 cursor-pointer group/checkbox">
-                                    <div className="w-5 h-5 rounded border border-white/20 bg-white/[0.05] flex items-center justify-center group-hover/checkbox:border-white/40 transition-colors">
-                                        <span className="material-symbols-outlined text-[14px] text-white opacity-0 transition-opacity group-has-[:checked]:opacity-100">check</span>
-                                    </div>
-                                    <input type="checkbox" className="sr-only" />
-                                    <span className="text-white/50 text-xs font-label uppercase tracking-widest group-hover/checkbox:text-white/80 transition-colors">Lembrar</span>
-                                </label>
-                                <a className="font-label text-[10px] text-white/50 hover:text-white transition-colors uppercase tracking-widest border-b border-transparent hover:border-white/50 pb-0.5" href="#">Recuperar Acesso</a>
-                            </div>
-                        )}
+                        <div className="flex justify-between items-center px-2">
+                            <label className="flex items-center gap-3 cursor-pointer group/checkbox">
+                                <div className={`w-5 h-5 rounded-[6px] border flex items-center justify-center transition-all duration-300 ${rememberMe ? 'border-primary bg-primary/20' : 'border-white/20 bg-white/[0.02] group-hover/checkbox:border-white/40'}`}>
+                                    <span className={`material-symbols-outlined text-[14px] transition-all duration-300 ${rememberMe ? 'text-primary opacity-100 scale-100' : 'text-white opacity-0 scale-50'}`}>check</span>
+                                </div>
+                                <input 
+                                    type="checkbox" 
+                                    className="sr-only" 
+                                    checked={rememberMe}
+                                    onChange={(e) => setRememberMe(e.target.checked)}
+                                />
+                                <span className={`text-xs font-label uppercase tracking-[0.15em] transition-colors duration-300 ${rememberMe ? 'text-white/90' : 'text-white/50 group-hover/checkbox:text-white/80'}`}>Lembrar</span>
+                            </label>
+                            
+                            {/* Opcional: Manter ou remover o "Recuperar Acesso" */}
+                            <a className="font-label text-[10px] text-white/40 hover:text-white transition-colors uppercase tracking-[0.1em]" href="#">Esqueceu a senha?</a>
+                        </div>
 
                         <button 
-                            disabled={loading}
-                            className="relative w-full bg-white text-black font-headline font-bold py-5 rounded-2xl text-[13px] tracking-[2px] hover:scale-[1.02] hover:shadow-[0_0_40px_rgba(255,255,255,0.3)] transition-all duration-500 active:scale-[0.98] uppercase mt-4 overflow-hidden group/btn disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed" 
+                            disabled={loading || !email || !password}
+                            className="relative w-full bg-white text-black font-headline font-bold py-5 rounded-2xl text-[13px] tracking-[0.2em] hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(255,255,255,0.2)] transition-all duration-500 active:scale-[0.98] uppercase mt-6 overflow-hidden group/btn disabled:opacity-40 disabled:hover:scale-100 disabled:cursor-not-allowed disabled:hover:shadow-none" 
                             type="submit"
                         >
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000 ease-in-out"></div>
-                            {loading ? "Processando..." : (isSignUp ? "Criar Conta" : "Entrar na Academia")}
+                            {loading ? "Autenticando..." : "Entrar"}
                         </button>
                     </form>
-
-                    <footer className="w-full pt-8 border-t border-white/10 text-center">
-                        <button 
-                            type="button" 
-                            onClick={() => { setIsSignUp(!isSignUp); setError(''); setPassword(''); }}
-                            className="text-white/40 hover:text-white transition-colors font-label text-[10px] tracking-[3px] uppercase flex items-center justify-center gap-2 w-full"
-                        >
-                            {isSignUp ? "Já possuo um convite (Fazer Login)" : "Solicitar Convite de Associação (Criar Conta)"}
-                            <span className="material-symbols-outlined text-sm">
-                                {isSignUp ? "login" : "arrow_right_alt"}
-                            </span>
-                        </button>
-                    </footer>
-                </div>
+                </motion.div>
 
                 <div className="text-center mt-12 pb-4">
-                    <div className="font-label text-[9px] text-white/20 tracking-[6px] uppercase">
-                        ATL ACADEMY // PROTOCOLO SEGURO V2
-                    </div>
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.5, duration: 1 }}
+                        className="font-label text-[9px] text-white/20 tracking-[0.4em] uppercase"
+                    >
+                        ATL ACADEMY // ACESSO RESTRITO
+                    </motion.div>
                 </div>
             </main>
 
