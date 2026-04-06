@@ -37,6 +37,18 @@ CREATE TABLE articles (
 -- ALTER TABLE courses ADD COLUMN IF NOT EXISTS description text;
 -- ALTER TABLE courses ADD COLUMN IF NOT EXISTS tags text[] DEFAULT '{}';
 
+-- Tabela de aulas (Cronograma)
+CREATE TABLE IF NOT EXISTS lessons (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "courseId" uuid REFERENCES courses(id) ON DELETE CASCADE,
+  title text NOT NULL,
+  "videoUrl" text,
+  "thumbnailUrl" text,
+  duration text DEFAULT '00h 00m',
+  "totalSeconds" float DEFAULT 0,
+  position integer DEFAULT 0
+);
+
 -- Per-user progress table (create this if it doesn't exist)
 CREATE TABLE IF NOT EXISTS user_progress (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -47,6 +59,7 @@ CREATE TABLE IF NOT EXISTS user_progress (
     last_watched_at bigint DEFAULT 0,
     UNIQUE(user_id, course_id)
 );
+
 -- Allow authenticated users to manage their own progress rows
 ALTER TABLE user_progress ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "users_own_progress" ON user_progress

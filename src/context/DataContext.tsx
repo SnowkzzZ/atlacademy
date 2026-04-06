@@ -24,6 +24,7 @@ export interface Lesson {
     courseId: string;
     title: string;
     videoUrl?: string;
+    thumbnailUrl?: string;
     duration: string;
     totalSeconds?: number;
     position: number;
@@ -195,8 +196,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (isSupabaseConfigured) {
             const { data, error } = await supabase.from('lessons').insert([{
                 courseId: lesson.courseId, title: lesson.title,
-                videoUrl: lesson.videoUrl, duration: lesson.duration,
-                totalSeconds: lesson.totalSeconds || 0, position: lesson.position,
+                videoUrl: lesson.videoUrl, thumbnailUrl: lesson.thumbnailUrl,
+                duration: lesson.duration, totalSeconds: lesson.totalSeconds || 0, position: lesson.position,
             }]).select().single();
             if (!error && data) setLessons(prev => prev.map(l => l.id === tempId ? { ...data, courseId: data.courseId } : l));
         }
@@ -208,8 +209,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (isSupabaseConfigured) {
             const { error } = await supabase.from('lessons').upsert({
                 id: full.id, courseId: full.courseId, title: full.title,
-                videoUrl: full.videoUrl, duration: full.duration,
-                totalSeconds: full.totalSeconds || 0, position: full.position,
+                videoUrl: full.videoUrl, thumbnailUrl: full.thumbnailUrl,
+                duration: full.duration, totalSeconds: full.totalSeconds || 0, position: full.position,
             });
             if (error) console.warn('updateLesson:', error.message);
         }

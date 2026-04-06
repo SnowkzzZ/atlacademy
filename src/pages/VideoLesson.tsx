@@ -296,41 +296,47 @@ const VideoLesson: React.FC = () => {
                             <div className="space-y-3 overflow-y-auto pr-2 custom-scrollbar flex-1">
                                 {hasLessons ? (
                                     // Show THIS course's lessons only
-                                    courseLessons.map((lesson, idx) => {
+                                    courseLessons.map((lesson) => {
                                         const isActive = lesson.id === activeLesson?.id;
                                         const lessonProgress = lesson.progress ?? 0;
                                         return (
                                             <button
                                                 key={lesson.id}
                                                 onClick={() => setActiveLessonId(lesson.id)}
-                                                className={`w-full group text-left p-5 rounded-2xl border transition-all duration-500 flex items-center gap-5 ${isActive ? 'bg-primary/10 border-primary/40 shadow-[0_20px_40px_rgba(0,255,135,0.1)]' : 'bg-white/[0.02] border-white/5 hover:border-white/20 hover:bg-white/[0.08]'}`}
+                                                className={`w-full group text-left p-4 rounded-2xl border transition-all duration-500 flex items-center gap-4 ${isActive ? 'bg-primary/10 border-primary/40 shadow-[0_20px_40px_rgba(0,255,135,0.1)]' : 'bg-white/[0.02] border-white/5 hover:border-white/20 hover:bg-white/[0.08]'}`}
                                             >
-                                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-all duration-500 ${isActive ? 'bg-primary text-black shadow-[0_0_20px_rgba(0,255,135,0.5)]' : 'bg-black/60 border border-white/10'}`}>
-                                                    {isActive ? (
-                                                        <span className="material-symbols-outlined text-[22px]">play_circle</span>
-                                                    ) : lessonProgress === 100 ? (
-                                                        <span className="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+                                                <div className={`w-20 aspect-video rounded-xl flex items-center justify-center shrink-0 transition-all duration-500 relative overflow-hidden ${isActive ? 'ring-2 ring-primary ring-offset-2 ring-offset-black' : 'bg-black/60 border border-white/10'}`}>
+                                                    {lesson.thumbnailUrl ? (
+                                                        <img src={lesson.thumbnailUrl} className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ${isActive ? 'scale-110' : 'opacity-40 group-hover:opacity-100 group-hover:scale-105'}`} alt="" />
                                                     ) : (
-                                                        <span className="font-headline font-bold text-sm text-white/40">{idx + 1}</span>
+                                                        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent flex items-center justify-center">
+                                                            <span className="material-symbols-outlined text-white/10 text-xl">image</span>
+                                                        </div>
+                                                    )}
+                                                    
+                                                    <div className={`absolute inset-0 flex items-center justify-center bg-black/40 transition-opacity duration-500 ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                                                        <span className={`material-symbols-outlined ${isActive ? 'text-primary' : 'text-white'} text-2xl transition-transform duration-500 ${isActive ? 'scale-110' : 'scale-90 group-hover:scale-100'}`}>
+                                                            {isActive ? 'pause_circle' : 'play_circle'}
+                                                        </span>
+                                                    </div>
+
+                                                    {lessonProgress === 100 && (
+                                                        <div className="absolute top-1 right-1 bg-primary text-black rounded-full p-0.5 z-20 shadow-lg">
+                                                            <span className="material-symbols-outlined text-[10px] font-bold">check</span>
+                                                        </div>
                                                     )}
                                                 </div>
                                                 <div className="flex-1 overflow-hidden">
-                                                    <p className={`text-sm font-bold truncate ${isActive ? 'text-primary' : 'text-white/70 group-hover:text-white'}`}>{lesson.title}</p>
-                                                    <div className="flex items-center gap-3 mt-1.5 opacity-60">
-                                                        <span className="text-[10px] font-label tracking-[2px] text-white uppercase">{lesson.duration || '00h 00m'}</span>
+                                                    <p className={`text-[13px] font-bold truncate leading-tight ${isActive ? 'text-primary' : 'text-white/70 group-hover:text-white'}`}>{lesson.title}</p>
+                                                    <div className="flex items-center gap-2.5 mt-1.5 opacity-60">
+                                                        <span className="text-[9px] font-label tracking-[2px] text-white uppercase">{lesson.duration || '00h 00m'}</span>
                                                         {lessonProgress > 0 && lessonProgress < 100 && (
                                                             <>
-                                                                <span className="w-1 h-1 rounded-full bg-white/20"></span>
-                                                                <span className="text-[10px] font-label text-primary font-bold">{lessonProgress}%</span>
+                                                                <span className="w-0.5 h-0.5 rounded-full bg-white/20"></span>
+                                                                <span className="text-[9px] font-label text-primary font-bold">{lessonProgress}%</span>
                                                             </>
                                                         )}
                                                     </div>
-                                                    {/* Mini progress bar */}
-                                                    {lessonProgress > 0 && (
-                                                        <div className="mt-2 h-0.5 bg-white/10 rounded-full overflow-hidden">
-                                                            <div className="h-full bg-primary transition-all" style={{ width: `${lessonProgress}%` }} />
-                                                        </div>
-                                                    )}
                                                 </div>
                                             </button>
                                         );

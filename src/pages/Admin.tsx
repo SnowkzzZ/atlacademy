@@ -216,6 +216,7 @@ const Admin: React.FC = () => {
                 courseId: editingLessonsCourseId,
                 title: curLesson.title!,
                 videoUrl: curLesson.videoUrl || '',
+                thumbnailUrl: curLesson.thumbnailUrl || '',
                 duration: curLesson.duration || '00h 00m',
                 totalSeconds: curLesson.totalSeconds || 0,
                 position: existingCount,
@@ -468,8 +469,35 @@ const Admin: React.FC = () => {
                                                             value={curLesson.videoUrl || ''}
                                                             onUrlChange={url => setCurLesson(p => ({ ...p, videoUrl: url }))}
                                                             onDurationDetected={(duration, totalSeconds) => setCurLesson(p => ({ ...p, duration, totalSeconds }))}
-                                                            onThumbnailDetected={() => {}}
+                                                            onThumbnailDetected={url => setCurLesson(p => ({ ...p, thumbnailUrl: url }))}
                                                         />
+                                                        <div className="space-y-1.5">
+                                                            <label className="font-label text-[9px] uppercase text-white/40 flex justify-between"><span>Thumbnail da Aula</span><span className="text-primary/40 text-[8px]">Auto-preenchida p/ YouTube</span></label>
+                                                            <div className="flex gap-2">
+                                                                <input className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-primary text-sm transition-all" value={curLesson.thumbnailUrl || ''} onChange={e => setCurLesson(p => ({ ...p, thumbnailUrl: e.target.value }))} placeholder="URL ou faça upload" />
+                                                                <label className="cursor-pointer px-4 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center hover:bg-white/10 transition-colors">
+                                                                    <span className="material-symbols-outlined text-base">upload</span>
+                                                                    <input type="file" hidden accept="image/*" onChange={async (e) => {
+                                                                        const file = e.target.files?.[0];
+                                                                        if (file) {
+                                                                            try { 
+                                                                                const compressed = await compressImage(file);
+                                                                                setCurLesson(p => ({ ...p, thumbnailUrl: compressed })); 
+                                                                            } catch { alert('Erro ao processar imagem.'); }
+                                                                        }
+                                                                    }} />
+                                                                </label>
+                                                            </div>
+                                                            {curLesson.thumbnailUrl && (
+                                                                <div className="relative aspect-video rounded-xl border border-white/10 overflow-hidden bg-black/40 group mt-2">
+                                                                    <img src={curLesson.thumbnailUrl} className="w-full h-full object-cover opacity-60 mix-blend-luminosity grayscale" alt="" />
+                                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                                                                    <button type="button" onClick={() => setCurLesson(p => ({ ...p, thumbnailUrl: '' }))} className="absolute bottom-2 right-2 text-red-400 hover:text-red-300">
+                                                                        <span className="material-symbols-outlined text-base">delete</span>
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                         <div className="space-y-1.5">
                                                             <label className="font-label text-[9px] uppercase text-white/40 flex justify-between"><span>Duração</span><span className="text-primary/40 text-[8px]">Auto-preenchida</span></label>
                                                             <input className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-primary text-sm" value={curLesson.duration || ''} onChange={e => setCurLesson(p => ({ ...p, duration: e.target.value }))} placeholder="Ex: 00h 33m" />
@@ -488,7 +516,16 @@ const Admin: React.FC = () => {
                                                 <div className="space-y-2">
                                                     {courseLessons.map((lesson, idx) => (
                                                         <div key={lesson.id} className="flex items-center gap-3 p-3.5 bg-white/[0.03] rounded-xl border border-white/5 group/lesson">
-                                                            <span className="w-7 h-7 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-[10px] font-label text-white/40 shrink-0">{idx + 1}</span>
+                                                            <div className="w-12 aspect-video rounded-lg bg-white/5 border border-white/10 flex items-center justify-center relative overflow-hidden shrink-0">
+                                                                {lesson.thumbnailUrl ? (
+                                                                    <img src={lesson.thumbnailUrl} className="absolute inset-0 w-full h-full object-cover" alt="" />
+                                                                ) : (
+                                                                    <span className="material-symbols-outlined text-white/10 text-xs">image</span>
+                                                                )}
+                                                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/lesson:opacity-100 transition-opacity z-10">
+                                                                    <span className="text-[8px] font-bold text-white uppercase">{idx + 1}</span>
+                                                                </div>
+                                                            </div>
                                                             <div className="flex-1 min-w-0">
                                                                 <p className="text-sm font-bold text-white/80 truncate">{lesson.title}</p>
                                                                 <div className="flex items-center gap-2 mt-0.5">
