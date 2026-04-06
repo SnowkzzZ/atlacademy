@@ -80,9 +80,9 @@ const Admin: React.FC = () => {
         e.preventDefault();
         if (username === 'juliano.atl' && password === 'Temp482*') {
             localStorage.setItem('atl_admin_is_master', 'true');
-            setIsAuthenticated(true);
-            setError('');
-            // Optional: window.location.reload() if needed, but local state is enough for this page
+            // Force full reload so AuthContext reinitializes and reads the localStorage flag.
+            // This ensures ProtectedRoute allows access and the Navbar shows the admin card.
+            window.location.reload();
         } else {
             setError('Credenciais inválidas. Acesso negado.');
         }
