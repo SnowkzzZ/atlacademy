@@ -1,68 +1,109 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { useData } from '../context/DataContext';
+import { loadYouTubeAPI, getYouTubeId, fmtDuration } from '../lib/youtube';
 
 const VideoLesson: React.FC = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { courses, updateCourse } = useData();
-    const videoRef = React.useRef<HTMLVideoElement>(null);
+    const videoRef = useRef<HTMLVideoElement>(null);
 
-    // Find course or fallback to first one if ID is missing or invalid
     const course = courses.find(c => c.id === id) || courses[0];
+    const ytVideoId = getYouTubeId(course?.videoUrl || '');
+    const ytPlayerId = `yt-lesson-${course?.id || 'default'}`;
 
-    // Effect to update last watched at and initialize total duration if needed
-    React.useEffect(() => {
-        if (course) {
-            updateCourse(course.id, { lastWatchedAt: Date.now() });
-        }
+    const ytPlayerRef = useRef<any>(null);
+    const progressIntervalRef = useRef<number | null>(null);
+
+    useEffect(() => {
+        if (course) updateCourse(course.id, { lastWatchedAt: Date.now() });
     }, [course?.id]);
 
+    // YouTube IFrame API Player lifecycle
+    useEffect(() => {
+        if (!ytVideoId) return;
+        let destroyed = false;
+
+        const stopPoll = () => {
+            if (progressIntervalRef.current) { clearInterval(progressIntervalRef.current); progressIntervalRef.current = null; }
+        };
+
+        const setup = async () => {
+            await loadYouTubeAPI();
+            if (destroyed) return;
+            // Small delay to ensure the div is rendered
+            await new Promise(r => setTimeout(r, 100));
+            if (destroyed || !document.getElementById(ytPlayerId)) return;
+
+            ytPlayerRef.current = new window.YT.Player(ytPlayerId, {
+                videoId: ytVideoId,
+                playerVars: { autoplay: 1, rel: 0, modestbranding: 1 },
+                events: {
+                    onReady: (event: any) => {
+                        const totalSecs = event.target.getDuration?.() ?? 0;
+                        if (course?.watchedSeconds && course.watchedSeconds > 10) {
+                            event.target.seekTo(course.watchedSeconds, true);
+                        }
+                        if (totalSecs > 0 && course) {
+                            updateCourse(course.id, { totalSeconds: totalSecs, duration: fmtDuration(totalSecs) });
+                        }
+                        progressIntervalRef.current = window.setInterval(() => {
+                            if (destroyed || !ytPlayerRef.current || !course) return;
+                            const currentTime = ytPlayerRef.current.getCurrentTime?.() ?? 0;
+                            const duration = ytPlayerRef.current.getDuration?.() ?? 0;
+                            if (duration > 0 && currentTime >= 0) {
+                                const progress = Math.min(Math.round((currentTime / duration) * 100), 100);
+                                updateCourse(course.id, { watchedSeconds: currentTime, progress, totalSeconds: duration });
+                            }
+                        }, 3000);
+                    },
+                    onStateChange: (event: any) => {
+                        if (event.data === 0 && course) { // ENDED
+                            stopPoll();
+                            updateCourse(course.id, { progress: 100 });
+                        }
+                    }
+                }
+            });
+        };
+
+        setup();
+        return () => {
+            destroyed = true;
+            stopPoll();
+            try { ytPlayerRef.current?.destroy(); } catch { }
+            ytPlayerRef.current = null;
+        };
+    }, [ytVideoId, course?.id]);
+
+    // MP4 event handlers
     const handleTimeUpdate = () => {
         if (!videoRef.current || !course) return;
-
-        const currentTime = videoRef.current.currentTime;
-        const duration = videoRef.current.duration;
-
+        const { currentTime, duration } = videoRef.current;
         if (isNaN(duration)) return;
-
-        // Only save if significant change or hit end (throttling)
         if (Math.abs(currentTime - (course.watchedSeconds || 0)) > 2 || currentTime === duration) {
             const progress = Math.min(Math.round((currentTime / duration) * 100), 100);
-            updateCourse(course.id, {
-                watchedSeconds: currentTime,
-                progress: progress,
-                totalSeconds: duration
-            });
+            updateCourse(course.id, { watchedSeconds: currentTime, progress, totalSeconds: duration });
         }
     };
 
     const handleLoadedMetadata = () => {
-        if (videoRef.current && course) {
-            const duration = videoRef.current.duration;
-            if (isNaN(duration)) return;
-
-            // Restore last position
-            if (course.watchedSeconds) {
-                videoRef.current.currentTime = course.watchedSeconds;
-            }
-
-            // Update duration string if missing
-            if (!course.totalSeconds || course.duration === "0h 00m") {
-                const h = Math.floor(duration / 3600);
-                const m = Math.floor((duration % 3600) / 60);
-                const durationStr = `${h}h ${m}m`;
-                updateCourse(course.id, { totalSeconds: duration, duration: durationStr });
-            }
+        if (!videoRef.current || !course) return;
+        const { duration } = videoRef.current;
+        if (isNaN(duration)) return;
+        if (course.watchedSeconds) videoRef.current.currentTime = course.watchedSeconds;
+        if (!course.totalSeconds || course.duration === '0h 00m') {
+            updateCourse(course.id, { totalSeconds: duration, duration: fmtDuration(duration) });
         }
     };
 
     if (!course) return null;
 
-    const handleLessonClick = (courseId: string) => {
-        navigate(`/lesson/${courseId}`);
-    };
+    const tags = course.tags?.filter(Boolean) ?? [];
+    const instructorTitle = course.instructorTitle || 'Especialista ATL';
+    const description = course.description || `Exploração dos protocolos de ${course.title.toLowerCase()}. Nesta masterclass, focamos na implementação prática e resultados de alta performance para o ecossistema ATL.`;
 
     return (
         <div className="bg-[#030303] min-h-screen text-white font-body selection:bg-primary selection:text-black relative">
@@ -76,30 +117,16 @@ const VideoLesson: React.FC = () => {
             <main className="relative z-10 max-w-[1600px] mx-auto px-4 md:px-10 py-6 md:py-10">
                 <div className="flex flex-col lg:flex-row gap-8">
 
-                    {/* Main Content Area: Video and Course Info */}
+                    {/* Main Content */}
                     <div className="flex-1 space-y-6 md:space-y-10">
-        {/* Video Player Section with cinematic backdrop */}
+                        {/* Video Player */}
                         <div className="relative group">
                             <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-primary/5 to-transparent blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
                             <div className="relative aspect-video bg-black rounded-2xl md:rounded-[2.5rem] overflow-hidden border border-white/5 shadow-2xl">
-                                {course.videoUrl ? (() => {
-                                    // Detect YouTube URL and convert to embed
-                                    const ytMatch = course.videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
-                                    if (ytMatch) {
-                                        const videoId = ytMatch[1];
-                                        return (
-                                            <iframe
-                                                key={course.videoUrl}
-                                                src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`}
-                                                className="w-full h-full"
-                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                                allowFullScreen
-                                                title={course.title}
-                                            />
-                                        );
-                                    }
-                                    // Regular video file
-                                    return (
+                                {course.videoUrl ? (
+                                    ytVideoId ? (
+                                        <div id={ytPlayerId} className="w-full h-full" />
+                                    ) : (
                                         <video
                                             key={course.videoUrl}
                                             ref={videoRef}
@@ -110,8 +137,8 @@ const VideoLesson: React.FC = () => {
                                             onTimeUpdate={handleTimeUpdate}
                                             onLoadedMetadata={handleLoadedMetadata}
                                         />
-                                    );
-                                })() : (
+                                    )
+                                ) : (
                                     <div className="w-full h-full flex flex-col items-center justify-center space-y-6">
                                         <div className="w-20 h-20 rounded-full border border-white/10 flex items-center justify-center bg-white/[0.02] shadow-inner">
                                             <span className="material-symbols-outlined text-white/20 text-4xl">play_circle</span>
@@ -122,14 +149,14 @@ const VideoLesson: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Title and Description Section */}
+                        {/* Course Info */}
                         <div className="space-y-6 md:space-y-10 px-2 md:px-0">
                             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-white/10">
                                 <div className="space-y-3">
                                     <div className="flex items-center gap-3">
                                         <span className="premium-pill py-1 px-4 text-[8px] bg-primary/10 border-primary/20 text-primary">AULA ATUAL</span>
                                         <div className="h-1 w-24 bg-white/5 rounded-full overflow-hidden">
-                                            <div className="h-full bg-primary" style={{ width: `${course.progress}%` }}></div>
+                                            <div className="h-full bg-primary transition-all duration-500" style={{ width: `${course.progress}%` }}></div>
                                         </div>
                                         <span className="text-white/40 font-bold text-[10px] uppercase tracking-widest">{course.progress}%</span>
                                     </div>
@@ -146,14 +173,14 @@ const VideoLesson: React.FC = () => {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                                 <div className="md:col-span-2 space-y-6">
                                     <h3 className="font-headline text-xl md:text-2xl font-bold uppercase tracking-tight">Conteúdo da Sessão</h3>
-                                    <p className="text-white/60 text-base md:text-lg leading-relaxed font-light">
-                                        Exploração profunda dos protocolos de {course.title.toLowerCase()}. Nesta masterclass técnica, focamos na implementação prática e resultados de alta performance para o ecossistema ATL.
-                                    </p>
-                                    <div className="flex flex-wrap gap-4 pt-4">
-                                        <div className="px-4 py-2 rounded-lg bg-white/5 border border-white/5 text-[10px] font-label text-white/40 uppercase tracking-widest">4K Ultra HD</div>
-                                        <div className="px-4 py-2 rounded-lg bg-white/5 border border-white/5 text-[10px] font-label text-white/40 uppercase tracking-widest">Dolby Atmos</div>
-                                        <div className="px-4 py-2 rounded-lg bg-white/5 border border-white/5 text-[10px] font-label text-white/40 uppercase tracking-widest">Subtitles EN/PT</div>
-                                    </div>
+                                    <p className="text-white/60 text-base md:text-lg leading-relaxed font-light">{description}</p>
+                                    {tags.length > 0 && (
+                                        <div className="flex flex-wrap gap-4 pt-4">
+                                            {tags.map(tag => (
+                                                <div key={tag} className="px-4 py-2 rounded-lg bg-white/5 border border-white/5 text-[10px] font-label text-white/40 uppercase tracking-widest">{tag}</div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="liquid-glass-soft p-8 space-y-6">
@@ -164,7 +191,7 @@ const VideoLesson: React.FC = () => {
                                         </div>
                                         <div>
                                             <p className="font-bold text-lg text-white">{course.instructor}</p>
-                                            <p className="text-[10px] text-primary font-label uppercase tracking-[3px] mt-1">Specialist</p>
+                                            <p className="text-[10px] text-primary font-label uppercase tracking-[3px] mt-1">{instructorTitle}</p>
                                         </div>
                                     </div>
                                     <button className="w-full py-3 rounded-lg border border-white/5 bg-white/[0.03] text-[9px] font-label uppercase tracking-widest hover:bg-white hover:text-black transition-all">Ver Perfil</button>
@@ -173,7 +200,7 @@ const VideoLesson: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Sidebar: Schedule */}
+                    {/* Sidebar */}
                     <div className="w-full lg:w-[450px] shrink-0">
                         <div className="liquid-glass-card p-6 md:p-10 flex flex-col lg:max-h-[85vh] sticky top-10 md:top-32">
                             <div className="flex items-center justify-between mb-10">
@@ -192,10 +219,10 @@ const VideoLesson: React.FC = () => {
                                     return (
                                         <button
                                             key={item.id}
-                                            onClick={() => handleLessonClick(item.id)}
+                                            onClick={() => navigate(`/lesson/${item.id}`)}
                                             className={`w-full group text-left p-5 rounded-2xl border transition-all duration-500 flex items-center gap-5 ${isCurrent ? 'bg-primary/10 border-primary/40 shadow-[0_20px_40px_rgba(0,255,135,0.1)]' : 'bg-white/[0.02] border-white/5 hover:border-white/20 hover:bg-white/[0.08]'}`}
                                         >
-                                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-all duration-500 ${isCurrent ? 'bg-primary text-black shadow-[0_0_20px_rgba(0,255,135,0.5)] rotate-0' : 'bg-black/60 border border-white/10 rotate-3 group-hover:rotate-0'}`}>
+                                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-all duration-500 ${isCurrent ? 'bg-primary text-black shadow-[0_0_20px_rgba(0,255,135,0.5)]' : 'bg-black/60 border border-white/10 rotate-3 group-hover:rotate-0'}`}>
                                                 {isCurrent ? (
                                                     <span className="material-symbols-outlined text-[24px]">play_circle</span>
                                                 ) : (

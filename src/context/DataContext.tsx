@@ -2,9 +2,10 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 export interface Course {
-    id: string; // no supabase usaremos uuid ou string gerada
+    id: string;
     title: string;
     instructor: string;
+    instructorTitle?: string;
     duration: string;
     icon: string;
     progress: number;
@@ -13,6 +14,8 @@ export interface Course {
     watchedSeconds?: number;
     totalSeconds?: number;
     lastWatchedAt?: number;
+    description?: string;
+    tags?: string[];
 }
 
 export interface Sector {

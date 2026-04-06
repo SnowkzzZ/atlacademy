@@ -5,6 +5,7 @@ CREATE TABLE courses (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   title text NOT NULL,
   instructor text NOT NULL,
+  "instructorTitle" text DEFAULT 'Especialista ATL',
   duration text,
   icon text,
   progress integer DEFAULT 0,
@@ -12,7 +13,9 @@ CREATE TABLE courses (
   "thumbnailUrl" text,
   "watchedSeconds" integer DEFAULT 0,
   "totalSeconds" integer DEFAULT 0,
-  "lastWatchedAt" bigint DEFAULT 0
+  "lastWatchedAt" bigint DEFAULT 0,
+  description text,
+  tags text[] DEFAULT '{}'
 );
 
 CREATE TABLE sectors (
@@ -28,3 +31,8 @@ CREATE TABLE articles (
   author text NOT NULL,
   "createdAt" bigint
 );
+
+-- If UPGRADING an existing database, run these ALTER TABLE statements:
+-- ALTER TABLE courses ADD COLUMN IF NOT EXISTS "instructorTitle" text DEFAULT 'Especialista ATL';
+-- ALTER TABLE courses ADD COLUMN IF NOT EXISTS description text;
+-- ALTER TABLE courses ADD COLUMN IF NOT EXISTS tags text[] DEFAULT '{}';
