@@ -140,27 +140,23 @@ const Login: React.FC = () => {
                         </div>
 
                         {/* Logo and Typography */}
-                        <div className="w-full flex flex-col items-center text-center space-y-7 relative z-10 mt-2 mb-8">
+                        <div className="w-full flex flex-col items-center text-center space-y-4 relative z-10 mb-6">
                             
                             {/* Decorative framing for logo */}
-                            <div className="relative mb-2">
+                            <div className="relative">
                                 <div className="absolute inset-0 bg-primary/20 blur-[40px] rounded-full scale-150 opacity-60"></div>
                                 <motion.img 
                                     whileHover={{ scale: 1.05, filter: "drop-shadow(0px 0px 25px rgba(0,255,135,0.4))" }}
                                     transition={{ duration: 0.4 }}
                                     src={logoBase64} 
                                     alt="ATL Logo" 
-                                    className="relative h-28 md:h-36 object-contain z-10" 
+                                    className="relative h-24 md:h-32 object-contain z-10" 
                                 />
                             </div>
 
-                            <div className="space-y-2 w-full pt-4 relative">
-                                <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-12 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent"></div>
-                                
-                                <h1 className="flex flex-col gap-2">
-                                    <span className="font-headline text-4xl md:text-5xl font-bold tracking-tight text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.15)] mt-4">
-                                        ATL Academy
-                                    </span>
+                            <div className="w-full relative">
+                                <h1 className="font-headline text-4xl md:text-5xl font-bold tracking-tight text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.15)]">
+                                    ATL Academy
                                 </h1>
                             </div>
                         </div>
