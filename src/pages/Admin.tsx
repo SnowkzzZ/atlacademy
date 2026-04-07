@@ -208,6 +208,9 @@ const Admin: React.FC = () => {
     const handleSaveLesson = (e: React.FormEvent) => {
         e.preventDefault();
         if (!curLesson.title || !editingLessonsCourseId) return;
+        
+        console.log('[Admin] Saving Lesson:', { ...curLesson, courseId: editingLessonsCourseId });
+        
         if (curLesson.id) {
             updateLesson(curLesson.id, curLesson as Lesson);
         } else {

@@ -51,6 +51,7 @@ interface DataContextType {
     lessons: Lesson[];
     sectors: Sector[];
     articles: Article[];
+    isLoading: boolean;
     addCourse: (course: Omit<Course, 'id'>) => void;
     updateCourse: (id: string, updatedCourse: Partial<Course>) => void;
     deleteCourse: (id: string) => void;
@@ -67,7 +68,7 @@ interface DataContextType {
 }
 
 const defaultCourses: Course[] = [
-    { id: '00000000-0000-0000-0000-000000000001', title: 'Modernização de Sistemas Estruturais', instructor: 'Dr. Julian Vance', duration: '00h 00m', icon: 'architecture', progress: 0, thumbnailUrl: '/thumbnails/hero.png', watchedSeconds: 0, totalSeconds: 0, lastWatchedAt: 0, videoUrl: 'https://cdn.pixabay.com/video/2021/08/04/83906-584732168_tiny.mp4' },
+    { id: '00000000-0000-0000-0000-000000000001', title: 'Modernização de Sistemas Estruturais', instructor: 'Dr. Julian Vance', duration: '00h 00m', icon: 'architecture', progress: 0, thumbnailUrl: '/thumbnails/hero.png', watchedSeconds: 0, totalSeconds: 0, lastWatchedAt: 0, videoUrl: 'https://www.youtube.com/watch?v=aqz-KE-bpKQ' },
     { id: '00000000-0000-0000-0000-000000000002', title: 'Rede Estratégica de Inteligência', instructor: 'Sarah Chen', duration: '00h 00m', icon: 'hub', progress: 0, thumbnailUrl: '/thumbnails/course_2.png', watchedSeconds: 0, totalSeconds: 0, lastWatchedAt: 0 },
 ];
 
@@ -89,9 +90,31 @@ const defaultArticles: Article[] = [
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
+// ── localStorage progress helpers ─────────────────────────────────────────
+const LS_PROGRESS_KEY = 'atl_progress_v2';
+
+interface ProgressEntry {
+    watched_seconds: number;
+    progress: number;
+    last_watched_at: number;
+}
+
+function lsLoadProgress(): Record<string, ProgressEntry> {
+    try { return JSON.parse(localStorage.getItem(LS_PROGRESS_KEY) ?? '{}'); } catch { return {}; }
+}
+
+function lsSaveProgress(itemId: string, entry: ProgressEntry) {
+    try {
+        const all = lsLoadProgress();
+        all[itemId] = entry;
+        localStorage.setItem(LS_PROGRESS_KEY, JSON.stringify(all));
+    } catch { }
+}
+
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { user } = useAuth();
     const userId = user?.id ?? null;
+    const isBypassUser = userId === 'admin-master';
 
     const [courses, setCourses] = useState<Course[]>(defaultCourses);
     const [lessons, setLessons] = useState<Lesson[]>([]);
@@ -111,44 +134,51 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     supabase.from('articles').select('*'),
                 ]);
 
-                // DB is authoritative — only fall back to defaults if DB is empty
-                let finalCourses: Course[] = defaultCourses;
-                if (coursesRes.data && coursesRes.data.length > 0) {
-                    finalCourses = coursesRes.data;
+                // DB is authoritative
+                let finalCourses: Course[] = (coursesRes.data && coursesRes.data.length > 0) ? coursesRes.data : defaultCourses;
+
+                // Normalize lessons: Supabase may return "courseId" with quotes as the key
+                // We ensure the field is always mapped to `courseId` on the JS object
+                let rawLessons: Lesson[] = (lessonsRes.data ?? []).map((l: any) => ({
+                    id: l.id,
+                    courseId: l.courseId ?? l['courseId'] ?? l.course_id ?? '',
+                    title: l.title,
+                    videoUrl: l.videoUrl ?? l['videoUrl'] ?? '',
+                    thumbnailUrl: l.thumbnailUrl ?? l['thumbnailUrl'] ?? '',
+                    duration: l.duration ?? '00h 00m',
+                    totalSeconds: l.totalSeconds ?? l['totalSeconds'] ?? 0,
+                    position: l.position ?? 0,
+                    progress: 0,
+                    watchedSeconds: 0,
+                }));
+
+                // Load progress
+                const lsProgress = lsLoadProgress();
+                let serverProgress: any[] = [];
+
+                if (userId && !isBypassUser) {
+                    const { data } = await supabase.from('user_progress').select('*').eq('user_id', userId);
+                    serverProgress = data ?? [];
                 }
 
-                // Load per-user progress and merge into courses
-                if (userId && finalCourses.length > 0) {
-                    const { data: progressRows } = await supabase
-                        .from('user_progress')
-                        .select('*')
-                        .eq('user_id', userId);
+                // Merge: Supabase (if exists) takes priority, then LocalStorage
+                const getMergedProgress = (itemId: string) => {
+                    const s = serverProgress.find(r => r.course_id === itemId);
+                    const l = lsProgress[itemId];
+                    if (s) return { progress: s.progress ?? 0, watchedSeconds: s.watched_seconds ?? 0, lastWatchedAt: s.last_watched_at ?? 0 };
+                    if (l) return { progress: l.progress ?? 0, watchedSeconds: l.watched_seconds ?? 0, lastWatchedAt: l.last_watched_at ?? 0 };
+                    return { progress: 0, watchedSeconds: 0, lastWatchedAt: 0 };
+                };
 
-                    if (progressRows && progressRows.length > 0) {
-                        finalCourses = finalCourses.map(course => {
-                            const p = progressRows.find((r: any) => r.course_id === course.id);
-                            return p ? { ...course, progress: p.progress ?? 0, watchedSeconds: p.watched_seconds ?? 0, lastWatchedAt: p.last_watched_at ?? 0 } : course;
-                        });
-
-                        // Also merge lesson progress
-                        if (lessonsRes.data) {
-                            const mergedLessons = lessonsRes.data.map((l: any) => {
-                                const p = progressRows.find((r: any) => r.course_id === l.id);
-                                return p ? { ...l, progress: p.progress ?? 0, watchedSeconds: p.watched_seconds ?? 0 } : l;
-                            });
-                            setLessons(mergedLessons);
-                        }
-                    } else if (lessonsRes.data) {
-                        setLessons(lessonsRes.data);
-                    }
-                } else if (lessonsRes.data) {
-                    setLessons(lessonsRes.data);
-                }
+                finalCourses = finalCourses.map(c => ({ ...c, ...getMergedProgress(c.id) }));
+                rawLessons = rawLessons.map(l => ({ ...l, ...getMergedProgress(l.id) }));
 
                 setCourses(finalCourses);
-                if (sectorsRes.data && sectorsRes.data.length > 0) setSectors(sectorsRes.data);
-                if (articlesRes.data && articlesRes.data.length > 0) setArticles(articlesRes.data);
+                setLessons(rawLessons);
+                if (sectorsRes.data?.length) setSectors(sectorsRes.data);
+                if (articlesRes.data?.length) setArticles(articlesRes.data);
 
+                console.log(`[DataContext] Loaded ${finalCourses.length} courses, ${rawLessons.length} lessons`);
             } catch (err) {
                 console.error('Error fetching data:', err);
             } finally {
@@ -156,63 +186,55 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
         };
         fetchData();
-    }, [userId]);
+    }, [userId, isBypassUser]);
 
-    // ── Courses ────────────────────────────────────────────────────────────
+    // ── Mutations ──────────────────────────────────────────────────────────
     const addCourse = async (course: Omit<Course, 'id'>) => {
         const tempId = crypto.randomUUID();
-        setCourses(prev => [...prev, { ...course, id: tempId }]);
+        setCourses(prev => [...prev, { ...course, id: tempId, progress: 0 }]);
         if (isSupabaseConfigured) {
-            const { data, error } = await supabase.from('courses').insert([{ ...course }]).select().single();
-            if (!error && data) setCourses(prev => prev.map(c => c.id === tempId ? data : c));
+            const { data, error } = await supabase.from('courses').insert([course]).select().single();
+            if (!error && data) setCourses(prev => prev.map(c => c.id === tempId ? { ...data, progress: 0 } : c));
+            else if (error) console.warn('[DataProvider] Supabase insert failed:', error.message);
         }
     };
 
-    const updateCourse = async (id: string, updatedFields: Partial<Course>) => {
-        const full = { ...courses.find(c => c.id === id), ...updatedFields } as Course;
-        setCourses(prev => prev.map(c => c.id === id ? full : c));
+    const updateCourse = async (id: string, updated: Partial<Course>) => {
+        setCourses(prev => prev.map(c => c.id === id ? { ...c, ...updated } : c));
         if (isSupabaseConfigured) {
-            const fields = ['id', 'title', 'instructor', 'instructorTitle', 'duration', 'icon', 'videoUrl', 'thumbnailUrl', 'description', 'tags'];
-            const payload: Record<string, unknown> = {};
-            for (const key of fields) {
-                const val = (full as unknown as Record<string, unknown>)[key];
-                if (val !== undefined) payload[key] = val;
-            }
-            const { error } = await supabase.from('courses').upsert(payload);
-            if (error) console.warn('updateCourse:', error.message);
+            const { error } = await supabase.from('courses').update(updated).eq('id', id);
+            if (error) console.warn('[DataProvider] Supabase update failed:', error.message);
         }
     };
 
     const deleteCourse = async (id: string) => {
         setCourses(prev => prev.filter(c => c.id !== id));
-        setLessons(prev => prev.filter(l => l.courseId !== id));
         if (isSupabaseConfigured) await supabase.from('courses').delete().eq('id', id);
     };
 
-    // ── Lessons ────────────────────────────────────────────────────────────
     const addLesson = async (lesson: Omit<Lesson, 'id'>) => {
         const tempId = crypto.randomUUID();
-        setLessons(prev => [...prev, { ...lesson, id: tempId }]);
+        setLessons(prev => [...prev, { ...lesson, id: tempId, progress: 0 }]);
         if (isSupabaseConfigured) {
             const { data, error } = await supabase.from('lessons').insert([{
-                courseId: lesson.courseId, title: lesson.title,
-                videoUrl: lesson.videoUrl, thumbnailUrl: lesson.thumbnailUrl,
-                duration: lesson.duration, totalSeconds: lesson.totalSeconds || 0, position: lesson.position,
+                courseId: lesson.courseId,
+                title: lesson.title,
+                videoUrl: lesson.videoUrl,
+                thumbnailUrl: lesson.thumbnailUrl,
+                duration: lesson.duration,
+                totalSeconds: lesson.totalSeconds || 0,
+                position: lesson.position,
             }]).select().single();
-            if (!error && data) setLessons(prev => prev.map(l => l.id === tempId ? { ...data, courseId: data.courseId } : l));
+            if (!error && data) setLessons(prev => prev.map(l => l.id === tempId ? { ...data, courseId: data.courseId, progress: 0 } : l));
+            else if (error) console.warn('[DataProvider] Lesson insert failed:', error.message);
         }
     };
 
     const updateLesson = async (id: string, updated: Partial<Lesson>) => {
-        const full = { ...lessons.find(l => l.id === id), ...updated } as Lesson;
-        setLessons(prev => prev.map(l => l.id === id ? full : l));
+        setLessons(prev => prev.map(l => l.id === id ? { ...l, ...updated } : l));
         if (isSupabaseConfigured) {
-            const { error } = await supabase.from('lessons').upsert({
-                id: full.id, courseId: full.courseId, title: full.title,
-                videoUrl: full.videoUrl, thumbnailUrl: full.thumbnailUrl,
-                duration: full.duration, totalSeconds: full.totalSeconds || 0, position: full.position,
-            });
-            if (error) console.warn('updateLesson:', error.message);
+            const { error } = await supabase.from('lessons').update(updated).eq('id', id);
+            if (error) console.warn('[DataProvider] Lesson update failed:', error.message);
         }
     };
 
@@ -221,30 +243,32 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (isSupabaseConfigured) await supabase.from('lessons').delete().eq('id', id);
     };
 
-    // ── Progress (per user, per item — works for both courses and lessons) ─
     const updateProgress = async (itemId: string, watchedSeconds: number, newProgress: number, totalSeconds?: number) => {
-        // Update local lesson state
-        setLessons(prev => prev.map(l => {
-            if (l.id !== itemId) return l;
-            return { ...l, watchedSeconds, progress: Math.max(l.progress ?? 0, newProgress), ...(totalSeconds ? { totalSeconds } : {}) };
-        }));
-        // Update local course state (for course-level items without lessons)
-        setCourses(prev => prev.map(c => {
-            if (c.id !== itemId) return c;
-            return { ...c, watchedSeconds, progress: Math.max(c.progress ?? 0, newProgress), lastWatchedAt: Date.now(), ...(totalSeconds ? { totalSeconds } : {}) };
-        }));
-        // Save to Supabase
-        if (isSupabaseConfigured && userId) {
-            const existing = [...lessons, ...courses].find(x => x.id === itemId);
-            const maxProgress = Math.max((existing as any)?.progress ?? 0, newProgress);
-            await supabase.from('user_progress').upsert({
-                user_id: userId, course_id: itemId,
-                watched_seconds: watchedSeconds, progress: maxProgress, last_watched_at: Date.now(),
+        const now = Date.now();
+        const existingLesson = lessons.find(l => l.id === itemId);
+        const existingCourse = courses.find(c => c.id === itemId);
+        const maxProgress = Math.max((existingLesson?.progress ?? existingCourse?.progress ?? 0), newProgress);
+
+        // UI Update
+        const updateItem = (item: any) => ({ ...item, watchedSeconds, progress: maxProgress, lastWatchedAt: now, ...(totalSeconds ? { totalSeconds } : {}) });
+        setLessons(prev => prev.map(l => l.id === itemId ? updateItem(l) : l));
+        setCourses(prev => prev.map(c => c.id === itemId ? updateItem(c) : c));
+
+        lsSaveProgress(itemId, { watched_seconds: watchedSeconds, progress: maxProgress, last_watched_at: now });
+
+        if (isSupabaseConfigured && userId && !isBypassUser) {
+            const { error } = await supabase.from('user_progress').upsert({
+                user_id: userId,
+                course_id: itemId,
+                watched_seconds: watchedSeconds,
+                progress: maxProgress,
+                last_watched_at: now,
             }, { onConflict: 'user_id,course_id' });
+            if (error) console.warn('[Progress] Supabase sync error:', error.message);
         }
     };
 
-    // ── Sectors ────────────────────────────────────────────────────────────
+    // Sectors & Articles
     const addSector = async (name: string) => {
         const tempId = crypto.randomUUID();
         setSectors(prev => [...prev, { id: tempId, name }]);
@@ -254,30 +278,26 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
     const updateSector = async (id: string, name: string) => {
-        const full = { ...sectors.find(s => s.id === id), name } as Sector;
-        setSectors(prev => prev.map(s => s.id === id ? full : s));
-        if (isSupabaseConfigured) await supabase.from('sectors').upsert(full);
+        setSectors(prev => prev.map(s => s.id === id ? { ...s, name } : s));
+        if (isSupabaseConfigured) await supabase.from('sectors').update({ name }).eq('id', id);
     };
     const deleteSector = async (id: string) => {
         setSectors(prev => prev.filter(s => s.id !== id));
-        setArticles(prev => prev.filter(a => a.sectorId !== id));
         if (isSupabaseConfigured) await supabase.from('sectors').delete().eq('id', id);
     };
 
-    // ── Articles ───────────────────────────────────────────────────────────
     const addArticle = async (article: Omit<Article, 'id' | 'createdAt'>) => {
         const tempId = crypto.randomUUID();
-        const newArticle: Article = { ...article, id: tempId, createdAt: Date.now() };
-        setArticles(prev => [newArticle, ...prev]);
+        const createdAt = Date.now();
+        setArticles(prev => [{ ...article, id: tempId, createdAt }, ...prev]);
         if (isSupabaseConfigured) {
-            const { data, error } = await supabase.from('articles').insert([{ sectorId: article.sectorId, title: article.title, content: article.content, author: article.author, createdAt: newArticle.createdAt }]).select().single();
+            const { data, error } = await supabase.from('articles').insert([{ ...article, createdAt }]).select().single();
             if (!error && data) setArticles(prev => prev.map(a => a.id === tempId ? data : a));
         }
     };
     const updateArticle = async (id: string, updated: Partial<Article>) => {
-        const full = { ...articles.find(a => a.id === id), ...updated } as Article;
-        setArticles(prev => prev.map(a => a.id === id ? full : a));
-        if (isSupabaseConfigured) await supabase.from('articles').upsert(full);
+        setArticles(prev => prev.map(a => a.id === id ? { ...a, ...updated } : a));
+        if (isSupabaseConfigured) await supabase.from('articles').update(updated).eq('id', id);
     };
     const deleteArticle = async (id: string) => {
         setArticles(prev => prev.filter(a => a.id !== id));
@@ -294,12 +314,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return (
         <DataContext.Provider value={{
-            courses, lessons, sectors, articles,
+            courses, lessons, sectors, articles, isLoading,
             addCourse, updateCourse, deleteCourse,
             addLesson, updateLesson, deleteLesson,
             addSector, updateSector, deleteSector,
             addArticle, updateArticle, deleteArticle,
-            updateProgress,
+            updateProgress
         }}>
             {children}
         </DataContext.Provider>

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { useData, type Lesson } from '../context/DataContext';
 import { loadYouTubeAPI, getYouTubeId } from '../lib/youtube';
@@ -13,7 +13,7 @@ const fmtTime = (secs: number) => {
 
 const VideoLesson: React.FC = () => {
     const { id: courseId } = useParams();
-    const navigate = useNavigate();
+
     const { courses, lessons, updateCourse, updateProgress } = useData();
 
     const course = courses.find(c => c.id === courseId) || courses[0];
@@ -156,7 +156,7 @@ const VideoLesson: React.FC = () => {
     const instructorTitle = course.instructorTitle || 'Especialista ATL';
     const description = course.description || `Exploração dos protocolos de ${course.title.toLowerCase()}. Nesta masterclass, focamos na implementação prática e resultados de alta performance para o ecossistema ATL.`;
 
-    // Cronograma: lessons of THIS course, or fall back to all courses if no lessons
+    // Cronograma: lessons of THIS course ONLY
     const displayTitle = activeLesson?.title ?? course.title;
     const displayProgress = activeLesson?.progress ?? course.progress;
 
@@ -222,8 +222,11 @@ const VideoLesson: React.FC = () => {
                                         </div>
                                         <div className="flex items-center gap-2 shrink-0">
                                             <button onClick={() => {
-                                                if (ytPlayerRef.current) ytPlayerRef.current.seekTo(currentWatchedSeconds, true);
-                                                else if (videoRef.current) videoRef.current.currentTime = currentWatchedSeconds;
+                                                if (ytPlayerRef.current && ytPlayerRef.current.seekTo) {
+                                                    ytPlayerRef.current.seekTo(currentWatchedSeconds, true);
+                                                } else if (videoRef.current) {
+                                                    videoRef.current.currentTime = currentWatchedSeconds;
+                                                }
                                                 setShowResume(false);
                                             }} className="bg-primary text-black font-headline font-bold text-[10px] uppercase tracking-[2px] px-5 py-2.5 rounded-xl hover:bg-white transition-all">Retomar</button>
                                             <button onClick={() => setShowResume(false)} className="text-white/40 hover:text-white"><span className="material-symbols-outlined text-xl">close</span></button>
@@ -284,18 +287,17 @@ const VideoLesson: React.FC = () => {
                             <div className="flex items-center justify-between mb-8">
                                 <div>
                                     <h2 className="font-headline text-2xl font-bold tracking-tight uppercase leading-none">Cronograma</h2>
-                                    <p className="text-[10px] font-label text-white/30 uppercase tracking-[4px] mt-1">{course.title}</p>
+                                    <p className="text-[10px] font-label text-white/30 uppercase tracking-[4px] mt-1">Sessões Disponíveis</p>
                                 </div>
                                 <div className="bg-primary/10 border border-primary/20 px-4 py-1.5 rounded-full">
-                                    <span className="text-[10px] font-bold text-primary uppercase tracking-widest">
-                                        {hasLessons ? `${courseLessons.length} Aulas` : `${courses.length} Módulos`}
+                                    <span className="text-[10px] font-bold text-primary uppercase tracking-widest leading-none">
+                                        {courseLessons.length} AULA{courseLessons.length !== 1 ? 'S' : ''}
                                     </span>
                                 </div>
                             </div>
 
                             <div className="space-y-3 overflow-y-auto pr-2 custom-scrollbar flex-1">
-                                {hasLessons ? (
-                                    // Show THIS course's lessons only
+                                {courseLessons.length > 0 ? (
                                     courseLessons.map((lesson) => {
                                         const isActive = lesson.id === activeLesson?.id;
                                         const lessonProgress = lesson.progress ?? 0;
@@ -342,29 +344,15 @@ const VideoLesson: React.FC = () => {
                                         );
                                     })
                                 ) : (
-                                    // Fallback: show all courses if no lessons defined
-                                    courses.map((item, idx) => {
-                                        const isCurrent = item.id === course.id;
-                                        return (
-                                            <button
-                                                key={item.id}
-                                                onClick={() => navigate(`/lesson/${item.id}`)}
-                                                className={`w-full group text-left p-5 rounded-2xl border transition-all duration-500 flex items-center gap-5 ${isCurrent ? 'bg-primary/10 border-primary/40' : 'bg-white/[0.02] border-white/5 hover:border-white/20 hover:bg-white/[0.08]'}`}
-                                            >
-                                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${isCurrent ? 'bg-primary text-black' : 'bg-black/60 border border-white/10'}`}>
-                                                    {isCurrent ? <span className="material-symbols-outlined text-[22px]">play_circle</span> : <span className="font-headline font-bold text-sm text-white/40">{idx + 1}</span>}
-                                                </div>
-                                                <div className="flex-1 overflow-hidden">
-                                                    <p className={`text-sm font-bold truncate ${isCurrent ? 'text-primary' : 'text-white/70'}`}>{item.title}</p>
-                                                    <div className="flex items-center gap-3 mt-1.5 opacity-60">
-                                                        <span className="text-[10px] font-label text-white uppercase">{item.duration}</span>
-                                                        <span className="text-[10px] text-primary font-bold">{item.progress}%</span>
-                                                    </div>
-                                                </div>
-                                                {item.progress === 100 && <span className="material-symbols-outlined text-primary text-xl">check_circle</span>}
-                                            </button>
-                                        );
-                                    })
+                                    <div className="flex-1 flex flex-col items-center justify-center py-20 px-6 text-center space-y-4">
+                                        <div className="w-16 h-16 rounded-full bg-white/[0.02] border border-white/5 flex items-center justify-center">
+                                            <span className="material-symbols-outlined text-white/10 text-3xl">terminal</span>
+                                        </div>
+                                        <div>
+                                            <p className="text-white/40 font-headline text-sm uppercase tracking-widest font-bold">Base de Dados Vazia</p>
+                                            <p className="text-white/20 font-label text-[10px] uppercase tracking-[4px] mt-2 leading-relaxed">Nenhuma sessão adicional encontrada <br/> para o módulo: {course.title}</p>
+                                        </div>
+                                    </div>
                                 )}
                             </div>
                         </div>
