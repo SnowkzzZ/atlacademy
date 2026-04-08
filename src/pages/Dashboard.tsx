@@ -22,6 +22,10 @@ const Dashboard: React.FC = () => {
     const heroLink = heroCourse ? (heroLessonId ? `/lesson/${heroLessonId}` : `/lesson/${heroCourse.id}`) : "/explore";
 
     const heroProgress = heroCourse ? heroCourse.progress : 0;
+    const isHeroStarted = heroCourse && (heroCourse.watchedSeconds || 0) > 0;
+    
+    // Diagnostic
+    if (heroCourse) console.log(`[Dashboard] Hero: ${heroCourse.title}, Progress: ${heroCourse.progress}%, Watched: ${heroCourse.watchedSeconds}s`);
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -137,7 +141,7 @@ const Dashboard: React.FC = () => {
                             </div>
 
                             <Link to={heroLink} className="w-full md:w-auto bg-white text-black px-10 py-4 rounded-2xl font-headline font-bold text-[11px] tracking-[0.2em] hover:bg-primary transition-all shadow-[0_20px_40px_rgba(255,255,255,0.1)] uppercase">
-                                {heroProgress > 0 ? 'Continuar Aula' : 'Iniciar Aula'}
+                                {isHeroStarted ? 'Continuar Aula' : 'Iniciar Aula'}
                             </Link>
                         </motion.div>
                     </div>

@@ -176,7 +176,7 @@ const VideoLesson: React.FC = () => {
                         lastPlayerTimeRef.current = currentTime;
                         
                         const progress = Math.min(Math.floor((lastAccumulatedRef.current / duration) * 100), 100);
-                        updateProgress(currentItemId, lastAccumulatedRef.current, progress, duration, currentTime);
+                        updateProgress(currentItemId, lastAccumulatedRef.current, progress, currentTime);
                     } else {
                         // Apenas atualizamos a última posição para evitar saltos se pausar e voltar
                         lastPlayerTimeRef.current = currentTime;

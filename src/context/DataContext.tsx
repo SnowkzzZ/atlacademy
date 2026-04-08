@@ -254,16 +254,18 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 const finalCourses = mergedCourses.map(c => {
                     const cProg = getMergedProgress(c.id); // For course-level progress if any
                     const cLessons = finalLessons.filter(l => l.courseId === c.id);
-                    const avgProgress = cLessons.length > 0 
-                        ? Math.round(cLessons.reduce((acc, curr) => acc + (curr.progress || 0), 0) / cLessons.length) 
+                    const avgProgressRaw = cLessons.length > 0 
+                        ? (cLessons.reduce((acc, curr) => acc + (curr.progress || 0), 0) / cLessons.length) 
                         : (cProg.progress || 0);
+                    const avgProgress = avgProgressRaw > 0 ? Math.max(1, Math.ceil(avgProgressRaw)) : 0;
                     
+                    const courseWatchedSeconds = cLessons.reduce((acc, curr) => acc + (curr.watchedSeconds || 0), 0);
                     const lastWatchedLesson = [...cLessons].sort((a, b) => (b.lastWatchedAt || 0) - (a.lastWatchedAt || 0))[0];
 
                     return {
                         ...c,
                         progress: avgProgress,
-                        watchedSeconds: cProg.watchedSeconds || 0,
+                        watchedSeconds: courseWatchedSeconds || cProg.watchedSeconds || 0,
                         lastWatchedAt: lastWatchedLesson?.lastWatchedAt || cProg.lastWatchedAt || 0,
                         lastLessonId: lastWatchedLesson?.id
                     };
@@ -401,7 +403,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (isSupabaseConfigured) await supabase.from('articles').delete().eq('id', id);
     };
 
-    const updateProgress = async (itemId: string, watchedSeconds: number, newProgress: number, totalSeconds?: number, lastPosition?: number) => {
+    const updateProgress = async (itemId: string, watchedSeconds: number, newProgress: number, lastPosition?: number) => {
         const lastWatchedAt = Date.now();
         const entry: ProgressEntry = { watched_seconds: watchedSeconds, last_position: lastPosition ?? watchedSeconds, progress: newProgress, last_watched_at: lastWatchedAt };
         lsSaveProgress(itemId, entry);
@@ -424,11 +426,15 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     if (c.id === cId) {
                         const courseLessons = nextLessons.filter(l => l.courseId === cId);
                         const totalLessonProgress = courseLessons.reduce((acc, curr) => acc + (curr.progress || 0), 0);
-                        const avgProgress = courseLessons.length > 0 ? Math.round(totalLessonProgress / courseLessons.length) : 0;
+                        const avgProgressRaw = courseLessons.length > 0 ? (totalLessonProgress / courseLessons.length) : 0;
+                        const avgProgress = avgProgressRaw > 0 ? Math.max(1, Math.ceil(avgProgressRaw)) : 0;
                         
+                        const courseWatchedTotal = courseLessons.reduce((acc, curr) => acc + (curr.watchedSeconds || 0), 0);
+
                         return {
                             ...c,
                             progress: avgProgress,
+                            watchedSeconds: courseWatchedTotal,
                             lastWatchedAt,
                             lastLessonId: itemId
                         };
