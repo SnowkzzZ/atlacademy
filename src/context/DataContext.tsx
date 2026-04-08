@@ -239,10 +239,40 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     return { progress: 0, watchedSeconds: 0, last_position: 0, lastWatchedAt: 0 };
                 };
 
-                setCourses(mergedCourses);
-                setLessons(mergedLessons);
+                // 5. Final Mapping with Progress
+                const finalLessons = mergedLessons.map(l => {
+                    const prog = getMergedProgress(l.id);
+                    return {
+                        ...l,
+                        progress: prog.progress,
+                        watchedSeconds: prog.watchedSeconds,
+                        lastPosition: prog.last_position,
+                        lastWatchedAt: prog.lastWatchedAt
+                    };
+                });
 
-                console.log(`[DataContext] Sync Complete: ${mergedCourses.length} courses, ${mergedLessons.length} lessons`);
+                const finalCourses = mergedCourses.map(c => {
+                    const cProg = getMergedProgress(c.id); // For course-level progress if any
+                    const cLessons = finalLessons.filter(l => l.courseId === c.id);
+                    const avgProgress = cLessons.length > 0 
+                        ? Math.round(cLessons.reduce((acc, curr) => acc + (curr.progress || 0), 0) / cLessons.length) 
+                        : (cProg.progress || 0);
+                    
+                    const lastWatchedLesson = [...cLessons].sort((a, b) => (b.lastWatchedAt || 0) - (a.lastWatchedAt || 0))[0];
+
+                    return {
+                        ...c,
+                        progress: avgProgress,
+                        watchedSeconds: cProg.watchedSeconds || 0,
+                        lastWatchedAt: lastWatchedLesson?.lastWatchedAt || cProg.lastWatchedAt || 0,
+                        lastLessonId: lastWatchedLesson?.id
+                    };
+                });
+
+                setCourses(finalCourses);
+                setLessons(finalLessons);
+
+                console.log(`[DataContext] Sync Complete: ${finalCourses.length} courses, ${finalLessons.length} lessons`);
                 setSyncStatus('synced');
             } catch (err) {
                 console.error('[DataContext] Background sync failed:', err);
@@ -253,46 +283,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
         };
         fetchData();
-    }, []);
+    }, [userId, isBypassUser]);
 
-    useEffect(() => {
-        if (lessons.length > 0) {
-            const fetchProgress = async () => {
-                const lsProgress = lsLoadProgress();
-                let serverProgress: any[] = [];
-                if (userId && !isBypassUser && isSupabaseConfigured) {
-                    const { data } = await supabase.from('user_progress').select('*').eq('user_id', userId);
-                    serverProgress = data ?? [];
-                }
-
-                const mappedLessons = lessons.map(l => {
-                    const p = serverProgress.find(r => r.course_id === l.id) || lsProgress[l.id];
-                    return {
-                        ...l,
-                        progress: p?.progress || 0,
-                        watchedSeconds: p?.watched_seconds || 0,
-                        lastWatchedAt: p?.last_watched_at ? Number(p.last_watched_at) : (l.lastWatchedAt || 0),
-                        lastPosition: p?.last_position || 0,
-                    };
-                });
-                setLessons(mappedLessons);
-                
-                // Update courses with their cumulative progress and last watched info
-                setCourses(prev => prev.map(c => {
-                    const cLessons = mappedLessons.filter(l => l.courseId === c.id);
-                    const courseProgress = cLessons.length > 0 ? Math.round(cLessons.reduce((acc, curr) => acc + (curr.progress || 0), 0) / cLessons.length) : 0;
-                    const lastWatchedLesson = [...cLessons].sort((a, b) => (b.lastWatchedAt || 0) - (a.lastWatchedAt || 0))[0];
-                    return {
-                        ...c,
-                        progress: courseProgress,
-                        lastWatchedAt: lastWatchedLesson?.lastWatchedAt ?? c.lastWatchedAt,
-                        lastLessonId: lastWatchedLesson?.id
-                    };
-                }));
-            };
-            fetchProgress();
-        }
-    }, [lessons.length, userId, isBypassUser]);
+    // Removed separate progress effect to unify loading above
 
     // ── Mutations ──────────────────────────────────────────────────────────
     const addCourse = async (course: Omit<Course, 'id'>) => {
