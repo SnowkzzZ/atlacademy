@@ -64,7 +64,7 @@ interface DataContextType {
     addArticle: (article: Omit<Article, 'id' | 'createdAt'>) => void;
     updateArticle: (id: string, updated: Partial<Article>) => void;
     deleteArticle: (id: string) => void;
-    updateProgress: (itemId: string, watchedSeconds: number, newProgress: number, totalSeconds?: number) => void;
+    updateProgress: (itemId: string, watchedSeconds: number, newProgress: number, totalSeconds?: number, lastPosition?: number) => void;
     clearLocalCache: () => void;
     isSyncing: boolean;
     syncStatus: 'synced' | 'syncing' | 'error' | 'local-mode';
@@ -94,10 +94,11 @@ const defaultArticles: Article[] = [
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 // ── localStorage progress helpers ─────────────────────────────────────────
-const LS_PROGRESS_KEY = 'atl_progress_v2';
+const LS_PROGRESS_KEY = 'atl_progress_v3';
 
 interface ProgressEntry {
-    watched_seconds: number;
+    watched_seconds: number;   // Tempo real ACUMULADO assistindo
+    last_position: number;     // Última posição do player (para resume)
     progress: number;
     last_watched_at: number;
 }
@@ -180,7 +181,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             try {
                 const local = lsLoadContent();
                 
-                // Fetch from Supabase with a timeout or handled errors
                 const fetchPromise = Promise.all([
                     supabase.from('courses').select('*'),
                     supabase.from('lessons').select('*').order('position', { ascending: true }),
@@ -216,16 +216,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     if (!mergedLessons.find(sl => sl.id === ll.id)) mergedLessons.push(ll);
                 });
 
-                // 3. Merge Sectors & Articles
-                const mergedSectors = [...(sectorsRes.data || [])];
-                local.sectors.forEach(ls => {
-                    if (!mergedSectors.find(ss => ss.id === ls.id)) mergedSectors.push(ls);
-                });
-
-                const mergedArticles = [...(articlesRes.data || [])];
-                local.articles.forEach(la => {
-                    if (!mergedArticles.find(sa => sa.id === la.id)) mergedArticles.push(la);
-                });
+                setSectors(sectorsRes.data && sectorsRes.data.length > 0 ? sectorsRes.data : local.sectors.length > 0 ? local.sectors : defaultSectors);
+                setArticles(articlesRes.data && articlesRes.data.length > 0 ? articlesRes.data : local.articles.length > 0 ? local.articles : defaultArticles);
 
                 // 4. Load & Merge Progress
                 const lsProgress = lsLoadProgress();
@@ -238,35 +230,23 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 const getMergedProgress = (itemId: string) => {
                     const s = serverProgress.find(r => r.course_id === itemId);
                     const l = lsProgress[itemId];
-                    if (s) return { progress: s.progress ?? 0, watchedSeconds: s.watched_seconds ?? 0, lastWatchedAt: s.last_watched_at ?? 0 };
-                    if (l) return { progress: l.progress ?? 0, watchedSeconds: l.watched_seconds ?? 0, last_watched_at: l.last_watched_at ?? 0 };
-                    return { progress: 0, watchedSeconds: 0, lastWatchedAt: 0 };
+                    if (s) return { progress: s.progress ?? 0, watchedSeconds: s.watched_seconds ?? 0, last_position: s.last_position ?? 0, lastWatchedAt: s.last_watched_at ?? 0 };
+                    if (l) return { progress: l.progress ?? 0, watchedSeconds: l.watched_seconds ?? 0, last_position: l.last_position ?? 0, last_watched_at: l.last_watched_at ?? 0 };
+                    return { progress: 0, watchedSeconds: 0, last_position: 0, lastWatchedAt: 0 };
                 };
 
                 const finalCourses: Course[] = mergedCourses.map(c => {
                     const prog = getMergedProgress(c.id);
-                    return {
-                        ...c,
-                        progress: prog.progress,
-                        watchedSeconds: prog.watchedSeconds,
-                        lastWatchedAt: prog.lastWatchedAt
-                    } as Course;
+                    return { ...c, progress: prog.progress, watchedSeconds: prog.watchedSeconds, lastWatchedAt: prog.lastWatchedAt } as Course;
                 });
                 
                 const finalLessons: Lesson[] = mergedLessons.map(l => {
                     const prog = getMergedProgress(l.id);
-                    return {
-                        ...l,
-                        progress: prog.progress,
-                        watchedSeconds: prog.watchedSeconds,
-                        lastWatchedAt: prog.lastWatchedAt
-                    } as Lesson;
+                    return { ...l, progress: prog.progress, watchedSeconds: prog.watchedSeconds } as Lesson;
                 });
 
                 setCourses(finalCourses);
                 setLessons(finalLessons);
-                setSectors(mergedSectors.length > 0 ? mergedSectors : defaultSectors);
-                setArticles(mergedArticles.length > 0 ? mergedArticles : defaultArticles);
 
                 console.log(`[DataContext] Sync Complete: ${finalCourses.length} courses, ${finalLessons.length} lessons`);
                 setSyncStatus('synced');
@@ -285,53 +265,27 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const addCourse = async (course: Omit<Course, 'id'>) => {
         const tempId = crypto.randomUUID();
         const newCourse = { ...course, id: tempId, progress: 0 };
-        setCourses(prev => {
-            const next = [...prev, newCourse];
-            persistLocal({ courses: next });
-            return next;
-        });
+        setCourses(prev => { const next = [...prev, newCourse]; persistLocal({ courses: next }); return next; });
         if (isSupabaseConfigured) {
             const { data, error } = await supabase.from('courses').insert([{ ...course, id: tempId }]).select().single();
-            if (!error && data) {
-                setCourses(prev => {
-                    const next = prev.map(c => c.id === tempId ? { ...data, progress: 0 } : c);
-                    persistLocal({ courses: next });
-                    return next;
-                });
-            }
-            else if (error) console.warn('[DataProvider] Supabase insert failed:', error.message);
+            if (!error && data) setCourses(prev => { const next = prev.map(c => c.id === tempId ? { ...data, progress: 0 } : c); persistLocal({ courses: next }); return next; });
         }
     };
 
     const updateCourse = async (id: string, updated: Partial<Course>) => {
-        setCourses(prev => {
-            const next = prev.map(c => c.id === id ? { ...c, ...updated } : c);
-            persistLocal({ courses: next });
-            return next;
-        });
-        if (isSupabaseConfigured) {
-            const { error } = await supabase.from('courses').update(updated).eq('id', id);
-            if (error) console.warn('[DataProvider] Supabase update failed:', error.message);
-        }
+        setCourses(prev => { const next = prev.map(c => c.id === id ? { ...c, ...updated } : c); persistLocal({ courses: next }); return next; });
+        if (isSupabaseConfigured) await supabase.from('courses').update(updated).eq('id', id);
     };
 
     const deleteCourse = async (id: string) => {
-        setCourses(prev => {
-            const next = prev.filter(c => c.id !== id);
-            persistLocal({ courses: next });
-            return next;
-        });
+        setCourses(prev => { const next = prev.filter(c => c.id !== id); persistLocal({ courses: next }); return next; });
         if (isSupabaseConfigured) await supabase.from('courses').delete().eq('id', id);
     };
 
     const addLesson = async (lesson: Omit<Lesson, 'id'>) => {
         const tempId = crypto.randomUUID();
         const newLesson = { ...lesson, id: tempId, progress: 0 };
-        setLessons(prev => {
-            const next = [...prev, newLesson];
-            persistLocal({ lessons: next });
-            return next;
-        });
+        setLessons(prev => { const next = [...prev, newLesson]; persistLocal({ lessons: next }); return next; });
         if (isSupabaseConfigured) {
             const { data, error } = await supabase.from('lessons').insert([{
                 id: tempId,
@@ -343,141 +297,76 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 totalSeconds: lesson.totalSeconds || 0,
                 position: lesson.position,
             }]).select().single();
-            if (!error && data) {
-                setLessons(prev => {
-                    const next = prev.map(l => l.id === tempId ? { ...data, courseId: data.courseId, progress: 0 } : l);
-                    persistLocal({ lessons: next });
-                    return next;
-                });
-            }
-            else if (error) console.warn('[DataProvider] Lesson insert failed:', error.message);
+            if (!error && data) setLessons(prev => { const next = prev.map(l => l.id === tempId ? { ...data, courseId: data.courseId, progress: 0 } : l); persistLocal({ lessons: next }); return next; });
         }
     };
 
     const updateLesson = async (id: string, updated: Partial<Lesson>) => {
-        setLessons(prev => {
-            const next = prev.map(l => l.id === id ? { ...l, ...updated } : l);
-            persistLocal({ lessons: next });
-            return next;
-        });
-        if (isSupabaseConfigured) {
-            const { error } = await supabase.from('lessons').update(updated).eq('id', id);
-            if (error) console.warn('[DataProvider] Lesson update failed:', error.message);
-        }
+        setLessons(prev => { const next = prev.map(l => l.id === id ? { ...l, ...updated } : l); persistLocal({ lessons: next }); return next; });
+        if (isSupabaseConfigured) await supabase.from('lessons').update(updated).eq('id', id);
     };
 
     const deleteLesson = async (id: string) => {
-        setLessons(prev => {
-            const next = prev.filter(l => l.id !== id);
-            persistLocal({ lessons: next });
-            return next;
-        });
+        setLessons(prev => { const next = prev.filter(l => l.id !== id); persistLocal({ lessons: next }); return next; });
         if (isSupabaseConfigured) await supabase.from('lessons').delete().eq('id', id);
     };
 
-    const updateProgress = async (itemId: string, watchedSeconds: number, newProgress: number, totalSeconds?: number) => {
-        const now = Date.now();
-        const existingLesson = lessons.find(l => l.id === itemId);
-        const existingCourse = courses.find(c => c.id === itemId);
-        const maxProgress = Math.max((existingLesson?.progress ?? existingCourse?.progress ?? 0), newProgress);
-
-        // UI Update
-        const updateItem = (item: any) => ({ ...item, watchedSeconds, progress: maxProgress, lastWatchedAt: now, ...(totalSeconds ? { totalSeconds } : {}) });
-        setLessons(prev => prev.map(l => l.id === itemId ? updateItem(l) : l));
-        setCourses(prev => prev.map(c => c.id === itemId ? updateItem(c) : c));
-
-        lsSaveProgress(itemId, { watched_seconds: watchedSeconds, progress: maxProgress, last_watched_at: now });
-
-        if (isSupabaseConfigured && userId && !isBypassUser) {
-            const { error } = await supabase.from('user_progress').upsert({
-                user_id: userId,
-                course_id: itemId,
-                watched_seconds: watchedSeconds,
-                progress: maxProgress,
-                last_watched_at: now,
-            }, { onConflict: 'user_id,course_id' });
-            if (error) console.warn('[Progress] Supabase sync error:', error.message);
-        }
-    };
-
-    // Sectors & Articles
     const addSector = async (name: string) => {
         const tempId = crypto.randomUUID();
-        const newSector = { id: tempId, name };
-        setSectors(prev => {
-            const next = [...prev, newSector];
-            persistLocal({ sectors: next });
-            return next;
-        });
+        setSectors(prev => { const next = [...prev, { id: tempId, name }]; persistLocal({ sectors: next }); return next; });
         if (isSupabaseConfigured) {
             const { data, error } = await supabase.from('sectors').insert([{ name }]).select().single();
-            if (!error && data) {
-                setSectors(prev => {
-                    const next = prev.map(s => s.id === tempId ? data : s);
-                    persistLocal({ sectors: next });
-                    return next;
-                });
-            }
+            if (!error && data) setSectors(prev => { const next = prev.map(s => s.id === tempId ? data : s); persistLocal({ sectors: next }); return next; });
         }
     };
     const updateSector = async (id: string, name: string) => {
-        setSectors(prev => {
-            const next = prev.map(s => s.id === id ? { ...s, name } : s);
-            persistLocal({ sectors: next });
-            return next;
-        });
+        setSectors(prev => { const next = prev.map(s => s.id === id ? { ...s, name } : s); persistLocal({ sectors: next }); return next; });
         if (isSupabaseConfigured) await supabase.from('sectors').update({ name }).eq('id', id);
     };
     const deleteSector = async (id: string) => {
-        setSectors(prev => {
-            const next = prev.filter(s => s.id !== id);
-            persistLocal({ sectors: next });
-            return next;
-        });
+        setSectors(prev => { const next = prev.filter(s => s.id !== id); persistLocal({ sectors: next }); return next; });
         if (isSupabaseConfigured) await supabase.from('sectors').delete().eq('id', id);
     };
 
     const addArticle = async (article: Omit<Article, 'id' | 'createdAt'>) => {
         const tempId = crypto.randomUUID();
         const createdAt = Date.now();
-        const newArt = { ...article, id: tempId, createdAt };
-        setArticles(prev => {
-            const next = [newArt, ...prev];
-            persistLocal({ articles: next });
-            return next;
-        });
+        setArticles(prev => { const next = [{ ...article, id: tempId, createdAt }, ...prev]; persistLocal({ articles: next }); return next; });
         if (isSupabaseConfigured) {
             const { data, error } = await supabase.from('articles').insert([{ ...article, createdAt }]).select().single();
-            if (!error && data) {
-                setArticles(prev => {
-                    const next = prev.map(a => a.id === tempId ? data : a);
-                    persistLocal({ articles: next });
-                    return next;
-                });
-            }
+            if (!error && data) setArticles(prev => { const next = prev.map(a => a.id === tempId ? data : a); persistLocal({ articles: next }); return next; });
         }
     };
     const updateArticle = async (id: string, updated: Partial<Article>) => {
-        setArticles(prev => {
-            const next = prev.map(a => a.id === id ? { ...a, ...updated } : a);
-            persistLocal({ articles: next });
-            return next;
-        });
+        setArticles(prev => { const next = prev.map(a => a.id === id ? { ...a, ...updated } : a); persistLocal({ articles: next }); return next; });
         if (isSupabaseConfigured) await supabase.from('articles').update(updated).eq('id', id);
     };
     const deleteArticle = async (id: string) => {
-        setArticles(prev => {
-            const next = prev.filter(a => a.id !== id);
-            persistLocal({ articles: next });
-            return next;
-        });
+        setArticles(prev => { const next = prev.filter(a => a.id !== id); persistLocal({ articles: next }); return next; });
         if (isSupabaseConfigured) await supabase.from('articles').delete().eq('id', id);
     };
 
-    const clearLocalCache = () => {
-        localStorage.removeItem(LS_CONTENT_KEY);
-        window.location.reload();
+    const updateProgress = async (itemId: string, watchedSeconds: number, newProgress: number, totalSeconds?: number, lastPosition?: number) => {
+        const lastWatchedAt = Date.now();
+        const entry: ProgressEntry = { watched_seconds: watchedSeconds, last_position: lastPosition ?? watchedSeconds, progress: newProgress, last_watched_at: lastWatchedAt };
+        lsSaveProgress(itemId, entry);
+
+        setLessons(prev => prev.map(l => l.id === itemId ? { ...l, progress: newProgress, watchedSeconds } : l));
+        setCourses(prev => prev.map(c => c.id === itemId ? { ...c, progress: newProgress, watchedSeconds, totalSeconds: totalSeconds || c.totalSeconds } : c));
+
+        if (userId && !isBypassUser && isSupabaseConfigured) {
+            await supabase.from('user_progress').upsert({
+                user_id: userId,
+                course_id: itemId,
+                watched_seconds: watchedSeconds,
+                last_position: lastPosition ?? watchedSeconds,
+                progress: newProgress,
+                last_watched_at: lastWatchedAt
+            }, { onConflict: 'user_id,course_id' });
+        }
     };
+
+    const clearLocalCache = () => { localStorage.removeItem(LS_CONTENT_KEY); window.location.reload(); };
 
     if (isLoading) {
         return (

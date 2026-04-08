@@ -83,6 +83,10 @@ const VideoLesson: React.FC = () => {
     const videoRef = useRef<HTMLVideoElement>(null);
     const ytPlayerRef = useRef<any>(null);
     const progressIntervalRef = useRef<number | null>(null);
+    
+    // Tracking tempo real acumulado
+    const lastAccumulatedRef = useRef<number>(currentWatchedSeconds);
+    const lastPlayerTimeRef = useRef<number>(currentWatchedSeconds);
 
     // ── PLAYER LIFECYCLE ──────────────────────────────────────────────────
     useEffect(() => {
@@ -145,12 +149,27 @@ const VideoLesson: React.FC = () => {
         const startPoll = () => {
             if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
             progressIntervalRef.current = window.setInterval(() => {
-                if (ytPlayerRef.current && ytPlayerRef.current.getCurrentTime) {
-                    const time = ytPlayerRef.current.getCurrentTime();
-                    const dur = ytPlayerRef.current.getDuration();
-                    if (dur > 0) {
-                        const prog = Math.floor((time / dur) * 100);
-                        updateProgress(currentItemId, time, prog, dur);
+                if (ytPlayerRef.current && ytPlayerRef.current.getCurrentTime && ytPlayerRef.current.getPlayerState) {
+                    const status = ytPlayerRef.current.getPlayerState();
+                    const currentTime = ytPlayerRef.current.getCurrentTime();
+                    const duration = ytPlayerRef.current.getDuration();
+                    
+                    // YT.PlayerState.PLAYING = 1
+                    if (status === 1 && duration > 0) {
+                        const delta = currentTime - lastPlayerTimeRef.current;
+                        
+                        // Se o avanço for pequeno ( < 5s), contamos como tempo assistido real
+                        if (delta > 0 && delta < 5) {
+                            lastAccumulatedRef.current += delta;
+                        }
+                        
+                        lastPlayerTimeRef.current = currentTime;
+                        
+                        const progress = Math.min(Math.floor((lastAccumulatedRef.current / duration) * 100), 100);
+                        updateProgress(currentItemId, lastAccumulatedRef.current, progress, duration, currentTime);
+                    } else {
+                        // Apenas atualizamos a última posição para evitar saltos se pausar e voltar
+                        lastPlayerTimeRef.current = currentTime;
                     }
                 }
             }, 3000);
