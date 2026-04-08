@@ -21,9 +21,7 @@ const Dashboard: React.FC = () => {
     const heroLessonId = heroCourse?.lastLessonId;
     const heroLink = heroCourse ? (heroLessonId ? `/lesson/${heroLessonId}` : `/lesson/${heroCourse.id}`) : "/explore";
 
-    const heroProgress = heroCourse ?
-        (heroCourse.totalSeconds ? Math.min(Math.round(((heroCourse.watchedSeconds || 0) / heroCourse.totalSeconds) * 100), 100) : heroCourse.progress)
-        : 0;
+    const heroProgress = heroCourse ? heroCourse.progress : 0;
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -228,7 +226,7 @@ const Dashboard: React.FC = () => {
                                         <div className="h-2 w-full bg-white/5 relative">
                                             <motion.div
                                                 initial={{ width: 0 }}
-                                                whileInView={{ width: course.progress + '%' }}
+                                                animate={{ width: course.progress + '%' }}
                                                 className={`h-full bg-gradient-to-r from-${cName}/20 to-${cName.replace('bg-', '')} shadow-[0_0_20px_rgba(0,255,135,0.2)]`}
                                             ></motion.div>
                                         </div>

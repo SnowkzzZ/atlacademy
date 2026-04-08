@@ -415,27 +415,37 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         let parentCourseId: string | undefined;
 
-        setLessons(prev => prev.map(l => {
-            if (l.id === itemId) {
-                parentCourseId = l.courseId;
-                return { ...l, progress: newProgress, watchedSeconds, lastPosition: lastPosition ?? watchedSeconds, lastWatchedAt };
-            }
-            return l;
-        }));
+        setLessons(prev => {
+            const nextLessons = prev.map(l => {
+                if (l.id === itemId) {
+                    parentCourseId = l.courseId;
+                    return { ...l, progress: newProgress, watchedSeconds, lastPosition: lastPosition ?? watchedSeconds, lastWatchedAt };
+                }
+                return l;
+            });
 
-        setCourses(prev => prev.map(c => {
-            if (c.id === itemId || c.id === parentCourseId) {
-                return { 
-                    ...c, 
-                    progress: (c.id === itemId) ? newProgress : c.progress, 
-                    watchedSeconds: (c.id === itemId) ? watchedSeconds : c.watchedSeconds, 
-                    totalSeconds: totalSeconds || c.totalSeconds,
-                    lastWatchedAt,
-                    lastLessonId: (c.id === parentCourseId) ? itemId : c.lastLessonId
-                };
+            // If we have a parent course, update its aggregate progress
+            if (parentCourseId) {
+                const cId = parentCourseId;
+                setCourses(prevCourses => prevCourses.map(c => {
+                    if (c.id === cId) {
+                        const courseLessons = nextLessons.filter(l => l.courseId === cId);
+                        const totalLessonProgress = courseLessons.reduce((acc, curr) => acc + (curr.progress || 0), 0);
+                        const avgProgress = courseLessons.length > 0 ? Math.round(totalLessonProgress / courseLessons.length) : 0;
+                        
+                        return {
+                            ...c,
+                            progress: avgProgress,
+                            lastWatchedAt,
+                            lastLessonId: itemId
+                        };
+                    }
+                    return c;
+                }));
             }
-            return c;
-        }));
+
+            return nextLessons;
+        });
 
         if (userId && !isBypassUser && isSupabaseConfigured) {
             await supabase.from('user_progress').upsert({
