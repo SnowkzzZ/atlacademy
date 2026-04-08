@@ -15,12 +15,19 @@ export const loadYouTubeAPI = (): Promise<void> => {
     if (_apiPromise) return _apiPromise;
 
     _apiPromise = new Promise<void>((resolve) => {
-        const prev = window.onYouTubeIframeAPIReady;
-        window.onYouTubeIframeAPIReady = () => { prev?.(); resolve(); };
+        const existingCallback = window.onYouTubeIframeAPIReady;
+        window.onYouTubeIframeAPIReady = () => {
+            if (existingCallback) existingCallback();
+            resolve();
+        };
+        
         if (!document.querySelector('script[src="https://www.youtube.com/iframe_api"]')) {
             const tag = document.createElement('script');
             tag.src = 'https://www.youtube.com/iframe_api';
             document.head.appendChild(tag);
+        } else if (window.YT?.Player) {
+            // Script already being loaded or present, resolve if ready
+            resolve();
         }
     });
     return _apiPromise;

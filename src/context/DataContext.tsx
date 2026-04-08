@@ -65,6 +65,9 @@ interface DataContextType {
     updateArticle: (id: string, updated: Partial<Article>) => void;
     deleteArticle: (id: string) => void;
     updateProgress: (itemId: string, watchedSeconds: number, newProgress: number, totalSeconds?: number) => void;
+    clearLocalCache: () => void;
+    isSyncing: boolean;
+    syncStatus: 'synced' | 'syncing' | 'error' | 'local-mode';
 }
 
 const defaultCourses: Course[] = [
@@ -111,35 +114,92 @@ function lsSaveProgress(itemId: string, entry: ProgressEntry) {
     } catch { }
 }
 
+// ── localStorage content helpers (Dual-Sync Fallback) ─────────────────────
+const LS_CONTENT_KEY = 'atl_content_v2';
+
+interface ContentSync {
+    courses: Course[];
+    lessons: Lesson[];
+    sectors: Sector[];
+    articles: Article[];
+    updatedAt: number;
+}
+
+function lsLoadContent(): ContentSync {
+    try {
+        const data = JSON.parse(localStorage.getItem(LS_CONTENT_KEY) ?? 'null');
+        return data || { courses: [], lessons: [], sectors: [], articles: [], updatedAt: 0 };
+    } catch { return { courses: [], lessons: [], sectors: [], articles: [], updatedAt: 0 }; }
+}
+
+function lsSaveContent(content: Partial<ContentSync>) {
+    try {
+        const current = lsLoadContent();
+        const next = { ...current, ...content, updatedAt: Date.now() };
+        localStorage.setItem(LS_CONTENT_KEY, JSON.stringify(next));
+    } catch { }
+}
+
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { user } = useAuth();
     const userId = user?.id ?? null;
     const isBypassUser = userId === 'admin-master';
 
-    const [courses, setCourses] = useState<Course[]>(defaultCourses);
-    const [lessons, setLessons] = useState<Lesson[]>([]);
-    const [sectors, setSectors] = useState<Sector[]>(defaultSectors);
-    const [articles, setArticles] = useState<Article[]>(defaultArticles);
+    const [courses, setCourses] = useState<Course[]>(() => {
+        const local = lsLoadContent();
+        return local.courses.length > 0 ? local.courses : defaultCourses;
+    });
+    const [lessons, setLessons] = useState<Lesson[]>(() => lsLoadContent().lessons);
+    const [sectors, setSectors] = useState<Sector[]>(() => {
+        const local = lsLoadContent();
+        return local.sectors.length > 0 ? local.sectors : defaultSectors;
+    });
+    const [articles, setArticles] = useState<Article[]>(() => {
+        const local = lsLoadContent();
+        return local.articles.length > 0 ? local.articles : defaultArticles;
+    });
     const [isLoading, setIsLoading] = useState(true);
+    const [isSyncing, setIsSyncing] = useState(false);
+    const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'error' | 'local-mode'>('synced');
 
-    // ── Fetch all data ─────────────────────────────────────────────────────
+    const persistLocal = (content: Partial<ContentSync>) => {
+        lsSaveContent(content);
+    };
+
+    // ── Fetch and Sync ─────────────────────────────────────────────────────
     useEffect(() => {
         const fetchData = async () => {
-            if (!isSupabaseConfigured) { setIsLoading(false); return; }
+            if (!isSupabaseConfigured) {
+                setSyncStatus('local-mode');
+                setIsLoading(false);
+                return;
+            }
+            setIsSyncing(true);
+            setSyncStatus('syncing');
+
             try {
-                const [coursesRes, lessonsRes, sectorsRes, articlesRes] = await Promise.all([
+                const local = lsLoadContent();
+                
+                // Fetch from Supabase with a timeout or handled errors
+                const fetchPromise = Promise.all([
                     supabase.from('courses').select('*'),
                     supabase.from('lessons').select('*').order('position', { ascending: true }),
                     supabase.from('sectors').select('*'),
                     supabase.from('articles').select('*'),
                 ]);
 
-                // DB is authoritative
-                let finalCourses: Course[] = (coursesRes.data && coursesRes.data.length > 0) ? coursesRes.data : defaultCourses;
+                const [coursesRes, lessonsRes, sectorsRes, articlesRes] = await fetchPromise;
 
-                // Normalize lessons: Supabase may return "courseId" with quotes as the key
-                // We ensure the field is always mapped to `courseId` on the JS object
-                let rawLessons: Lesson[] = (lessonsRes.data ?? []).map((l: any) => ({
+                // 1. Merge Courses
+                const sbCourses = coursesRes.data || [];
+                const mergedCourses = [...sbCourses];
+                local.courses.forEach(lc => {
+                    if (!mergedCourses.find(sc => sc.id === lc.id)) mergedCourses.push(lc);
+                });
+                
+                // 2. Merge Lessons
+                const rawSbLessons = lessonsRes.data ?? [];
+                const sbLessons: Lesson[] = rawSbLessons.map((l: any) => ({
                     id: l.id,
                     courseId: l.courseId ?? l['courseId'] ?? l.course_id ?? '',
                     title: l.title,
@@ -151,37 +211,70 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     progress: 0,
                     watchedSeconds: 0,
                 }));
+                const mergedLessons = [...sbLessons];
+                local.lessons.forEach(ll => {
+                    if (!mergedLessons.find(sl => sl.id === ll.id)) mergedLessons.push(ll);
+                });
 
-                // Load progress
+                // 3. Merge Sectors & Articles
+                const mergedSectors = [...(sectorsRes.data || [])];
+                local.sectors.forEach(ls => {
+                    if (!mergedSectors.find(ss => ss.id === ls.id)) mergedSectors.push(ls);
+                });
+
+                const mergedArticles = [...(articlesRes.data || [])];
+                local.articles.forEach(la => {
+                    if (!mergedArticles.find(sa => sa.id === la.id)) mergedArticles.push(la);
+                });
+
+                // 4. Load & Merge Progress
                 const lsProgress = lsLoadProgress();
                 let serverProgress: any[] = [];
-
                 if (userId && !isBypassUser) {
                     const { data } = await supabase.from('user_progress').select('*').eq('user_id', userId);
                     serverProgress = data ?? [];
                 }
 
-                // Merge: Supabase (if exists) takes priority, then LocalStorage
                 const getMergedProgress = (itemId: string) => {
                     const s = serverProgress.find(r => r.course_id === itemId);
                     const l = lsProgress[itemId];
                     if (s) return { progress: s.progress ?? 0, watchedSeconds: s.watched_seconds ?? 0, lastWatchedAt: s.last_watched_at ?? 0 };
-                    if (l) return { progress: l.progress ?? 0, watchedSeconds: l.watched_seconds ?? 0, lastWatchedAt: l.last_watched_at ?? 0 };
+                    if (l) return { progress: l.progress ?? 0, watchedSeconds: l.watched_seconds ?? 0, last_watched_at: l.last_watched_at ?? 0 };
                     return { progress: 0, watchedSeconds: 0, lastWatchedAt: 0 };
                 };
 
-                finalCourses = finalCourses.map(c => ({ ...c, ...getMergedProgress(c.id) }));
-                rawLessons = rawLessons.map(l => ({ ...l, ...getMergedProgress(l.id) }));
+                const finalCourses: Course[] = mergedCourses.map(c => {
+                    const prog = getMergedProgress(c.id);
+                    return {
+                        ...c,
+                        progress: prog.progress,
+                        watchedSeconds: prog.watchedSeconds,
+                        lastWatchedAt: prog.lastWatchedAt
+                    } as Course;
+                });
+                
+                const finalLessons: Lesson[] = mergedLessons.map(l => {
+                    const prog = getMergedProgress(l.id);
+                    return {
+                        ...l,
+                        progress: prog.progress,
+                        watchedSeconds: prog.watchedSeconds,
+                        lastWatchedAt: prog.lastWatchedAt
+                    } as Lesson;
+                });
 
                 setCourses(finalCourses);
-                setLessons(rawLessons);
-                if (sectorsRes.data?.length) setSectors(sectorsRes.data);
-                if (articlesRes.data?.length) setArticles(articlesRes.data);
+                setLessons(finalLessons);
+                setSectors(mergedSectors.length > 0 ? mergedSectors : defaultSectors);
+                setArticles(mergedArticles.length > 0 ? mergedArticles : defaultArticles);
 
-                console.log(`[DataContext] Loaded ${finalCourses.length} courses, ${rawLessons.length} lessons`);
+                console.log(`[DataContext] Sync Complete: ${finalCourses.length} courses, ${finalLessons.length} lessons`);
+                setSyncStatus('synced');
             } catch (err) {
-                console.error('Error fetching data:', err);
+                console.error('[DataContext] Background sync failed:', err);
+                setSyncStatus('error');
             } finally {
+                setIsSyncing(false);
                 setIsLoading(false);
             }
         };
@@ -191,16 +284,31 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // ── Mutations ──────────────────────────────────────────────────────────
     const addCourse = async (course: Omit<Course, 'id'>) => {
         const tempId = crypto.randomUUID();
-        setCourses(prev => [...prev, { ...course, id: tempId, progress: 0 }]);
+        const newCourse = { ...course, id: tempId, progress: 0 };
+        setCourses(prev => {
+            const next = [...prev, newCourse];
+            persistLocal({ courses: next });
+            return next;
+        });
         if (isSupabaseConfigured) {
-            const { data, error } = await supabase.from('courses').insert([course]).select().single();
-            if (!error && data) setCourses(prev => prev.map(c => c.id === tempId ? { ...data, progress: 0 } : c));
+            const { data, error } = await supabase.from('courses').insert([{ ...course, id: tempId }]).select().single();
+            if (!error && data) {
+                setCourses(prev => {
+                    const next = prev.map(c => c.id === tempId ? { ...data, progress: 0 } : c);
+                    persistLocal({ courses: next });
+                    return next;
+                });
+            }
             else if (error) console.warn('[DataProvider] Supabase insert failed:', error.message);
         }
     };
 
     const updateCourse = async (id: string, updated: Partial<Course>) => {
-        setCourses(prev => prev.map(c => c.id === id ? { ...c, ...updated } : c));
+        setCourses(prev => {
+            const next = prev.map(c => c.id === id ? { ...c, ...updated } : c);
+            persistLocal({ courses: next });
+            return next;
+        });
         if (isSupabaseConfigured) {
             const { error } = await supabase.from('courses').update(updated).eq('id', id);
             if (error) console.warn('[DataProvider] Supabase update failed:', error.message);
@@ -208,15 +316,25 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const deleteCourse = async (id: string) => {
-        setCourses(prev => prev.filter(c => c.id !== id));
+        setCourses(prev => {
+            const next = prev.filter(c => c.id !== id);
+            persistLocal({ courses: next });
+            return next;
+        });
         if (isSupabaseConfigured) await supabase.from('courses').delete().eq('id', id);
     };
 
     const addLesson = async (lesson: Omit<Lesson, 'id'>) => {
         const tempId = crypto.randomUUID();
-        setLessons(prev => [...prev, { ...lesson, id: tempId, progress: 0 }]);
+        const newLesson = { ...lesson, id: tempId, progress: 0 };
+        setLessons(prev => {
+            const next = [...prev, newLesson];
+            persistLocal({ lessons: next });
+            return next;
+        });
         if (isSupabaseConfigured) {
             const { data, error } = await supabase.from('lessons').insert([{
+                id: tempId,
                 courseId: lesson.courseId,
                 title: lesson.title,
                 videoUrl: lesson.videoUrl,
@@ -225,13 +343,23 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 totalSeconds: lesson.totalSeconds || 0,
                 position: lesson.position,
             }]).select().single();
-            if (!error && data) setLessons(prev => prev.map(l => l.id === tempId ? { ...data, courseId: data.courseId, progress: 0 } : l));
+            if (!error && data) {
+                setLessons(prev => {
+                    const next = prev.map(l => l.id === tempId ? { ...data, courseId: data.courseId, progress: 0 } : l);
+                    persistLocal({ lessons: next });
+                    return next;
+                });
+            }
             else if (error) console.warn('[DataProvider] Lesson insert failed:', error.message);
         }
     };
 
     const updateLesson = async (id: string, updated: Partial<Lesson>) => {
-        setLessons(prev => prev.map(l => l.id === id ? { ...l, ...updated } : l));
+        setLessons(prev => {
+            const next = prev.map(l => l.id === id ? { ...l, ...updated } : l);
+            persistLocal({ lessons: next });
+            return next;
+        });
         if (isSupabaseConfigured) {
             const { error } = await supabase.from('lessons').update(updated).eq('id', id);
             if (error) console.warn('[DataProvider] Lesson update failed:', error.message);
@@ -239,7 +367,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const deleteLesson = async (id: string) => {
-        setLessons(prev => prev.filter(l => l.id !== id));
+        setLessons(prev => {
+            const next = prev.filter(l => l.id !== id);
+            persistLocal({ lessons: next });
+            return next;
+        });
         if (isSupabaseConfigured) await supabase.from('lessons').delete().eq('id', id);
     };
 
@@ -271,37 +403,80 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Sectors & Articles
     const addSector = async (name: string) => {
         const tempId = crypto.randomUUID();
-        setSectors(prev => [...prev, { id: tempId, name }]);
+        const newSector = { id: tempId, name };
+        setSectors(prev => {
+            const next = [...prev, newSector];
+            persistLocal({ sectors: next });
+            return next;
+        });
         if (isSupabaseConfigured) {
             const { data, error } = await supabase.from('sectors').insert([{ name }]).select().single();
-            if (!error && data) setSectors(prev => prev.map(s => s.id === tempId ? data : s));
+            if (!error && data) {
+                setSectors(prev => {
+                    const next = prev.map(s => s.id === tempId ? data : s);
+                    persistLocal({ sectors: next });
+                    return next;
+                });
+            }
         }
     };
     const updateSector = async (id: string, name: string) => {
-        setSectors(prev => prev.map(s => s.id === id ? { ...s, name } : s));
+        setSectors(prev => {
+            const next = prev.map(s => s.id === id ? { ...s, name } : s);
+            persistLocal({ sectors: next });
+            return next;
+        });
         if (isSupabaseConfigured) await supabase.from('sectors').update({ name }).eq('id', id);
     };
     const deleteSector = async (id: string) => {
-        setSectors(prev => prev.filter(s => s.id !== id));
+        setSectors(prev => {
+            const next = prev.filter(s => s.id !== id);
+            persistLocal({ sectors: next });
+            return next;
+        });
         if (isSupabaseConfigured) await supabase.from('sectors').delete().eq('id', id);
     };
 
     const addArticle = async (article: Omit<Article, 'id' | 'createdAt'>) => {
         const tempId = crypto.randomUUID();
         const createdAt = Date.now();
-        setArticles(prev => [{ ...article, id: tempId, createdAt }, ...prev]);
+        const newArt = { ...article, id: tempId, createdAt };
+        setArticles(prev => {
+            const next = [newArt, ...prev];
+            persistLocal({ articles: next });
+            return next;
+        });
         if (isSupabaseConfigured) {
             const { data, error } = await supabase.from('articles').insert([{ ...article, createdAt }]).select().single();
-            if (!error && data) setArticles(prev => prev.map(a => a.id === tempId ? data : a));
+            if (!error && data) {
+                setArticles(prev => {
+                    const next = prev.map(a => a.id === tempId ? data : a);
+                    persistLocal({ articles: next });
+                    return next;
+                });
+            }
         }
     };
     const updateArticle = async (id: string, updated: Partial<Article>) => {
-        setArticles(prev => prev.map(a => a.id === id ? { ...a, ...updated } : a));
+        setArticles(prev => {
+            const next = prev.map(a => a.id === id ? { ...a, ...updated } : a);
+            persistLocal({ articles: next });
+            return next;
+        });
         if (isSupabaseConfigured) await supabase.from('articles').update(updated).eq('id', id);
     };
     const deleteArticle = async (id: string) => {
-        setArticles(prev => prev.filter(a => a.id !== id));
+        setArticles(prev => {
+            const next = prev.filter(a => a.id !== id);
+            persistLocal({ articles: next });
+            return next;
+        });
         if (isSupabaseConfigured) await supabase.from('articles').delete().eq('id', id);
+    };
+
+    const clearLocalCache = () => {
+        localStorage.removeItem(LS_CONTENT_KEY);
+        window.location.reload();
     };
 
     if (isLoading) {
@@ -319,7 +494,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             addLesson, updateLesson, deleteLesson,
             addSector, updateSector, deleteSector,
             addArticle, updateArticle, deleteArticle,
-            updateProgress
+            updateProgress, clearLocalCache, isSyncing, syncStatus
         }}>
             {children}
         </DataContext.Provider>

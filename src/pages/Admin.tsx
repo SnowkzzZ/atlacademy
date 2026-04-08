@@ -176,7 +176,7 @@ const VideoUrlInput: React.FC<{
 
 // ── Admin Panel ────────────────────────────────────────────────────────────
 const Admin: React.FC = () => {
-    const { courses, lessons, sectors, articles, addCourse, updateCourse, deleteCourse, addLesson, updateLesson, deleteLesson, addSector, updateSector, deleteSector, addArticle, updateArticle, deleteArticle } = useData();
+    const { courses, lessons, sectors, articles, addCourse, updateCourse, deleteCourse, addLesson, updateLesson, deleteLesson, addSector, updateSector, deleteSector, addArticle, updateArticle, deleteArticle, clearLocalCache, isSyncing, syncStatus } = useData();
     const navigate = useNavigate();
 
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -297,6 +297,40 @@ const Admin: React.FC = () => {
         <div className="bg-[#030303] text-white/90 min-h-screen font-body relative pb-32">
             <div className="fixed inset-0 z-0 pointer-events-none">
                 <div className="absolute inset-0 bg-[#030303]"></div>
+                <header className="relative z-10 max-w-[1440px] mx-auto px-6 pt-10 pb-6 flex items-center justify-between border-b border-white/[0.05] mb-12">
+                <div className="flex items-center gap-6">
+                    <h1 className="font-headline text-3xl font-bold tracking-tight uppercase">Painel de Controle</h1>
+                    <div className="h-6 w-px bg-white/10 hidden md:block"></div>
+                    <div className="flex items-center gap-3">
+                        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border ${
+                            syncStatus === 'local-mode' ? 'bg-orange-500/10 border-orange-500/20' : 
+                            syncStatus === 'error' ? 'bg-red-500/10 border-red-500/20' :
+                            'bg-primary/10 border-primary/20'
+                        }`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${isSyncing ? 'animate-spin border-t-transparent border-white' : 'animate-pulse'} ${
+                                syncStatus === 'local-mode' ? 'bg-orange-400 shadow-[0_0_8px_#FB923C]' : 
+                                syncStatus === 'error' ? 'bg-red-400 shadow-[0_0_8px_#EF4444]' :
+                                'bg-primary shadow-[0_0_8px_#00FD86]'
+                            }`}></span>
+                            <span className={`text-[9px] font-bold tracking-widest uppercase ${
+                                syncStatus === 'local-mode' ? 'text-orange-400' : 
+                                syncStatus === 'error' ? 'text-red-400' :
+                                'text-primary'
+                            }`}>
+                                {syncStatus === 'syncing' ? 'Sincronizando...' : 
+                                 syncStatus === 'error' ? 'Erro na Nuvem (Salvo Local)' :
+                                 syncStatus === 'local-mode' ? 'Modo Offline (LocalStorage)' : 
+                                 'Conectado ao Supabase'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div className="flex items-center gap-4">
+                    <button onClick={handleLogout} className="text-white/40 hover:text-white transition-all text-[10px] font-label uppercase tracking-widest flex items-center gap-2">
+                        <span className="material-symbols-outlined text-base">logout</span> Sair
+                    </button>
+                </div>
+            </header>
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/5 blur-3xl"></div>
                 <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-500/5 blur-3xl"></div>
                 <div className="dot-grid absolute inset-0 opacity-[0.03]"></div>
@@ -657,6 +691,22 @@ const Admin: React.FC = () => {
                     )}
                 </section>
             </main>
+            <footer className="mt-20 py-10 border-t border-white/[0.05] relative z-10 px-6">
+                <div className="max-w-[1440px] mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div className="space-y-1 text-center md:text-left">
+                        <p className="text-white/20 font-label text-[10px] tracking-widest uppercase italic">Proteção de Dados Ativa: Salvamento Duplo Híbrido</p>
+                        <p className="text-white/10 text-[8px] uppercase tracking-[4px]">Integridade Garantida via localStorage + Supabase</p>
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <button 
+                            onClick={() => { if (confirm('Isso irá limpar seu cache local e atualizar a página. Você pode perder alterações NÃO sincronizadas com a nuvem. Continuar?')) clearLocalCache(); }} 
+                            className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white/30 hover:text-red-400 hover:border-red-400/30 transition-all font-label text-[9px] uppercase tracking-widest"
+                        >
+                            Limpar Cache Local
+                        </button>
+                    </div>
+                </div>
+            </footer>
         </div>
     );
 };
