@@ -84,7 +84,8 @@ const VideoLesson: React.FC = () => {
     const ytPlayerRef = useRef<any>(null);
     const progressIntervalRef = useRef<number | null>(null);
     
-    // Tracking tempo real acumulado
+    // Estados do Player e Capa
+    const [isPlayerStarted, setIsPlayerStarted] = useState(false);
     const lastAccumulatedRef = useRef<number>(currentWatchedSeconds);
     const lastPlayerTimeRef = useRef<number>(currentWatchedSeconds);
 
@@ -97,7 +98,10 @@ const VideoLesson: React.FC = () => {
                 await loadYouTubeAPI();
                 
                 // If the player already exists, just change the video
-                if (ytPlayerRef.current && ytPlayerRef.current.loadVideoById) {
+                // Se mudar de lição, resetamos a capa
+            setIsPlayerStarted(false);
+            
+            if (ytPlayerRef.current && ytPlayerRef.current.loadVideoById) {
                     console.log('[Player] Reusing existing player for:', ytVideoId);
                     ytPlayerRef.current.loadVideoById({
                         videoId: ytVideoId,
@@ -153,6 +157,11 @@ const VideoLesson: React.FC = () => {
                     const status = ytPlayerRef.current.getPlayerState();
                     const currentTime = ytPlayerRef.current.getCurrentTime();
                     const duration = ytPlayerRef.current.getDuration();
+                    
+                    // Se estiver tocando, a capa some (caso não tenha sumido pelo clique)
+                    if (status === 1 && !isPlayerStarted) {
+                        setIsPlayerStarted(true);
+                    }
                     
                     // YT.PlayerState.PLAYING = 1
                     if (status === 1 && duration > 0) {
@@ -283,6 +292,59 @@ const VideoLesson: React.FC = () => {
                                         <div className="text-center space-y-2">
                                             <p className="text-white/30 font-headline text-sm tracking-[6px] uppercase font-bold text-shadow">Sinal de Vídeo Indisponível</p>
                                             <p className="text-white/10 font-label text-[8px] uppercase tracking-[2px]">Aguardando conexão com o servidor de mídia</p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Custom Video Cover (Poster) */}
+                                {!isPlayerStarted && currentVideoUrl && (
+                                    <div className="absolute inset-0 z-20 overflow-hidden group/cover">
+                                        {/* Background Image */}
+                                        <div className="absolute inset-0 bg-black">
+                                            {activeLesson?.thumbnailUrl ? (
+                                                <img src={activeLesson.thumbnailUrl} className="w-full h-full object-cover opacity-60 group-hover/cover:scale-105 transition-transform duration-1000" alt="" />
+                                            ) : (
+                                                <div className="w-full h-full bg-gradient-to-br from-[#0a0a0a] to-[#111] flex items-center justify-center">
+                                                    <span className="material-symbols-outlined text-white/5 text-9xl">play_circle</span>
+                                                </div>
+                                            )}
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
+                                        </div>
+
+                                        {/* Action Area */}
+                                        <button 
+                                            onClick={() => {
+                                                setIsPlayerStarted(true);
+                                                if (ytPlayerRef.current) {
+                                                    ytPlayerRef.current.playVideo();
+                                                } else if (videoRef.current) {
+                                                    videoRef.current.play();
+                                                }
+                                            }}
+                                            className="absolute inset-0 flex flex-col items-center justify-center space-y-6 group/btn"
+                                        >
+                                            <div className="relative">
+                                                <div className="absolute -inset-8 bg-primary/20 rounded-full blur-3xl opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500"></div>
+                                                <div className="relative w-20 h-20 rounded-full bg-primary/10 border border-primary/40 backdrop-blur-xl flex items-center justify-center group-hover/btn:scale-110 group-hover/btn:bg-primary group-hover/btn:border-white transition-all duration-500 shadow-[0_0_50px_rgba(0,255,135,0.2)]">
+                                                    <span className="material-symbols-outlined text-primary text-4xl group-hover/btn:text-black group-hover/btn:fill-1 transition-colors">play_arrow</span>
+                                                </div>
+                                            </div>
+                                            <div className="text-center">
+                                                <p className="font-headline text-xl md:text-2xl font-bold uppercase tracking-[10px] text-white/90 group-hover/btn:text-white transition-colors">{displayTitle}</p>
+                                                <p className="font-label text-[9px] uppercase tracking-[4px] text-primary/60 mt-2">Clique para iniciar treinamento</p>
+                                            </div>
+                                        </button>
+
+                                        {/* Top Logo Badge */}
+                                        <div className="absolute top-8 left-8 flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 backdrop-blur-md flex items-center justify-center">
+                                                <img src="/logo.png" className="w-6 h-6 object-contain opacity-50" alt="" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                                                <span className="material-symbols-outlined text-white/20 text-xl">shield</span>
+                                            </div>
+                                            <div className="space-y-0.5">
+                                                <p className="text-[8px] font-label tracking-[3px] text-white/30 uppercase">ATL Academy</p>
+                                                <p className="text-[10px] font-headline font-bold uppercase tracking-widest text-white/70">Módulo de Especialização</p>
+                                            </div>
                                         </div>
                                     </div>
                                 )}
