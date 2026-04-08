@@ -506,7 +506,12 @@ const Admin: React.FC = () => {
                                                             value={curLesson.videoUrl || ''}
                                                             onUrlChange={url => setCurLesson(p => ({ ...p, videoUrl: url }))}
                                                             onDurationDetected={(duration, totalSeconds) => setCurLesson(p => ({ ...p, duration, totalSeconds }))}
-                                                            onThumbnailDetected={url => setCurLesson(p => ({ ...p, thumbnailUrl: url }))}
+                                                            onThumbnailDetected={url => {
+                                                                // Prioridade para anexo: só sobrescreve se estiver vazio ou se já for uma thumb do YT
+                                                                if (!curLesson.thumbnailUrl || curLesson.thumbnailUrl.includes('youtube.com') || curLesson.thumbnailUrl.includes('ytimg.com')) {
+                                                                    setCurLesson(p => ({ ...p, thumbnailUrl: url }));
+                                                                }
+                                                            }}
                                                         />
                                                         <div className="space-y-1.5">
                                                             <label className="font-label text-[9px] uppercase text-white/40 flex justify-between"><span>Thumbnail da Aula</span><span className="text-primary/40 text-[8px]">Auto-preenchida p/ YouTube</span></label>
