@@ -255,7 +255,7 @@ const VideoLesson: React.FC = () => {
 
             <Navbar isFixed={false} />
 
-            <main className="relative z-10 max-w-[1700px] mx-auto px-4 lg:px-12 py-6 md:py-10">
+            <main className="relative z-10 max-w-[1700px] mx-auto px-4 lg:px-12 py-4 md:py-10">
                 <div className="flex flex-col lg:flex-row gap-10">
 
                     {/* Main Content Area */}
@@ -270,7 +270,7 @@ const VideoLesson: React.FC = () => {
                         {/* Player Container */}
                         <div className="relative group">
                             <div className="absolute -inset-2 bg-gradient-to-r from-primary/10 via-transparent to-transparent blur-3xl opacity-0 group-hover:opacity-100 transition-duration-1000"></div>
-                            <div className="relative aspect-video bg-black rounded-3xl overflow-hidden border border-white/5 shadow-2xl ring-1 ring-white/5">
+                            <div className="relative aspect-video bg-black rounded-xl md:rounded-3xl overflow-hidden border border-white/5 shadow-2xl ring-1 ring-white/5">
                                 {currentVideoUrl ? (
                                     ytVideoId ? (
                                         <div id={ytPlayerId} className="w-full h-full" />
@@ -302,13 +302,12 @@ const VideoLesson: React.FC = () => {
                                     <div className="absolute inset-0 z-20 overflow-hidden group/cover">
                                         {/* Background Image */}
                                         <div className="absolute inset-0 bg-black">
-                                            {activeLesson?.thumbnailUrl ? (
-                                                <img src={activeLesson.thumbnailUrl} className="w-full h-full object-cover opacity-60 group-hover/cover:scale-105 transition-transform duration-1000" alt="" />
-                                            ) : (
-                                                <div className="w-full h-full bg-gradient-to-br from-[#0a0a0a] to-[#111] flex items-center justify-center">
-                                                    <span className="material-symbols-outlined text-white/5 text-9xl">play_circle</span>
-                                                </div>
-                                            )}
+                                            <img 
+                                                src={activeLesson?.thumbnailUrl || activeCourse?.thumbnailUrl || ""} 
+                                                alt="Video Cover" 
+                                                className="w-full h-full object-cover transition-transform duration-1000 group-hover/cover:scale-105 opacity-60"
+                                            />
+                                            <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
                                             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
                                         </div>
 

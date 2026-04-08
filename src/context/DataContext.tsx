@@ -226,7 +226,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 // 4. Load & Merge Progress
                 const lsProgress = lsLoadProgress();
                 let serverProgress: any[] = [];
-                if (userId && !isBypassUser) {
+                if (userId && isSupabaseConfigured) {
                     const { data } = await supabase.from('user_progress').select('*').eq('user_id', userId);
                     serverProgress = data ?? [];
                 }
@@ -446,7 +446,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             return nextLessons;
         });
 
-        if (userId && !isBypassUser && isSupabaseConfigured) {
+        if (userId && isSupabaseConfigured) {
             await supabase.from('user_progress').upsert({
                 user_id: userId,
                 course_id: itemId,
