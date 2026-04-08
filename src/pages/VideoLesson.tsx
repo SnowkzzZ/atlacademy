@@ -78,92 +78,100 @@ const VideoLesson: React.FC = () => {
     const ytVideoId = getYouTubeId(currentVideoUrl);
     const currentItemId = activeLesson?.id ?? activeCourse?.id ?? '';
     const currentWatchedSeconds = activeLesson?.watchedSeconds ?? activeCourse?.watchedSeconds ?? 0;
-    const ytPlayerId = `yt-player-${currentItemId}`;
+    const ytPlayerId = 'main-yt-player';
 
     const videoRef = useRef<HTMLVideoElement>(null);
     const ytPlayerRef = useRef<any>(null);
     const progressIntervalRef = useRef<number | null>(null);
 
+    // ── PLAYER LIFECYCLE ──────────────────────────────────────────────────
     useEffect(() => {
         if (!ytVideoId || !currentItemId || dataLoading) return;
-        let destroyed = false;
-        const stopPoll = () => { if (progressIntervalRef.current) { clearInterval(progressIntervalRef.current); progressIntervalRef.current = null; } };
-
-        const setup = async () => {
+        
+        const initPlayer = async () => {
             try {
                 await loadYouTubeAPI();
-                if (destroyed) return;
                 
-                // Slightly longer buffer to ensure React keyed-div remount is painted
-                await new Promise(r => setTimeout(r, 400));
-                
-                const el = document.getElementById(ytPlayerId);
-                if (destroyed || !el) {
-                    console.warn(`[VideoLesson] Target div ${ytPlayerId} not found or destroyed.`);
+                // If the player already exists, just change the video
+                if (ytPlayerRef.current && ytPlayerRef.current.loadVideoById) {
+                    console.log('[Player] Reusing existing player for:', ytVideoId);
+                    ytPlayerRef.current.loadVideoById({
+                        videoId: ytVideoId,
+                        startSeconds: currentWatchedSeconds
+                    });
                     return;
                 }
 
-                ytPlayerRef.current = new window.YT.Player(ytPlayerId, {
+                // Otherwise, wait for DOM and create it
+                await new Promise(r => setTimeout(r, 300));
+                const el = document.getElementById(ytPlayerId);
+                if (!el) return;
+
+                console.log('[Player] Initializing new player for:', ytVideoId);
+                ytPlayerRef.current = new (window as any).YT.Player(ytPlayerId, {
                     videoId: ytVideoId,
-                    playerVars: { 
-                        autoplay: 1, 
-                        rel: 0, 
-                        modestbranding: 1, 
-                        iv_load_policy: 3,
-                        origin: window.location.origin 
+                    playerVars: {
+                        autoplay: 1,
+                        modestbranding: 1,
+                        rel: 0,
+                        start: Math.floor(currentWatchedSeconds),
+                        origin: window.location.origin
                     },
                     events: {
-                        onReady: (event: any) => {
-                            if (destroyed) return;
-                            const totalSecs = event.target.getDuration?.() ?? 0;
-                            if (currentWatchedSeconds > 5) event.target.seekTo(currentWatchedSeconds, true);
-                            if (totalSecs > 0) updateProgress(currentItemId, currentWatchedSeconds, activeLesson?.progress ?? activeCourse?.progress ?? 0, totalSecs);
-                            
-                            progressIntervalRef.current = window.setInterval(() => {
-                                if (destroyed || !ytPlayerRef.current || !ytPlayerRef.current.getCurrentTime) return;
-                                const currentTime = ytPlayerRef.current.getCurrentTime();
-                                const duration = ytPlayerRef.current.getDuration();
-                                if (duration > 0) {
-                                    const progress = Math.min(Math.round((currentTime / duration) * 100), 100);
-                                    updateProgress(currentItemId, currentTime, progress, duration);
-                                }
-                            }, 5000);
+                        onReady: (e: any) => {
+                            if (currentWatchedSeconds > 0) e.target.seekTo(currentWatchedSeconds, true);
+                            e.target.playVideo();
+                            startPoll();
                         },
-                        onStateChange: (event: any) => {
-                            if (destroyed) return;
-                            if (event.data === 0) { // ENDED
-                                stopPoll();
-                                updateProgress(currentItemId, ytPlayerRef.current?.getDuration?.() ?? 0, 100);
-                                const idx = courseLessons.findIndex(l => l.id === activeLesson?.id);
-                                if (idx >= 0 && idx < courseLessons.length - 1) {
-                                    setTimeout(() => changeLesson(courseLessons[idx + 1].id), 2000);
+                        onStateChange: (e: any) => {
+                            // YT.PlayerState.ENDED = 0
+                            if (e.data === 0) {
+                                const cls = lessons.filter(l => l.courseId === activeCourse?.id).sort((a,b) => a.position - b.position);
+                                const idx = cls.findIndex(l => l.id === activeLesson?.id);
+                                if (idx !== -1 && idx < cls.length - 1) {
+                                    changeLesson(cls[idx+1].id);
                                 }
                             }
-                        },
-                        onError: (err: any) => {
-                            console.error('[YouTubePlayer] Error:', err);
                         }
                     }
                 });
             } catch (err) {
-                console.error('[VideoLesson] Setup failed:', err);
+                console.error('[Player] Init failed', err);
             }
         };
 
-        setup();
-        return () => {
-            destroyed = true;
-            stopPoll();
-            if (ytPlayerRef.current) {
-                try {
-                    if (ytPlayerRef.current.destroy) ytPlayerRef.current.destroy();
-                } catch (e) {
-                    console.warn('[VideoLesson] Error destroying player:', e);
+        initPlayer();
+
+        const startPoll = () => {
+            if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+            progressIntervalRef.current = window.setInterval(() => {
+                if (ytPlayerRef.current && ytPlayerRef.current.getCurrentTime) {
+                    const time = ytPlayerRef.current.getCurrentTime();
+                    const dur = ytPlayerRef.current.getDuration();
+                    if (dur > 0) {
+                        const prog = Math.floor((time / dur) * 100);
+                        updateProgress(currentItemId, time, prog, dur);
+                    }
                 }
+            }, 3000);
+        };
+
+        return () => {
+            // We don't destroy the player here unless the whole component unmounts
+            // because subsequent effects for the SAME component will reuse it.
+            if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+        };
+    }, [currentItemId, ytVideoId, dataLoading]);
+
+    // Clean up player on UNMOUNT only
+    useEffect(() => {
+        return () => {
+            if (ytPlayerRef.current) {
+                try { ytPlayerRef.current.destroy(); } catch {}
                 ytPlayerRef.current = null;
             }
         };
-    }, [ytVideoId, currentItemId, dataLoading]);
+    }, []);
 
     const handleTimeUpdate = () => {
         if (!videoRef.current) return;
@@ -236,7 +244,7 @@ const VideoLesson: React.FC = () => {
                             <div className="relative aspect-video bg-black rounded-3xl overflow-hidden border border-white/5 shadow-2xl ring-1 ring-white/5">
                                 {currentVideoUrl ? (
                                     ytVideoId ? (
-                                        <div key={currentItemId} id={ytPlayerId} className="w-full h-full" />
+                                        <div id={ytPlayerId} className="w-full h-full" />
                                     ) : (
                                         <video
                                             key={currentVideoUrl}
