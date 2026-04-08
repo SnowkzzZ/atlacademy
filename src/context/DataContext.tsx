@@ -15,6 +15,8 @@ export interface Course {
     watchedSeconds?: number;
     totalSeconds?: number;
     lastWatchedAt?: number;
+    lastPosition?: number;
+    lastLessonId?: string;
     description?: string;
     tags?: string[];
 }
@@ -30,6 +32,8 @@ export interface Lesson {
     position: number;
     progress?: number;
     watchedSeconds?: number;
+    lastPosition?: number;
+    lastWatchedAt?: number;
 }
 
 export interface Sector {
@@ -235,20 +239,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     return { progress: 0, watchedSeconds: 0, last_position: 0, lastWatchedAt: 0 };
                 };
 
-                const finalCourses: Course[] = mergedCourses.map(c => {
-                    const prog = getMergedProgress(c.id);
-                    return { ...c, progress: prog.progress, watchedSeconds: prog.watchedSeconds, lastWatchedAt: prog.lastWatchedAt } as Course;
-                });
-                
-                const finalLessons: Lesson[] = mergedLessons.map(l => {
-                    const prog = getMergedProgress(l.id);
-                    return { ...l, progress: prog.progress, watchedSeconds: prog.watchedSeconds } as Lesson;
-                });
+                setCourses(mergedCourses);
+                setLessons(mergedLessons);
 
-                setCourses(finalCourses);
-                setLessons(finalLessons);
-
-                console.log(`[DataContext] Sync Complete: ${finalCourses.length} courses, ${finalLessons.length} lessons`);
+                console.log(`[DataContext] Sync Complete: ${mergedCourses.length} courses, ${mergedLessons.length} lessons`);
                 setSyncStatus('synced');
             } catch (err) {
                 console.error('[DataContext] Background sync failed:', err);
@@ -259,7 +253,46 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
         };
         fetchData();
-    }, [userId, isBypassUser]);
+    }, []);
+
+    useEffect(() => {
+        if (lessons.length > 0) {
+            const fetchProgress = async () => {
+                const lsProgress = lsLoadProgress();
+                let serverProgress: any[] = [];
+                if (userId && !isBypassUser && isSupabaseConfigured) {
+                    const { data } = await supabase.from('user_progress').select('*').eq('user_id', userId);
+                    serverProgress = data ?? [];
+                }
+
+                const mappedLessons = lessons.map(l => {
+                    const p = serverProgress.find(r => r.course_id === l.id) || lsProgress[l.id];
+                    return {
+                        ...l,
+                        progress: p?.progress || 0,
+                        watchedSeconds: p?.watched_seconds || 0,
+                        lastWatchedAt: p?.last_watched_at ? Number(p.last_watched_at) : (l.lastWatchedAt || 0),
+                        lastPosition: p?.last_position || 0,
+                    };
+                });
+                setLessons(mappedLessons);
+                
+                // Update courses with their cumulative progress and last watched info
+                setCourses(prev => prev.map(c => {
+                    const cLessons = mappedLessons.filter(l => l.courseId === c.id);
+                    const courseProgress = cLessons.length > 0 ? Math.round(cLessons.reduce((acc, curr) => acc + (curr.progress || 0), 0) / cLessons.length) : 0;
+                    const lastWatchedLesson = [...cLessons].sort((a, b) => (b.lastWatchedAt || 0) - (a.lastWatchedAt || 0))[0];
+                    return {
+                        ...c,
+                        progress: courseProgress,
+                        lastWatchedAt: lastWatchedLesson?.lastWatchedAt ?? c.lastWatchedAt,
+                        lastLessonId: lastWatchedLesson?.id
+                    };
+                }));
+            };
+            fetchProgress();
+        }
+    }, [lessons.length, userId, isBypassUser]);
 
     // ── Mutations ──────────────────────────────────────────────────────────
     const addCourse = async (course: Omit<Course, 'id'>) => {
@@ -380,8 +413,29 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const entry: ProgressEntry = { watched_seconds: watchedSeconds, last_position: lastPosition ?? watchedSeconds, progress: newProgress, last_watched_at: lastWatchedAt };
         lsSaveProgress(itemId, entry);
 
-        setLessons(prev => prev.map(l => l.id === itemId ? { ...l, progress: newProgress, watchedSeconds } : l));
-        setCourses(prev => prev.map(c => c.id === itemId ? { ...c, progress: newProgress, watchedSeconds, totalSeconds: totalSeconds || c.totalSeconds } : c));
+        let parentCourseId: string | undefined;
+
+        setLessons(prev => prev.map(l => {
+            if (l.id === itemId) {
+                parentCourseId = l.courseId;
+                return { ...l, progress: newProgress, watchedSeconds, lastPosition: lastPosition ?? watchedSeconds, lastWatchedAt };
+            }
+            return l;
+        }));
+
+        setCourses(prev => prev.map(c => {
+            if (c.id === itemId || c.id === parentCourseId) {
+                return { 
+                    ...c, 
+                    progress: (c.id === itemId) ? newProgress : c.progress, 
+                    watchedSeconds: (c.id === itemId) ? watchedSeconds : c.watchedSeconds, 
+                    totalSeconds: totalSeconds || c.totalSeconds,
+                    lastWatchedAt,
+                    lastLessonId: (c.id === parentCourseId) ? itemId : c.lastLessonId
+                };
+            }
+            return c;
+        }));
 
         if (userId && !isBypassUser && isSupabaseConfigured) {
             await supabase.from('user_progress').upsert({

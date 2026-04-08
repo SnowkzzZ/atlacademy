@@ -78,6 +78,7 @@ const VideoLesson: React.FC = () => {
     const ytVideoId = getYouTubeId(currentVideoUrl);
     const currentItemId = activeLesson?.id ?? activeCourse?.id ?? '';
     const currentWatchedSeconds = activeLesson?.watchedSeconds ?? activeCourse?.watchedSeconds ?? 0;
+    const currentLastPosition = activeLesson?.lastPosition ?? activeCourse?.lastPosition ?? 0;
     const ytPlayerId = 'main-yt-player';
 
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -105,7 +106,7 @@ const VideoLesson: React.FC = () => {
                     console.log('[Player] Reusing existing player for:', ytVideoId);
                     ytPlayerRef.current.loadVideoById({
                         videoId: ytVideoId,
-                        startSeconds: currentWatchedSeconds
+                        startSeconds: currentLastPosition
                     });
                     return;
                 }
@@ -122,12 +123,12 @@ const VideoLesson: React.FC = () => {
                         autoplay: 1,
                         modestbranding: 1,
                         rel: 0,
-                        start: Math.floor(currentWatchedSeconds),
+                        start: Math.floor(currentLastPosition),
                         origin: window.location.origin
                     },
                     events: {
                         onReady: (e: any) => {
-                            if (currentWatchedSeconds > 0) e.target.seekTo(currentWatchedSeconds, true);
+                            if (currentLastPosition > 0) e.target.seekTo(currentLastPosition, true);
                             e.target.playVideo();
                             startPoll();
                         },

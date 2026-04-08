@@ -15,10 +15,14 @@ const Dashboard: React.FC = () => {
     const totalHoursWatched = Math.floor(totalWatchedSeconds / 3600);
     const totalMinutesWatched = Math.floor((totalWatchedSeconds % 3600) / 60);
 
-    const heroCourse = [...courses].sort((a, b) => (b.lastWatchedAt || 0) - (a.lastWatchedAt || 0))[0] || courses[0];
+    const heroCourse = [...courses].sort((a, b) => (b.lastWatchedAt || 0) - (a.lastWatchedAt || 0))[0] || (courses.length > 0 ? courses[0] : null);
+    
+    // Find the actual lesson to link to (either the last watched one or the first one)
+    const heroLessonId = heroCourse?.lastLessonId;
+    const heroLink = heroCourse ? (heroLessonId ? `/lesson/${heroLessonId}` : `/lesson/${heroCourse.id}`) : "/explore";
 
     const heroProgress = heroCourse ?
-        (heroCourse.totalSeconds ? Math.round(((heroCourse.watchedSeconds || 0) / heroCourse.totalSeconds) * 100) : heroCourse.progress)
+        (heroCourse.totalSeconds ? Math.min(Math.round(((heroCourse.watchedSeconds || 0) / heroCourse.totalSeconds) * 100), 100) : heroCourse.progress)
         : 0;
 
     const containerVariants = {
@@ -134,7 +138,7 @@ const Dashboard: React.FC = () => {
                                 </div>
                             </div>
 
-                            <Link to={heroCourse ? `/lesson/${heroCourse.id}` : "/lesson"} className="w-full md:w-auto bg-white text-black px-10 py-4 rounded-2xl font-headline font-bold text-[11px] tracking-[0.2em] hover:bg-primary transition-all shadow-[0_20px_40px_rgba(255,255,255,0.1)] uppercase">
+                            <Link to={heroLink} className="w-full md:w-auto bg-white text-black px-10 py-4 rounded-2xl font-headline font-bold text-[11px] tracking-[0.2em] hover:bg-primary transition-all shadow-[0_20px_40px_rgba(255,255,255,0.1)] uppercase">
                                 {heroProgress > 0 ? 'Continuar Aula' : 'Iniciar Aula'}
                             </Link>
                         </motion.div>
@@ -186,15 +190,17 @@ const Dashboard: React.FC = () => {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12">
-                        {courses.slice(0, 3).map((course, idx) => {
+                        {courses.filter(c => c.progress > 0).sort((a,b) => (b.lastWatchedAt || 0) - (a.lastWatchedAt || 0)).slice(0, 3).map((course, idx) => {
                             const colors = ['bg-primary', 'bg-blue-500', 'bg-purple-500'];
                             const textColors = ['text-primary', 'text-blue-400', 'text-purple-400'];
                             const cName = colors[idx % 3];
                             const tName = textColors[idx % 3];
+                            
+                            const courseLink = course.lastLessonId ? `/lesson/${course.lastLessonId}` : `/lesson/${course.id}`;
 
                             return (
                                 <motion.div key={course.id} whileHover={{ y: -12 }} transition={{ duration: 0.5 }}>
-                                    <Link to={`/lesson/${course.id}`} className="liquid-glass-card group flex flex-col h-[480px] overflow-hidden relative">
+                                    <Link to={courseLink} className="liquid-glass-card group flex flex-col h-[480px] overflow-hidden relative">
                                         <div className="flex-1 p-10 flex flex-col justify-between relative overflow-hidden">
                                             {course.thumbnailUrl ? (
                                                 <div className="absolute inset-0 z-0">
