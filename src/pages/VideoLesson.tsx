@@ -321,22 +321,22 @@ const VideoLesson: React.FC = () => {
                                                     videoRef.current.play();
                                                 }
                                             }}
-                                            className="absolute inset-0 flex flex-col items-center justify-center space-y-6 group/btn"
+                                            className="absolute inset-0 flex flex-col items-center justify-center space-y-4 md:space-y-6 group/btn"
                                         >
                                             <div className="relative">
                                                 <div className="absolute -inset-8 bg-primary/20 rounded-full blur-3xl opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500"></div>
-                                                <div className="relative w-20 h-20 rounded-full bg-primary/10 border border-primary/40 backdrop-blur-xl flex items-center justify-center group-hover/btn:scale-110 group-hover/btn:bg-primary group-hover/btn:border-white transition-all duration-500 shadow-[0_0_50px_rgba(0,255,135,0.2)]">
-                                                    <span className="material-symbols-outlined text-primary text-4xl group-hover/btn:text-black group-hover/btn:fill-1 transition-colors">play_arrow</span>
+                                                <div className="relative w-16 h-16 md:w-20 md:h-20 rounded-full bg-primary/10 border border-primary/40 backdrop-blur-xl flex items-center justify-center group-hover/btn:scale-110 group-hover/btn:bg-primary group-hover/btn:border-white transition-all duration-500 shadow-[0_0_50px_rgba(0,255,135,0.2)]">
+                                                    <span className="material-symbols-outlined text-primary text-3xl md:text-4xl group-hover/btn:text-black group-hover/btn:fill-1 transition-colors">play_arrow</span>
                                                 </div>
                                             </div>
-                                            <div className="text-center">
-                                                <p className="font-headline text-xl md:text-2xl font-bold uppercase tracking-[10px] text-white/90 group-hover/btn:text-white transition-colors">{displayTitle}</p>
-                                                <p className="font-label text-[9px] uppercase tracking-[4px] text-primary/60 mt-2">Clique para iniciar treinamento</p>
+                                            <div className="text-center px-6">
+                                                <p className="hidden md:block font-headline text-xl md:text-2xl font-bold uppercase tracking-[10px] text-white/90 group-hover/btn:text-white transition-colors">{displayTitle}</p>
+                                                <p className="font-label text-[8px] md:text-[9px] uppercase tracking-[3px] md:tracking-[4px] text-primary/60 mt-1 md:mt-2">Clique para iniciar treinamento</p>
                                             </div>
                                         </button>
 
-                                        {/* Top Logo Badge */}
-                                        <div className="absolute top-8 left-8 flex items-center gap-3">
+                                        {/* Top Logo Badge - Hidden on Mobile */}
+                                        <div className="absolute top-8 left-8 hidden md:flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 backdrop-blur-md flex items-center justify-center">
                                                 <img src="/logo.png" className="w-6 h-6 object-contain opacity-50" alt="" onError={(e) => (e.currentTarget.style.display = 'none')} />
                                                 <span className="material-symbols-outlined text-white/20 text-xl">shield</span>

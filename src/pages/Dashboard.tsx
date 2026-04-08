@@ -191,8 +191,8 @@ const Dashboard: React.FC = () => {
                         <Link className="premium-pill" to="/explore">Explorar Tudo</Link>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12">
-                        {courses.filter(c => c.progress > 0).sort((a,b) => (b.lastWatchedAt || 0) - (a.lastWatchedAt || 0)).slice(0, 3).map((course, idx) => {
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-12">
+                        {courses.filter(c => c.progress > 0 || (courses.length <= 3)).sort((a,b) => (b.lastWatchedAt || 0) - (a.lastWatchedAt || 0)).slice(0, 3).map((course, idx) => {
                             const colors = ['bg-primary', 'bg-blue-500', 'bg-purple-500'];
                             const textColors = ['text-primary', 'text-blue-400', 'text-purple-400'];
                             const cName = colors[idx % 3];
@@ -201,8 +201,8 @@ const Dashboard: React.FC = () => {
                             const courseLink = course.lastLessonId ? `/lesson/${course.lastLessonId}` : `/lesson/${course.id}`;
 
                             return (
-                                <motion.div key={course.id} whileHover={{ y: -12 }} transition={{ duration: 0.5 }}>
-                                    <Link to={courseLink} className="liquid-glass-card group flex flex-col h-[480px] overflow-hidden relative">
+                                <motion.div key={course.id} whileHover={{ y: -8 }} transition={{ duration: 0.5 }}>
+                                    <Link to={courseLink} className="liquid-glass-card group flex flex-col aspect-[4/5] md:h-[520px] overflow-hidden relative">
                                         <div className="flex-1 p-10 flex flex-col justify-between relative overflow-hidden">
                                             {course.thumbnailUrl ? (
                                                 <div className="absolute inset-0 z-0">

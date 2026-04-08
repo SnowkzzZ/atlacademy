@@ -194,32 +194,45 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
                 const [coursesRes, lessonsRes, sectorsRes, articlesRes] = await fetchPromise;
 
-                // 1. Merge Courses
-                const sbCourses = coursesRes.data || [];
-                const mergedCourses = [...sbCourses];
-                local.courses.forEach(lc => {
-                    if (!mergedCourses.find(sc => sc.id === lc.id)) mergedCourses.push(lc);
-                });
+                // 1. Prioritize Supabase Courses
+                const sbCourses: Course[] = coursesRes.data?.map((c: any) => ({
+                    id: c.id,
+                    title: c.title,
+                    instructor: c.instructor,
+                    instructorTitle: c.instructorTitle,
+                    duration: c.duration,
+                    icon: c.icon,
+                    progress: 0,
+                    videoUrl: c.videoUrl,
+                    thumbnailUrl: c.thumbnailUrl,
+                    watchedSeconds: 0,
+                    totalSeconds: c.totalSeconds,
+                    lastWatchedAt: 0,
+                    description: c.description,
+                    tags: c.tags || [],
+                })) || [];
                 
-                // 2. Merge Lessons
-                const rawSbLessons = lessonsRes.data ?? [];
-                const sbLessons: Lesson[] = rawSbLessons.map((l: any) => ({
+                const mergedCourses = [...sbCourses];
+                if (mergedCourses.length === 0 && local.courses.length > 0) {
+                    mergedCourses.push(...local.courses);
+                }
+
+                // 2. Prioritize Supabase Lessons
+                const sbLessons: Lesson[] = lessonsRes.data?.map((l: any) => ({
                     id: l.id,
-                    courseId: l.courseId ?? l['courseId'] ?? l.course_id ?? '',
+                    courseId: l.courseId || l.course_id || '',
                     title: l.title,
-                    videoUrl: l.videoUrl ?? l['videoUrl'] ?? '',
-                    thumbnailUrl: l.thumbnailUrl ?? l['thumbnailUrl'] ?? '',
-                    duration: l.duration ?? '00h 00m',
-                    totalSeconds: l.totalSeconds ?? l['totalSeconds'] ?? 0,
-                    position: l.position ?? 0,
+                    videoUrl: l.videoUrl,
+                    thumbnailUrl: l.thumbnailUrl,
+                    duration: l.duration,
+                    totalSeconds: l.totalSeconds,
+                    position: l.position || 0,
                     progress: 0,
                     watchedSeconds: 0,
-                }));
-                const mergedLessons = [...sbLessons];
-                local.lessons.forEach(ll => {
-                    if (!mergedLessons.find(sl => sl.id === ll.id)) mergedLessons.push(ll);
-                });
+                })) || [];
 
+                const mergedLessons = [...sbLessons];
+                
                 setSectors(sectorsRes.data && sectorsRes.data.length > 0 ? sectorsRes.data : local.sectors.length > 0 ? local.sectors : defaultSectors);
                 setArticles(articlesRes.data && articlesRes.data.length > 0 ? articlesRes.data : local.articles.length > 0 ? local.articles : defaultArticles);
 
