@@ -240,8 +240,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 const lsProgress = lsLoadProgress();
                 let serverProgress: any[] = [];
                 if (userId && isSupabaseConfigured) {
-                    const { data } = await supabase.from('user_progress').select('*').eq('user_id', userId);
+                    console.log(`[DataContext] Fetching progress for user: ${userId}`);
+                    const { data, error } = await supabase.from('user_progress').select('*').eq('user_id', userId);
+                    if (error) console.error('[DataContext] Progress fetch error:', error);
                     serverProgress = data ?? [];
+                    console.log(`[DataContext] Server progress loaded: ${serverProgress.length} items`);
                 }
 
                 const getMergedProgress = (itemId: string) => {
@@ -460,7 +463,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
 
         if (userId && isSupabaseConfigured) {
-            await supabase.from('user_progress').upsert({
+            console.log(`[DataContext] Saving progress online for ${itemId}: ${newProgress}%`);
+            const { error } = await supabase.from('user_progress').upsert({
                 user_id: userId,
                 course_id: itemId,
                 watched_seconds: watchedSeconds,
@@ -468,6 +472,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 progress: newProgress,
                 last_watched_at: lastWatchedAt
             }, { onConflict: 'user_id,course_id' });
+            if (error) console.error('[DataContext] Error saving online progress:', error);
         }
     };
 

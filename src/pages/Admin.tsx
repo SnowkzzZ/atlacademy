@@ -273,9 +273,9 @@ const Admin: React.FC = () => {
         <div className="bg-[#030303] text-white/90 min-h-screen font-body relative pb-32">
             <div className="fixed inset-0 z-0 pointer-events-none">
                 <div className="absolute inset-0 bg-[#030303]"></div>
-                <header className="relative z-10 max-w-[1440px] mx-auto px-6 pt-10 pb-6 flex items-center justify-between border-b border-white/[0.05] mb-12">
-                <div className="flex items-center gap-6">
-                    <h1 className="font-headline text-3xl font-bold tracking-tight uppercase">Painel de Controle</h1>
+                <header className="relative z-10 max-w-[1440px] mx-auto px-4 md:px-6 pt-6 md:pt-10 pb-6 flex items-center justify-between border-b border-white/[0.05] mb-6 md:mb-12">
+                <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
+                    <h1 className="font-headline text-lg md:text-3xl font-bold tracking-tight uppercase">Painel de Controle</h1>
                     <div className="h-6 w-px bg-white/10 hidden md:block"></div>
                     <div className="flex items-center gap-3">
                         <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border ${
@@ -301,11 +301,6 @@ const Admin: React.FC = () => {
                         </div>
                     </div>
                 </div>
-                <div className="flex items-center gap-4">
-                    <button onClick={handleLogout} className="text-white/40 hover:text-white transition-all text-[10px] font-label uppercase tracking-widest flex items-center gap-2">
-                        <span className="material-symbols-outlined text-base">logout</span> Sair
-                    </button>
-                </div>
             </header>
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/5 blur-3xl"></div>
                 <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-500/5 blur-3xl"></div>
@@ -313,12 +308,12 @@ const Admin: React.FC = () => {
             </div>
             <Navbar />
 
-            <main className="relative z-10 max-w-[1440px] mx-auto px-4 md:px-10 py-24 md:py-32 space-y-10 md:space-y-12">
+            <main className="relative z-10 max-w-[1440px] mx-auto px-4 md:px-10 py-10 md:py-32 space-y-8 md:space-y-12">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-white/10 pb-6 md:pb-8">
-                    <div>
-                        <h1 className="font-headline text-3xl md:text-5xl font-bold uppercase tracking-tight text-white/90">Central de Comando</h1>
-                        <p className="font-label text-[9px] md:text-xs text-white/40 tracking-[3px] uppercase mt-1">Gerenciamento de Conteúdo Global</p>
+                    <div className="flex-1 min-w-0">
+                        <h1 className="font-headline text-2xl md:text-5xl font-bold uppercase tracking-tight text-white/90 break-words">Central de Comando</h1>
+                        <p className="font-label text-[8px] md:text-xs text-white/40 tracking-[2px] md:tracking-[3px] uppercase mt-1">Gerenciamento de Conteúdo Global</p>
                     </div>
                     <button onClick={handleLogout} className="w-full md:w-auto px-6 py-3.5 rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/10 transition-colors uppercase font-label text-[10px] tracking-[2px] flex items-center justify-center gap-2">
                         <span className="material-symbols-outlined text-[16px]">exit_to_app</span> Sair do Painel
