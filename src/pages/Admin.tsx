@@ -205,30 +205,6 @@ const Admin: React.FC = () => {
     const [curLesson, setCurLesson] = useState<Partial<Lesson & { id?: string }>>({});
     const getCourseLesson = (courseId: string) => lessons.filter(l => l.courseId === courseId).sort((a, b) => a.position - b.position);
 
-    const handleSaveLesson = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!curLesson.title || !editingLessonsCourseId) return;
-        
-        console.log('[Admin] Saving Lesson:', { ...curLesson, courseId: editingLessonsCourseId });
-        
-        if (curLesson.id) {
-            updateLesson(curLesson.id, curLesson as Lesson);
-        } else {
-            const existingCount = getCourseLesson(editingLessonsCourseId).length;
-            addLesson({
-                courseId: editingLessonsCourseId,
-                title: curLesson.title!,
-                videoUrl: curLesson.videoUrl || '',
-                thumbnailUrl: curLesson.thumbnailUrl || '',
-                duration: curLesson.duration || '00h 00m',
-                totalSeconds: curLesson.totalSeconds || 0,
-                position: existingCount,
-            });
-        }
-        setIsAddingLesson(false);
-        setCurLesson({});
-    };
-
     // Tags helper: convert comma-separated string ↔ string[]
     const tagsToStr = (tags?: string[]) => (tags || []).join(', ');
     const strToTags = (s: string): string[] => s.split(',').map(t => t.trim()).filter(Boolean);
@@ -493,7 +469,29 @@ const Admin: React.FC = () => {
 
                                                 {/* Add/Edit Lesson Form */}
                                                 {isAddingLesson && (
-                                                    <form onSubmit={handleSaveLesson} className="bg-white/[0.03] border border-white/10 rounded-xl p-5 space-y-4">
+                                                    <form onSubmit={async e => {
+                                                        e.preventDefault();
+                                                        try {
+                                                            if (curLesson.id) {
+                                                                await updateLesson(curLesson.id, curLesson as Lesson);
+                                                            } else {
+                                                                await addLesson({
+                                                                    courseId: course.id,
+                                                                    title: curLesson.title!,
+                                                                    videoUrl: curLesson.videoUrl || '',
+                                                                    thumbnailUrl: curLesson.thumbnailUrl || '',
+                                                                    duration: curLesson.duration || '00h 00m',
+                                                                    totalSeconds: curLesson.totalSeconds || 0,
+                                                                    position: courseLessons.length,
+                                                                });
+                                                            }
+                                                            setCurLesson({});
+                                                            setIsAddingLesson(false);
+                                                        } catch (err: any) {
+                                                            console.error('Lesson Save Error:', err);
+                                                            alert('Erro ao salvar aula. Verifique o console ou tente novamente usando uma imagem por upload (anexo).');
+                                                        }
+                                                    }} className="bg-white/[0.03] border border-white/10 rounded-xl p-5 space-y-4">
                                                         <div className="flex items-center justify-between mb-2">
                                                             <p className="font-label text-[10px] uppercase tracking-widest text-white/60">{curLesson.id ? 'Editar Aula' : 'Nova Aula'}</p>
                                                             <button type="button" onClick={() => { setIsAddingLesson(false); setCurLesson({}); }} className="text-white/30 hover:text-white text-[10px] font-label uppercase">Cancelar</button>

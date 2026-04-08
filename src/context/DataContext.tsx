@@ -289,21 +289,50 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (isSupabaseConfigured) {
             const { data, error } = await supabase.from('lessons').insert([{
                 id: tempId,
-                courseId: lesson.courseId,
-                title: lesson.title,
-                videoUrl: lesson.videoUrl,
-                thumbnailUrl: lesson.thumbnailUrl,
-                duration: lesson.duration,
-                totalSeconds: lesson.totalSeconds || 0,
-                position: lesson.position,
+                "courseId": lesson.courseId,
+                "title": lesson.title,
+                "videoUrl": lesson.videoUrl,
+                "thumbnailUrl": lesson.thumbnailUrl,
+                "duration": lesson.duration,
+                "totalSeconds": lesson.totalSeconds || 0,
+                "position": lesson.position,
             }]).select().single();
-            if (!error && data) setLessons(prev => { const next = prev.map(l => l.id === tempId ? { ...data, courseId: data.courseId, progress: 0 } : l); persistLocal({ lessons: next }); return next; });
+            if (!error && data) {
+                setLessons(prev => {
+                    const next = prev.map(l => l.id === tempId ? { ...data, courseId: data.courseId, progress: 0 } : l);
+                    persistLocal({ lessons: next });
+                    return next;
+                });
+            } else if (error) {
+                console.error('[DataContext] addLesson Supabase Error:', error.message);
+                throw error; // Let the caller handle it for UI feedback
+            }
         }
     };
 
     const updateLesson = async (id: string, updated: Partial<Lesson>) => {
-        setLessons(prev => { const next = prev.map(l => l.id === id ? { ...l, ...updated } : l); persistLocal({ lessons: next }); return next; });
-        if (isSupabaseConfigured) await supabase.from('lessons').update(updated).eq('id', id);
+        setLessons(prev => {
+            const next = prev.map(l => l.id === id ? { ...l, ...updated } : l);
+            persistLocal({ lessons: next });
+            return next;
+        });
+        if (isSupabaseConfigured) {
+            // Map keys explicitly for Supabase quoted columns
+            const sbUpdate: any = {};
+            if (updated.title !== undefined) sbUpdate.title = updated.title;
+            if (updated.courseId !== undefined) sbUpdate["courseId"] = updated.courseId;
+            if (updated.videoUrl !== undefined) sbUpdate["videoUrl"] = updated.videoUrl;
+            if (updated.thumbnailUrl !== undefined) sbUpdate["thumbnailUrl"] = updated.thumbnailUrl;
+            if (updated.duration !== undefined) sbUpdate["duration"] = updated.duration;
+            if (updated.totalSeconds !== undefined) sbUpdate["totalSeconds"] = updated.totalSeconds;
+            if (updated.position !== undefined) sbUpdate["position"] = updated.position;
+
+            const { error } = await supabase.from('lessons').update(sbUpdate).eq('id', id);
+            if (error) {
+                console.error('[DataContext] updateLesson Supabase Error:', error.message);
+                throw error;
+            }
+        }
     };
 
     const deleteLesson = async (id: string) => {
