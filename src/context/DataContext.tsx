@@ -158,7 +158,30 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const [courses, setCourses] = useState<Course[]>(() => {
         const local = lsLoadContent();
-        return local.courses.length > 0 ? local.courses : defaultCourses;
+        const baseCourses = local.courses.length > 0 ? local.courses : defaultCourses;
+        const lsProg = lsLoadProgress();
+        
+        return baseCourses.map(c => {
+            // Pick up the course's directly saved progress, or search lessons
+            const cProg = lsProg[c.id];
+            
+            // To ensure the Hero Banner sorts correctly on first millisecond:
+            // Find max last_watched_at among its lessons from lsProg
+            let maxWatchedAt = cProg?.last_watched_at || 0;
+            Object.keys(lsProg).forEach(key => {
+                if (key.startsWith(c.id + '_')) {
+                    if ((lsProg[key]?.last_watched_at || 0) > maxWatchedAt) {
+                        maxWatchedAt = lsProg[key].last_watched_at;
+                    }
+                }
+            });
+
+            return {
+                ...c,
+                progress: cProg?.progress || 0,
+                lastWatchedAt: maxWatchedAt
+            };
+        });
     });
     const [lessons, setLessons] = useState<Lesson[]>(() => lsLoadContent().lessons);
     const [sectors, setSectors] = useState<Sector[]>(() => {

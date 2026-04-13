@@ -8,7 +8,15 @@ import ForumSection from '../components/ForumSection';
 import ModuleCard from '../components/ModuleCard';
 
 const Dashboard: React.FC = () => {
-    const { courses, sectors } = useData();
+    const { courses, sectors, isLoading } = useData();
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-[#050B14] flex items-center justify-center">
+                <div className="w-16 h-16 rounded-full border-t-2 border-[#00F0FF] border-r-2 animate-spin"></div>
+            </div>
+        );
+    }
 
     const totalCourses = courses.length;
     const completedCoursesCount = courses.filter(c => c.progress === 100).length;
