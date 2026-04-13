@@ -48,9 +48,9 @@ const Dashboard: React.FC = () => {
     };
 
     return (
-        <div className="font-body text-white/90 selection:bg-primary selection:text-black min-h-screen relative bg-[#030303] overflow-x-hidden">
+        <div className="font-body text-white/90 selection:bg-primary selection:text-black min-h-screen relative bg-surface-container-lowest overflow-x-hidden">
             <div className="fixed inset-0 z-0">
-                <div className="absolute inset-0 bg-[#030303]"></div>
+                <div className="absolute inset-0 bg-surface-container-lowest"></div>
                 <div className="absolute top-[-20%] left-[-10%] w-[80%] h-[80%] rounded-full bg-primary/5 blur-3xl"></div>
                 <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-blue-500/5 blur-3xl"></div>
                 <div className="dot-grid absolute inset-0 opacity-[0.02]"></div>
@@ -60,15 +60,9 @@ const Dashboard: React.FC = () => {
 
             {/* FULL BLEED BACKGROUND HERO */}
             <div className="absolute top-0 left-0 right-0 w-full h-[60vh] md:h-[80vh] z-0 overflow-hidden pointer-events-none">
-                <div 
-                    className="w-full h-full"
-                    style={{
-                        maskImage: 'radial-gradient(ellipse 70% 90% at 50% 40%, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%)',
-                        WebkitMaskImage: 'radial-gradient(ellipse 70% 90% at 50% 40%, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%)'
-                    }}
-                >
+                <div className="w-full h-full">
                     {heroCourse?.thumbnailUrl ? (
-                        <img src={heroCourse.thumbnailUrl} className="w-full h-full object-cover opacity-60 brightness-[0.5] grayscale contrast-125 mix-blend-luminosity object-center" alt="" />
+                        <img src={heroCourse.thumbnailUrl} className="w-full h-full object-cover opacity-60 brightness-[0.5] grayscale contrast-125 mix-blend-luminosity object-top" alt="" />
                     ) : (
                         <div className="absolute inset-0 bg-primary opacity-5 blur-3xl rounded-full scale-125"></div>
                     )}
