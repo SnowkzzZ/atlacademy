@@ -132,7 +132,7 @@
   }
 
   .module-card-overlay-bottom {
-    @apply absolute bottom-0 left-0 right-0 p-6 pt-12 bg-gradient-to-t from-black/95 via-black/60 to-transparent backdrop-blur-[2px];
+    @apply absolute bottom-0 left-0 right-0 p-6 pt-48 bg-gradient-to-t from-black/[0.85] via-black/[0.3] to-transparent backdrop-blur-[1.5px] z-20;
   }
 }
 
