@@ -484,16 +484,12 @@ const Admin: React.FC = () => {
                                                                 <div className="module-card-vertical pointer-events-none opacity-90 scale-95 origin-center">
                                                                     <div className="absolute inset-0 z-0">
                                                                         {(curCard.cardThumbnail || curCard.thumbnailUrl) ? (
-                                                                            <img src={curCard.cardThumbnail || curCard.thumbnailUrl} className="w-full h-full object-cover opacity-80" alt="" />
+                                                                            <img src={curCard.cardThumbnail || curCard.thumbnailUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" alt="" />
                                                                         ) : (
                                                                             <div className="w-full h-full bg-gradient-to-br from-white/5 to-white/0" />
                                                                         )}
-                                                                        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/80" />
                                                                     </div>
-                                                                    <div className="absolute inset-0 flex items-center justify-center z-10">
-                                                                        <span className="material-symbols-outlined text-white/40 text-6xl">{curCard.cardIcon || curCard.icon || 'layers'}</span>
-                                                                    </div>
-                                                                    <div className="module-card-overlay-bottom z-20 flex flex-col items-center text-center p-4">
+                                                                    <div className="module-card-overlay-bottom backdrop-blur-md z-20 flex flex-col items-center text-center">
                                                                         <p className="font-label text-[7px] text-white/40 tracking-[0.3em] uppercase mb-0.5">{curCard.cardSubtitle || curCard.subtitle || 'MODULO BASE'}</p>
                                                                         <h3 className="font-headline text-sm font-bold text-white tracking-widest uppercase truncate w-full">{curCard.cardTitle || curCard.title}</h3>
                                                                     </div>
@@ -522,10 +518,6 @@ const Admin: React.FC = () => {
                                                                 placeholder={course.subtitle || 'Ex: IA PARA'}
                                                             />
                                                         </div>
-                                                        <IconPicker 
-                                                            value={curCard.cardIcon || curCard.icon || ''} 
-                                                            onChange={ic => setCurCard(p => ({ ...p, cardIcon: ic }))} 
-                                                        />
                                                         <div className="space-y-1.5">
                                                             <label className="font-label text-[9px] uppercase text-white/40">Imagem da Capa (Vertical 1536x2752)</label>
                                                             <div className="flex gap-2">
