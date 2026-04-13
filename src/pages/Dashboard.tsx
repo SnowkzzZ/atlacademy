@@ -231,7 +231,7 @@ const Dashboard: React.FC = () => {
                                             <motion.div
                                                 initial={{ width: 0 }}
                                                 animate={{ width: course.progress + '%' }}
-                                                className={`h-full bg-gradient-to-r from-${cName}/20 to-${cName.replace('bg-', '')} shadow-[0_0_20px_rgba(0,255,135,0.2)]`}
+                                                className={`h-full bg-gradient-to-r from-${cName}/20 to-${cName.replace('bg-', '')} shadow-[0_0_20px_rgba(0, 245, 255,0.2)]`}
                                             ></motion.div>
                                         </div>
                                     </Link>
@@ -251,7 +251,7 @@ const Dashboard: React.FC = () => {
                         {sectors.map((sector) => (
                             <motion.div key={sector.id} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                                 <Link to="/explore" className="px-3 py-3 md:px-10 md:py-6 liquid-glass rounded-xl md:rounded-full flex items-center gap-2 md:gap-6 hover:bg-white/[0.08] transition-all group w-full">
-                                    <span className="w-1.5 h-1.5 md:w-2.5 md:h-2.5 rounded-full bg-white/10 group-hover:bg-primary group-hover:shadow-[0_0_10px_#00FF87] transition-all shrink-0"></span>
+                                    <span className="w-1.5 h-1.5 md:w-2.5 md:h-2.5 rounded-full bg-white/10 group-hover:bg-primary group-hover:shadow-[0_0_10px_#00F5FF] transition-all shrink-0"></span>
                                     <span className="font-label text-[8px] md:text-xs tracking-[0.15em] md:tracking-[0.3em] uppercase text-white/60 group-hover:text-white transition-colors leading-tight">{sector.name}</span>
                                 </Link>
                             </motion.div>

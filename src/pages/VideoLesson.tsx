@@ -286,7 +286,7 @@ const VideoLesson: React.FC = () => {
                                         />
                                     )
                                 ) : (
-                                    <div className="w-full h-full flex flex-col items-center justify-center space-y-8 bg-[#080808]">
+                                    <div className="w-full h-full flex flex-col items-center justify-center space-y-8 bg-[#0A1628]">
                                         <div className="w-20 h-20 rounded-full border border-white/10 flex items-center justify-center bg-white/[0.02] shadow-inner">
                                             <span className="material-symbols-outlined text-white/10 text-4xl">cloud_off</span>
                                         </div>
@@ -325,7 +325,7 @@ const VideoLesson: React.FC = () => {
                                         >
                                             <div className="relative">
                                                 <div className="absolute -inset-8 bg-primary/20 rounded-full blur-3xl opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500"></div>
-                                                <div className="relative w-16 h-16 md:w-20 md:h-20 rounded-full bg-primary/10 border border-primary/40 backdrop-blur-xl flex items-center justify-center group-hover/btn:scale-110 group-hover/btn:bg-primary group-hover/btn:border-white transition-all duration-500 shadow-[0_0_50px_rgba(0,255,135,0.2)]">
+                                                <div className="relative w-16 h-16 md:w-20 md:h-20 rounded-full bg-primary/10 border border-primary/40 backdrop-blur-xl flex items-center justify-center group-hover/btn:scale-110 group-hover/btn:bg-primary group-hover/btn:border-white transition-all duration-500 shadow-[0_0_50px_rgba(0, 245, 255,0.2)]">
                                                     <span className="material-symbols-outlined text-primary text-3xl md:text-4xl group-hover/btn:text-black group-hover/btn:fill-1 transition-colors">play_arrow</span>
                                                 </div>
                                             </div>
@@ -352,7 +352,7 @@ const VideoLesson: React.FC = () => {
                                 {/* Modern Resume Banner */}
                                 {showResume && (
                                     <div className="absolute bottom-6 left-6 right-6 z-30 animate-in slide-in-from-bottom-2 duration-500">
-                                        <div className="bg-black/90 backdrop-blur-2xl border border-primary/30 rounded-[2rem] px-8 py-5 flex items-center justify-between gap-6 shadow-[0_30px_60px_-12px_rgba(0,0,0,0.5),0_0_20px_rgba(0,255,135,0.1)]">
+                                        <div className="bg-black/90 backdrop-blur-2xl border border-primary/30 rounded-[2rem] px-8 py-5 flex items-center justify-between gap-6 shadow-[0_30px_60px_-12px_rgba(0,0,0,0.5),0_0_20px_rgba(0, 245, 255,0.1)]">
                                             <div className="flex items-center gap-5">
                                                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
                                                     <span className="material-symbols-outlined text-primary text-2xl">play_arrow</span>
@@ -468,13 +468,13 @@ const VideoLesson: React.FC = () => {
                                             <button
                                                 key={lesson.id}
                                                 onClick={() => changeLesson(lesson.id)}
-                                                className={`w-full group text-left p-2 rounded-3xl border transition-all duration-500 flex items-center gap-5 ${isActive ? 'bg-primary/10 border-primary/40 shadow-[0_20px_50px_rgba(0,255,135,0.1)]' : 'bg-transparent border-transparent hover:bg-white/[0.04] hover:border-white/10'}`}
+                                                className={`w-full group text-left p-2 rounded-3xl border transition-all duration-500 flex items-center gap-5 ${isActive ? 'bg-primary/10 border-primary/40 shadow-[0_20px_50px_rgba(0, 245, 255,0.1)]' : 'bg-transparent border-transparent hover:bg-white/[0.04] hover:border-white/10'}`}
                                             >
                                                 <div className="relative w-28 aspect-video rounded-2xl overflow-hidden shadow-2xl shrink-0">
                                                     {lesson.thumbnailUrl ? (
                                                         <img src={lesson.thumbnailUrl} className={`w-full h-full object-cover transition-all duration-1000 ${isActive ? 'scale-110 brightness-110' : 'opacity-40 brightness-75 group-hover:opacity-100 group-hover:scale-105'}`} alt="" />
                                                     ) : (
-                                                        <div className="w-full h-full bg-[#080808] flex items-center justify-center">
+                                                        <div className="w-full h-full bg-[#0A1628] flex items-center justify-center">
                                                             <span className="material-symbols-outlined text-white/5 text-2xl">motion_photos_on</span>
                                                         </div>
                                                     )}

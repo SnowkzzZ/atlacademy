@@ -44,7 +44,7 @@ const Intelligence: React.FC = () => {
 
             {/* Hero */}
             <section className="relative pt-32 pb-20 md:pt-44 md:pb-28 px-6 md:px-10 text-center overflow-hidden">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(0,255,135,0.04)_0%,transparent_70%)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(0, 245, 255,0.04)_0%,transparent_70%)]" />
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -72,7 +72,7 @@ const Intelligence: React.FC = () => {
                 <div className="flex flex-wrap gap-3">
                     <button
                         onClick={() => setSelectedSector(null)}
-                        className={`px-5 py-2 rounded-full font-label text-[10px] tracking-[0.2em] uppercase transition-all border ${!selectedSector ? 'bg-primary text-black border-primary shadow-[0_0_20px_rgba(0,255,135,0.3)]' : 'border-white/10 text-white/40 hover:text-white hover:border-white/30'}`}
+                        className={`px-5 py-2 rounded-full font-label text-[10px] tracking-[0.2em] uppercase transition-all border ${!selectedSector ? 'bg-primary text-black border-primary shadow-[0_0_20px_rgba(0, 245, 255,0.3)]' : 'border-white/10 text-white/40 hover:text-white hover:border-white/30'}`}
                     >
                         Todos
                     </button>
@@ -80,7 +80,7 @@ const Intelligence: React.FC = () => {
                         <button
                             key={s.id}
                             onClick={() => setSelectedSector(s.id === selectedSector ? null : s.id)}
-                            className={`px-5 py-2 rounded-full font-label text-[10px] tracking-[0.2em] uppercase transition-all border ${selectedSector === s.id ? 'bg-primary text-black border-primary shadow-[0_0_20px_rgba(0,255,135,0.3)]' : 'border-white/10 text-white/40 hover:text-white hover:border-white/30 liquid-glass'}`}
+                            className={`px-5 py-2 rounded-full font-label text-[10px] tracking-[0.2em] uppercase transition-all border ${selectedSector === s.id ? 'bg-primary text-black border-primary shadow-[0_0_20px_rgba(0, 245, 255,0.3)]' : 'border-white/10 text-white/40 hover:text-white hover:border-white/30 liquid-glass'}`}
                         >
                             {s.name}
                         </button>

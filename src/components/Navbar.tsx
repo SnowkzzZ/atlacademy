@@ -60,7 +60,7 @@ const Navbar: React.FC<{ isFixed?: boolean }> = ({ isFixed = true }) => {
                                 {isActive(link.path) && (
                                     <motion.div
                                         layoutId="nav-bg"
-                                        className="absolute inset-0 bg-primary rounded-full shadow-[0_0_20px_rgba(0,255,135,0.4)]"
+                                        className="absolute inset-0 bg-primary rounded-full shadow-[0_0_20px_rgba(0, 245, 255,0.4)]"
                                         transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                                     />
                                 )}
@@ -85,7 +85,7 @@ const Navbar: React.FC<{ isFixed?: boolean }> = ({ isFixed = true }) => {
                                 <span className="material-symbols-outlined text-white/50 text-[16px]">search</span>
                             </motion.button>
                             <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="w-9 h-9 rounded-full border border-white/10 flex items-center justify-center bg-white/[0.03] hover:bg-white/[0.08] transition-colors relative">
-                                <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-primary rounded-full shadow-[0_0_10px_#00FF87]"></div>
+                                <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-primary rounded-full shadow-[0_0_10px_#00F5FF]"></div>
                                 <span className="material-symbols-outlined text-white/50 text-[16px]">notifications</span>
                             </motion.button>
                         </div>

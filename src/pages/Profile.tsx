@@ -35,7 +35,7 @@ const Profile: React.FC = () => {
 
                     <div className="w-48 h-48 rounded-[40px] border border-white/10 p-2 overflow-hidden shrink-0 relative flex items-center justify-center bg-white/[0.02] backdrop-blur-3xl shadow-2xl">
                         <span className="material-symbols-outlined text-white/40 text-[100px] drop-shadow-xl">person</span>
-                        <div className="absolute top-4 right-4 w-5 h-5 bg-primary rounded-full border-4 border-[#030303] shadow-[0_0_15px_#00FF87] z-20"></div>
+                        <div className="absolute top-4 right-4 w-5 h-5 bg-primary rounded-full border-4 border-[#030303] shadow-[0_0_15px_#00F5FF] z-20"></div>
                     </div>
 
                     <div className="space-y-8 flex-1 text-center md:text-left pt-4">

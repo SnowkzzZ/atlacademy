@@ -79,8 +79,8 @@ const Login: React.FC = () => {
                     className="absolute inset-0 opacity-[0.05]" 
                     style={{ 
                         backgroundImage: `
-                            linear-gradient(rgba(0, 255, 135, 0.1) 1px, transparent 1px),
-                            linear-gradient(90deg, rgba(0, 255, 135, 0.1) 1px, transparent 1px)
+                            linear-gradient(rgba(0, 245, 255, 0.1) 1px, transparent 1px),
+                            linear-gradient(90deg, rgba(0, 245, 255, 0.1) 1px, transparent 1px)
                         `, 
                         backgroundSize: '40px 40px' 
                     }}
@@ -104,7 +104,7 @@ const Login: React.FC = () => {
                         rotate: [0, -90, 0]
                     }}
                     transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute bottom-[-10%] left-[-10%] w-[800px] h-[800px] bg-gradient-to-tr from-[#00FF87]/20 via-[#004A26]/10 to-transparent rounded-full blur-[140px] mix-blend-screen"
+                    className="absolute bottom-[-10%] left-[-10%] w-[800px] h-[800px] bg-gradient-to-tr from-[#00F5FF]/20 via-[#004A26]/10 to-transparent rounded-full blur-[140px] mix-blend-screen"
                 ></motion.div>
 
                 {/* Focus beam top-to-bottom */}
@@ -148,7 +148,7 @@ const Login: React.FC = () => {
                             <div className="relative">
                                 <div className="absolute inset-0 bg-primary/20 blur-[40px] rounded-full scale-150 opacity-60"></div>
                                 <motion.img 
-                                    whileHover={{ scale: 1.05, filter: "drop-shadow(0px 0px 25px rgba(0,255,135,0.4))" }}
+                                    whileHover={{ scale: 1.05, filter: "drop-shadow(0px 0px 25px rgba(0, 245, 255,0.4))" }}
                                     transition={{ duration: 0.4 }}
                                     src={logoBase64} 
                                     alt="ATL Logo" 
@@ -226,11 +226,11 @@ const Login: React.FC = () => {
                             {/* Options Row */}
                             <div className="flex justify-between items-center px-2 py-2">
                                 <label className="flex items-center gap-3 cursor-pointer group/checkbox">
-                                    <div className={`w-5 h-5 rounded-[6px] border flex items-center justify-center transition-all duration-300 ${rememberMe ? 'border-primary bg-primary/20 shadow-[0_0_15px_rgba(0,255,135,0.3)]' : 'border-white/10 bg-[#030805] group-hover/checkbox:border-white/30'}`}>
+                                    <div className={`w-5 h-5 rounded-[6px] border flex items-center justify-center transition-all duration-300 ${rememberMe ? 'border-primary bg-primary/20 shadow-[0_0_15px_rgba(0, 245, 255,0.3)]' : 'border-white/10 bg-[#030805] group-hover/checkbox:border-white/30'}`}>
                                         <motion.span 
                                             initial={false}
                                             animate={{ scale: rememberMe ? 1 : 0, opacity: rememberMe ? 1 : 0 }}
-                                            className="material-symbols-outlined text-[14px] text-primary drop-shadow-[0_0_5px_rgba(0,255,135,0.8)]"
+                                            className="material-symbols-outlined text-[14px] text-primary drop-shadow-[0_0_5px_rgba(0, 245, 255,0.8)]"
                                         >
                                             check
                                         </motion.span>
@@ -263,7 +263,7 @@ const Login: React.FC = () => {
                                 <div className="absolute inset-0 bg-primary/20 blur-xl opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500"></div>
                                 
                                 {/* Button Surface */}
-                                <div className="relative w-full bg-primary hover:bg-[#00E57A] text-black font-headline font-bold py-5 px-6 rounded-2xl text-[14px] tracking-[0.25em] transition-colors duration-300 uppercase shadow-[inset_0_2px_4px_rgba(255,255,255,0.4),0_0_20px_rgba(0,255,135,0.3)] group-hover/btn:shadow-[inset_0_2px_4px_rgba(255,255,255,0.5),0_0_35px_rgba(0,255,135,0.5)]">
+                                <div className="relative w-full bg-primary hover:bg-[#00E57A] text-black font-headline font-bold py-5 px-6 rounded-2xl text-[14px] tracking-[0.25em] transition-colors duration-300 uppercase shadow-[inset_0_2px_4px_rgba(255,255,255,0.4),0_0_20px_rgba(0, 245, 255,0.3)] group-hover/btn:shadow-[inset_0_2px_4px_rgba(255,255,255,0.5),0_0_35px_rgba(0, 245, 255,0.5)]">
                                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-[200%] group-hover/btn:translate-x-[200%] transition-transform duration-1000 ease-in-out"></div>
                                     
                                     <span className="relative z-10 flex items-center justify-center gap-3">
@@ -283,9 +283,9 @@ const Login: React.FC = () => {
                 {/* Footer Badges */}
                 <div className="mt-12 flex flex-col justify-center items-center gap-5 opacity-50 hover:opacity-100 transition-opacity duration-700">
                     <div className="flex gap-2">
-                        <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_12px_#00FF87] animate-pulse"></div>
-                        <div className="w-2 h-2 rounded-full bg-[#00FF87]/20"></div>
-                        <div className="w-2 h-2 rounded-full bg-[#00FF87]/20"></div>
+                        <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_12px_#00F5FF] animate-pulse"></div>
+                        <div className="w-2 h-2 rounded-full bg-[#00F5FF]/20"></div>
+                        <div className="w-2 h-2 rounded-full bg-[#00F5FF]/20"></div>
                     </div>
                     <div className="flex items-center gap-4 border border-white/10 bg-white/[0.02] px-4 py-2 rounded-full backdrop-blur-md">
                         <span className="material-symbols-outlined text-primary text-[14px]">encrypted</span>
