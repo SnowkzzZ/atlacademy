@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
 import { logoBase64 } from '../logoBase64';
 import { useData } from '../context/DataContext';
+import ForumSection from '../components/ForumSection';
 
 const Dashboard: React.FC = () => {
     const { courses, sectors } = useData();
@@ -251,6 +252,9 @@ const Dashboard: React.FC = () => {
                 </motion.section>
 
             </motion.main>
+
+            {/* NEW FORUM SECTION */}
+            <ForumSection />
 
             <footer className="mt-10 md:mt-40 border-t border-white/[0.05] relative z-10 bg-black/40 backdrop-blur-3xl">
                 <div className="max-w-[1440px] mx-auto px-6 md:px-10 py-8 md:py-24 flex flex-col md:flex-row items-center justify-between gap-6 md:gap-12">
