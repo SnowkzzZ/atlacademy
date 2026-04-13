@@ -77,7 +77,7 @@ const Dashboard: React.FC = () => {
                 className="relative z-10 max-w-[1440px] mx-auto px-6 md:px-10 pb-8 md:pb-32 space-y-8 md:space-y-24"
             >
                 {/* Cinematic Liquid Glass Hero */}
-                <section className="pt-0 relative flex flex-col items-center justify-start min-h-[auto] md:min-h-[50vh] mt-2 md:mt-8">
+                <section className="pt-0 relative flex flex-col items-center justify-start min-h-[auto] md:min-h-[50vh] mt-20 md:mt-48">
                     <div className="relative z-10 flex flex-col items-center text-center space-y-4 w-full max-w-5xl pt-16 pb-0 md:py-16">
                         <motion.div variants={itemVariants} className="relative mt-2 mb-4 flex flex-col items-center">
                             <div className="absolute inset-0 bg-primary opacity-20 blur-3xl rounded-full scale-125"></div>
