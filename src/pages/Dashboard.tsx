@@ -6,6 +6,7 @@ import { logoBase64 } from '../logoBase64';
 import { useData } from '../context/DataContext';
 import ForumSection from '../components/ForumSection';
 import ModuleCard from '../components/ModuleCard';
+import AnimatedStatCard from '../components/AnimatedStatCard';
 
 const Dashboard: React.FC = () => {
     const { courses, sectors, isLoading } = useData();
@@ -185,29 +186,7 @@ const Dashboard: React.FC = () => {
                         { label: 'APRENDIZADO', value: `${totalHoursWatched}h ${totalMinutesWatched}m`, icon: 'schedule' },
                         { label: 'TRILHAS', value: sectors.length, icon: 'bolt' }
                     ].map((stat) => (
-                        <motion.div
-                            key={stat.label}
-                            whileHover={{ y: -6, scale: 1.02 }}
-                            className="liquid-glass p-5 md:p-12 flex flex-col justify-between group relative rounded-2xl md:aspect-square"
-                        >
-                            <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-[40px] opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                            {/* Icon */}
-                            <div className="w-9 h-9 md:w-16 md:h-16 rounded-xl md:rounded-2xl bg-white/[0.03] border border-white/5 flex items-center justify-center mb-4 md:mb-16 group-hover:bg-primary/10 group-hover:border-primary/20 transition-all duration-500">
-                                <span className="material-symbols-outlined text-white/40 group-hover:text-primary transition-colors text-base md:text-3xl">{stat.icon}</span>
-                            </div>
-                            <div>
-                                <div className="font-label text-white/30 text-[8px] md:text-[10px] tracking-[0.25em] uppercase mb-1 md:mb-4">{stat.label}</div>
-                                <div className="font-headline text-3xl md:text-6xl font-semibold tracking-tighter text-white leading-none">
-                                    {typeof stat.value === 'string' ? (
-                                        <span className="whitespace-nowrap">
-                                            {stat.value.split(' ')[0].replace('h', '')}<span className="text-sm md:text-3xl text-white/30">h</span>
-                                            <span className="mx-0.5"> </span>
-                                            {stat.value.split(' ')[1].replace('m', '')}<span className="text-sm md:text-3xl text-white/30">m</span>
-                                        </span>
-                                    ) : stat.value}
-                                </div>
-                            </div>
-                        </motion.div>
+                        <AnimatedStatCard key={stat.label} label={stat.label} value={stat.value} icon={stat.icon} />
                     ))}
                 </motion.section>
 
