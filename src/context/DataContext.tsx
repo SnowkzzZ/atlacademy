@@ -489,7 +489,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }, { onConflict: 'user_id,course_id' });
             if (error) {
                 console.error('[DataContext] Error saving online progress:', error);
-                if (isBypassUser) alert('Erro de Sincronia Supabase: ' + error.message + ' \n\nDetalhes: ' + JSON.stringify(error));
+                alert('Erro de Sincronia Supabase: ' + error.message + ' \n\nDetalhes: ' + JSON.stringify(error));
             } else {
                 console.log(`[DataContext] Saved online!`);
             }
