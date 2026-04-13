@@ -120,7 +120,7 @@ const VideoLesson: React.FC = () => {
                 ytPlayerRef.current = new (window as any).YT.Player(ytPlayerId, {
                     videoId: ytVideoId,
                     playerVars: {
-                        autoplay: 1,
+                        autoplay: 0,
                         modestbranding: 1,
                         rel: 0,
                         start: Math.floor(currentLastPosition),
@@ -129,7 +129,6 @@ const VideoLesson: React.FC = () => {
                     events: {
                         onReady: (e: any) => {
                             if (currentLastPosition > 0) e.target.seekTo(currentLastPosition, true);
-                            e.target.playVideo();
                             startPoll();
                         },
                         onStateChange: (e: any) => {
@@ -280,7 +279,7 @@ const VideoLesson: React.FC = () => {
                                             ref={videoRef}
                                             src={currentVideoUrl}
                                             className="w-full h-full object-contain"
-                                            controls autoPlay
+                                            controls
                                             onTimeUpdate={handleTimeUpdate}
                                             onLoadedMetadata={handleLoadedMetadata}
                                         />
