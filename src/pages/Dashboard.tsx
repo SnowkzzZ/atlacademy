@@ -165,16 +165,12 @@ const Dashboard: React.FC = () => {
                         <Link className="premium-pill" to="/explore">Ver todos os cursos <span className="ml-1 text-[10px]">↗</span></Link>
                     </div>
 
-                    <div className="module-carousel-container">
-                        <div className="flex gap-4 md:gap-8 overflow-x-auto pb-12 px-6 no-scrollbar snap-x snap-mandatory">
+                    <div className="module-carousel-container relative">
+                        <div className="flex gap-4 md:gap-8 overflow-x-auto pb-12 px-4 md:px-6 no-scrollbar snap-x snap-mandatory">
                             {courses.map((course, idx) => (
                                 <ModuleCard key={course.id} course={course} index={idx} />
                             ))}
                         </div>
-                        
-                        {/* Shadow/Dark edge overlays for the scroll effect */}
-                        <div className="absolute top-0 left-0 bottom-0 w-20 bg-gradient-to-r from-surface-container-lowest to-transparent pointer-events-none z-30"></div>
-                        <div className="absolute top-0 right-0 bottom-0 w-20 bg-gradient-to-l from-surface-container-lowest to-transparent pointer-events-none z-30"></div>
                     </div>
                 </motion.section>
 
