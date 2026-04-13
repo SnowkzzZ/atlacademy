@@ -357,25 +357,25 @@ const VideoLesson: React.FC = () => {
 
                                 {/* Modern Resume Banner */}
                                 {showResume && (
-                                    <div className="absolute bottom-6 left-6 right-6 z-30 animate-in slide-in-from-bottom-2 duration-500">
-                                        <div className="bg-black/90 backdrop-blur-2xl border border-primary/30 rounded-[2rem] px-8 py-5 flex items-center justify-between gap-6 shadow-[0_30px_60px_-12px_rgba(0,0,0,0.5),0_0_20px_rgba(0, 245, 255,0.1)]">
-                                            <div className="flex items-center gap-5">
-                                                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
-                                                    <span className="material-symbols-outlined text-primary text-2xl">play_arrow</span>
+                                    <div className="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-6 z-30 animate-in slide-in-from-bottom-2 duration-500">
+                                        <div className="bg-black/80 backdrop-blur-2xl border border-primary/20 rounded-2xl md:rounded-[2rem] px-4 py-3 md:px-8 md:py-5 flex items-center justify-between gap-3 md:gap-6 shadow-[0_30px_60px_-12px_rgba(0,0,0,0.5),0_0_20px_rgba(0, 245, 255,0.05)]">
+                                            <div className="flex items-center gap-3 md:gap-5">
+                                                <div className="w-9 h-9 md:w-12 md:h-12 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
+                                                    <span className="material-symbols-outlined text-primary text-xl md:text-2xl">play_arrow</span>
                                                 </div>
-                                                <div>
-                                                    <h4 className="text-white font-headline font-bold text-sm uppercase tracking-widest leading-none">Retomar Aula</h4>
-                                                    <p className="text-primary/70 font-label text-[10px] mt-1 uppercase tracking-widest">Sincronizado em {fmtTime(currentWatchedSeconds)}</p>
+                                                <div className="min-w-0">
+                                                    <h4 className="text-white font-headline font-bold text-[10px] md:text-sm uppercase tracking-widest leading-none truncate">Retomar Aula</h4>
+                                                    <p className="text-primary/60 font-label text-[8px] md:text-[10px] mt-1 uppercase tracking-widest truncate">Sincronizado {fmtTime(currentWatchedSeconds)}</p>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-3">
+                                            <div className="flex items-center gap-2 md:gap-3 shrink-0">
                                                 <button onClick={() => {
                                                     if (ytPlayerRef.current?.seekTo) ytPlayerRef.current.seekTo(currentWatchedSeconds, true);
                                                     else if (videoRef.current) videoRef.current.currentTime = currentWatchedSeconds;
                                                     setShowResume(false);
-                                                }} className="bg-primary text-black font-headline font-bold text-[11px] uppercase tracking-[2px] px-8 py-3.5 rounded-2xl hover:bg-white hover:scale-105 active:scale-95 transition-all shadow-lg">Continuar</button>
-                                                <button onClick={() => setShowResume(false)} className="w-10 h-10 rounded-full flex items-center justify-center text-white/20 hover:text-white transition-colors">
-                                                    <span className="material-symbols-outlined text-xl">close</span>
+                                                }} className="bg-primary text-black font-headline font-bold text-[9px] md:text-[11px] uppercase tracking-[1px] md:tracking-[2px] px-4 py-2.5 md:px-8 md:py-3.5 rounded-xl md:rounded-2xl hover:bg-white hover:scale-105 active:scale-95 transition-all shadow-lg whitespace-nowrap">Continuar</button>
+                                                <button onClick={() => setShowResume(false)} className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-white/20 hover:text-white transition-colors">
+                                                    <span className="material-symbols-outlined text-lg md:text-xl">close</span>
                                                 </button>
                                             </div>
                                         </div>
