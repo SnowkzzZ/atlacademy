@@ -285,7 +285,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     const s = serverProgress.find(r => r.course_id === itemId);
                     const l = lsProgress[itemId];
                     if (s) return { progress: s.progress ?? 0, watchedSeconds: s.watched_seconds ?? 0, last_position: s.last_position ?? 0, lastWatchedAt: s.last_watched_at ?? 0 };
-                    if (l) return { progress: l.progress ?? 0, watchedSeconds: l.watched_seconds ?? 0, last_position: l.last_position ?? 0, last_watched_at: l.last_watched_at ?? 0 };
+                    if (l) return { progress: l.progress ?? 0, watchedSeconds: l.watched_seconds ?? 0, last_position: l.last_position ?? 0, lastWatchedAt: l.last_watched_at ?? 0 };
                     return { progress: 0, watchedSeconds: 0, last_position: 0, lastWatchedAt: 0 };
                 };
 
