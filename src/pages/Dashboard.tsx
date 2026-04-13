@@ -5,6 +5,7 @@ import Navbar from '../components/Navbar';
 import { logoBase64 } from '../logoBase64';
 import { useData } from '../context/DataContext';
 import ForumSection from '../components/ForumSection';
+import ModuleCard from '../components/ModuleCard';
 
 const Dashboard: React.FC = () => {
     const { courses, sectors } = useData();
@@ -141,6 +142,29 @@ const Dashboard: React.FC = () => {
                         </motion.div>
                     </div>
                 </section>
+
+                {/* PREMIUM "MÓDULOS" HORIZONTAL CAROUSEL (ADAPTA STYLE) */}
+                <motion.section variants={itemVariants} className="space-y-8 md:space-y-12">
+                    <div className="flex justify-between items-end px-2">
+                        <div className="space-y-1 md:space-y-2">
+                            <span className="font-label text-primary text-[8px] md:text-[10px] tracking-[0.4em] uppercase">Atl Academy Exclusive</span>
+                            <h2 className="font-headline text-3xl md:text-5xl font-bold tracking-tight">Módulos</h2>
+                        </div>
+                        <Link className="premium-pill" to="/explore">Ver todos os cursos <span className="ml-1 text-[10px]">↗</span></Link>
+                    </div>
+
+                    <div className="module-carousel-container">
+                        <div className="flex gap-4 md:gap-8 overflow-x-auto pb-12 px-6 no-scrollbar snap-x snap-mandatory">
+                            {courses.map((course, idx) => (
+                                <ModuleCard key={course.id} course={course} index={idx} />
+                            ))}
+                        </div>
+                        
+                        {/* Shadow/Dark edge overlays for the scroll effect */}
+                        <div className="absolute top-0 left-0 bottom-0 w-20 bg-gradient-to-r from-surface-container-lowest to-transparent pointer-events-none z-30"></div>
+                        <div className="absolute top-0 right-0 bottom-0 w-20 bg-gradient-to-l from-surface-container-lowest to-transparent pointer-events-none z-30"></div>
+                    </div>
+                </motion.section>
 
                 {/* Premium Stats - Responsive Liquid Glass Grid */}
                 <motion.section variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8 pt-0 md:pt-0">

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>ATL Academy - API Reference</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,sans-serif;background:#0a0f1a;color:#e2e8f0;font-size:13.5px;line-height:1.7;display:flex;min-height:100vh}
+.sidebar{width:250px;background:#050b14;border-right:1px solid rgba(0,200,212,.1);padding:28px 0;position:fixed;height:100vh;overflow-y:auto}
+.sidebar-logo{padding:0 24px 24px;border-bottom:1px solid rgba(255,255,255,.05);margin-bottom:16px}
+.sidebar-logo .name{font-size:11px;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:#00C8D4}
+.sidebar-logo .sub{font-size:9px;color:rgba(255,255,255,.25);letter-spacing:.2em;text-transform:uppercase;margin-top:2px}
+.nav-group{padding:0 16px;margin-bottom:8px}
+.nav-label{font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.2);padding:12px 8px 6px}
+.nav-item{display:block;padding:7px 10px;border-radius:6px;font-size:12px;color:rgba(255,255,255,.45);text-decoration:none;cursor:pointer}
+.nav-item:hover{color:#fff;background:rgba(255,255,255,.05)}
+.nav-item.active{color:#00C8D4;background:rgba(0,200,212,.08)}
+.badge-method{display:inline-block;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;margin-right:6px;font-family:'JetBrains Mono',monospace}
+.get{background:rgba(16,185,129,.15);color:#10b981}
+.post{background:rgba(59,130,246,.15);color:#3b82f6}
+.content{margin-left:250px;flex:1;padding:60px 60px 100px;max-width:940px}
+.hero{margin-bottom:60px;padding-bottom:40px;border-bottom:1px solid rgba(255,255,255,.06)}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(0,200,212,.1);border:1px solid rgba(0,200,212,.25);border-radius:50px;padding:4px 14px;font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#00C8D4;margin-bottom:20px}
+.hero h1{font-size:36px;font-weight:700;color:#fff;line-height:1.1;margin-bottom:12px}
+.hero p{color:rgba(255,255,255,.4);font-size:14px;max-width:560px}
+.base-url{background:#0d1424;border:1px solid rgba(0,200,212,.2);border-radius:10px;padding:14px 20px;margin-top:24px;display:flex;align-items:center;gap:12px}
+.base-label{font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.3);flex-shrink:0}
+.base-val{font-family:'JetBrains Mono',monospace;font-size:12px;color:#00C8D4;word-break:break-all}
+.section{margin-bottom:56px}
+.section h2{font-size:22px;font-weight:700;color:#fff;margin-bottom:8px}
+.section .desc{color:rgba(255,255,255,.4);font-size:13px;margin-bottom:24px}
+.endpoint{background:#0d1424;border:1px solid rgba(255,255,255,.07);border-radius:14px;overflow:hidden;margin-bottom:24px}
+.ep-header{padding:18px 24px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.06)}
+.ep-method{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;flex-shrink:0}
+.ep-method.get{background:rgba(16,185,129,.15);color:#10b981}
+.ep-method.post{background:rgba(59,130,246,.15);color:#3b82f6}
+.ep-path{font-family:'JetBrains Mono',monospace;font-size:13px;color:#fff}
+.ep-body{padding:24px}
+.label{font-size:11px;font-weight:600;color:rgba(255,255,255,.5);margin:16px 0 8px;text-transform:uppercase;letter-spacing:.1em}
+.param-table{width:100%;border-collapse:collapse;margin:12px 0 20px}
+.param-table th{text-align:left;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.3);padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.06)}
+.param-table td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.04);font-size:12.5px;color:rgba(255,255,255,.65);vertical-align:top}
+.param-table td:first-child{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#7dd3fc}
+.req{color:#f59e0b;font-size:9px;font-weight:700;text-transform:uppercase}
+.opt{color:#94a3b8;font-size:9px;font-weight:700;text-transform:uppercase}
+.code-block{background:#060c18;border:1px solid rgba(255,255,255,.07);border-radius:10px;margin:12px 0;overflow:hidden}
+.code-header{padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center}
+.code-lang{font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.3)}
+.code-block pre{padding:16px 20px;font-family:'JetBrains Mono',monospace;font-size:11.5px;line-height:1.7;color:#e2e8f0;white-space:pre;overflow-x:auto}
+.auth-box{background:#0d1424;border:1px solid rgba(245,158,11,.2);border-left:3px solid #f59e0b;border-radius:10px;padding:16px 20px;margin:16px 0}
+.auth-box .title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#f59e0b;margin-bottom:8px}
+.auth-box p{font-size:12.5px;color:rgba(255,255,255,.5)}
+.info-box{background:#0d1424;border:1px solid rgba(0,200,212,.15);border-left:3px solid #00C8D4;border-radius:10px;padding:16px 20px;margin:16px 0}
+.info-box .title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#00C8D4;margin-bottom:8px}
+.info-box p{font-size:12.5px;color:rgba(255,255,255,.5)}
+hr{border:none;border-top:1px solid rgba(255,255,255,.06);margin:40px 0}
+@media print{
+  body{background:#fff;color:#1a2332;display:block}
+  .sidebar{display:none}
+  .content{margin-left:0;max-width:100%;padding:40px}
+  .endpoint{border:1px solid #e2e8f0;background:#f8fafc}
+  .ep-header{background:#f0f4f8;border-bottom:1px solid #e2e8f0}
+  .ep-path{color:#1a2332}
+  .code-block{background:#1a1f2e}
+  .code-block pre{color:#e2e8f0}
+  .ep-method,.auth-box,.info-box,.base-url,.hero-badge,.code-block,.code-header{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="name">ATL Academy</div>
+    <div class="sub">API Reference v1.0</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Introducao</div>
+    <div class="nav-item active">Visao Geral</div>
+    <div class="nav-item">Autenticacao</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Usuarios</div>
+    <div class="nav-item"><span class="badge-method get">GET</span> Listar Usuarios</div>
+    <div class="nav-item"><span class="badge-method post">POST</span> Criar Usuario</div>
+    <div class="nav-item"><span class="badge-method post">POST</span> Sync em Lote</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Credenciais</div>
+    <div class="nav-item">Variaveis de Ambiente</div>
+  </div>
+</aside>
+
+<div class="content">
+
+  <div class="hero">
+    <div class="hero-badge">API Reference — v1.0</div>
+    <h1>ATL Academy<br>Integration API</h1>
+    <p>Documentacao oficial para integracao da plataforma Atlantica Natural com o sistema de usuarios e autenticacao da ATL Academy. Use esta API para sincronizar os usuarios da Atlantica Natural com o painel da ATL Academy.</p>
+    <div class="base-url">
+      <span class="base-label">Base URL</span>
+      <span class="base-val">https://xicjkwzwmmlxgnbfgkga.supabase.co</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Autenticacao</h2>
+    <p class="desc">Todas as requisicoes para a API admin requerem a Service Role Key nos headers abaixo.</p>
+    <div class="auth-box">
+      <div class="title">Headers Obrigatorios em Todas as Requisicoes</div>
+      <p>Incluir os headers abaixo em cada chamada de API feita pelo servidor da Atlantica Natural.</p>
+    </div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">HTTP Headers</span></div>
+      <pre>apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpY2prd3p3bW1seGduYmZna2dhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTE1MTQ0OSwiZXhwIjoyMDkwNzI3NDQ5fQ.3RuqGnodaYZyaXQqDGWPDd2ISR4t5zyEQbj11n24sbY
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpY2prd3p3bW1seGduYmZna2dhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTE1MTQ0OSwiZXhwIjoyMDkwNzI3NDQ5fQ.3RuqGnodaYZyaXQqDGWPDd2ISR4t5zyEQbj11n24sbY
+Content-Type: application/json</pre>
+    </div>
+  </div>
+
+  <hr>
+
+  <div class="section">
+    <h2>Listar Todos os Usuarios da ATL Academy</h2>
+    <p class="desc">Retorna todos os usuarios cadastrados no painel da ATL Academy. Util para verificar quais usuarios ja existem antes de sincronizar.</p>
+    <div class="endpoint">
+      <div class="ep-header">
+        <div class="ep-method get">GET</div>
+        <div class="ep-path">/auth/v1/admin/users</div>
+      </div>
+      <div class="ep-body">
+        <div class="label">Exemplo — cURL</div>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">cURL</span></div>
+          <pre>curl -X GET \
+  "https://xicjkwzwmmlxgnbfgkga.supabase.co/auth/v1/admin/users" \
+  -H "apikey: SERVICE_ROLE_KEY" \
+  -H "Authorization: Bearer SERVICE_ROLE_KEY"</pre>
+        </div>
+        <div class="label">Exemplo — JavaScript</div>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">JavaScript / Node.js</span></div>
+          <pre>const res = await fetch(
+  "https://xicjkwzwmmlxgnbfgkga.supabase.co/auth/v1/admin/users",
+  {
+    headers: {
+      "apikey": "SERVICE_ROLE_KEY",
+      "Authorization": "Bearer SERVICE_ROLE_KEY"
+    }
+  }
+);
+const { users } = await res.json();
+console.log(users);</pre>
+        </div>
+        <div class="label">Resposta de Sucesso — 200 OK</div>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">JSON</span></div>
+          <pre>{
+  "users": [
+    {
+      "id": "uuid-do-usuario",
+      "email": "usuario@email.com",
+      "created_at": "2026-01-15T10:00:00Z",
+      "last_sign_in_at": "2026-04-13T12:30:00Z",
+      "user_metadata": { "full_name": "Nome do Usuario" }
+    }
+  ],
+  "total": 142
+}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <div class="section">
+    <h2>Criar Usuario (Sincronizar da Atlantica Natural)</h2>
+    <p class="desc">Cria um novo usuario da Atlantica Natural dentro da ATL Academy. Chamar este endpoint para cada usuario que deve ter acesso ao painel ATL Academy.</p>
+    <div class="endpoint">
+      <div class="ep-header">
+        <div class="ep-method post">POST</div>
+        <div class="ep-path">/auth/v1/admin/users</div>
+      </div>
+      <div class="ep-body">
+        <div class="label">Parametros do Body (JSON)</div>
+        <table class="param-table">
+          <thead>
+            <tr><th>Campo</th><th>Tipo</th><th>Status</th><th>Descricao</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>email</td><td>string</td><td><span class="req">obrigatorio</span></td><td>Email do usuario (deve ser unico na plataforma)</td></tr>
+            <tr><td>password</td><td>string</td><td><span class="req">obrigatorio</span></td><td>Senha do usuario (minimo 6 caracteres)</td></tr>
+            <tr><td>email_confirm</td><td>boolean</td><td><span class="opt">opcional</span></td><td>true = email confirmado automaticamente. Recomendado: true</td></tr>
+            <tr><td>user_metadata.full_name</td><td>string</td><td><span class="opt">opcional</span></td><td>Nome completo do usuario</td></tr>
+          </tbody>
+        </table>
+        <div class="label">Exemplo — cURL</div>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">cURL</span></div>
+          <pre>curl -X POST \
+  "https://xicjkwzwmmlxgnbfgkga.supabase.co/auth/v1/admin/users" \
+  -H "apikey: SERVICE_ROLE_KEY" \
+  -H "Authorization: Bearer SERVICE_ROLE_KEY" \
+  -H "Content-Type: application/json" \
+  --data-raw '{
+    "email": "joao@atlanticanatural.com.br",
+    "password": "senha_do_usuario",
+    "email_confirm": true,
+    "user_metadata": { "full_name": "Joao Silva" }
+  }'</pre>
+        </div>
+        <div class="label">Exemplo — JavaScript</div>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">JavaScript / Node.js</span></div>
+          <pre>const res = await fetch(
+  "https://xicjkwzwmmlxgnbfgkga.supabase.co/auth/v1/admin/users",
+  {
+    method: "POST",
+    headers: {
+      "apikey": "SERVICE_ROLE_KEY",
+      "Authorization": "Bearer SERVICE_ROLE_KEY",
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      email: "joao@atlanticanatural.com.br",
+      password: "senha_do_usuario",
+      email_confirm: true,
+      user_metadata: { full_name: "Joao Silva" }
+    })
+  }
+);
+const data = await res.json();
+console.log("Usuario criado:", data.id);</pre>
+        </div>
+        <div class="label">Resposta de Sucesso — 200 OK</div>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">JSON</span></div>
+          <pre>{
+  "id": "novo-uuid-gerado",
+  "email": "joao@atlanticanatural.com.br",
+  "created_at": "2026-04-13T17:00:00Z",
+  "email_confirmed_at": "2026-04-13T17:00:00Z",
+  "user_metadata": { "full_name": "Joao Silva" }
+}</pre>
+        </div>
+        <div class="label">Resposta de Erro — Email ja existente (422)</div>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">JSON</span></div>
+          <pre>{ "code": 422, "msg": "User already registered" }</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <div class="section">
+    <h2>Sincronizar Lista Completa em Lote</h2>
+    <p class="desc">Script completo para importar todos os usuarios da Atlantica Natural de uma so vez. Executar no servidor da Atlantica Natural.</p>
+    <div class="info-box">
+      <div class="title">Como usar</div>
+      <p>Substituir o array "usuarios" pelos dados reais exportados do sistema da Atlantica Natural e executar o script uma unica vez para a sincronizacao inicial. Apos isso, usar o endpoint POST individualmente para novos cadastros.</p>
+    </div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">Node.js — Sync em Lote</span></div>
+      <pre>const SUPABASE_URL    = "https://xicjkwzwmmlxgnbfgkga.supabase.co";
+const SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
+
+// Substituir com os usuarios reais da Atlantica Natural
+const usuarios = [
+  { email: "usuario1@email.com", senha: "senha1", nome: "Usuario 1" },
+  { email: "usuario2@email.com", senha: "senha2", nome: "Usuario 2" },
+  // adicionar quantos usuarios precisar
+];
+
+async function criarUsuario(user) {
+  const res = await fetch(`${SUPABASE_URL}/auth/v1/admin/users`, {
+    method: "POST",
+    headers: {
+      "apikey": SERVICE_ROLE_KEY,
+      "Authorization": `Bearer ${SERVICE_ROLE_KEY}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      email: user.email,
+      password: user.senha,
+      email_confirm: true,
+      user_metadata: { full_name: user.nome }
+    })
+  });
+  return res.json();
+}
+
+async function sincronizarTodos() {
+  console.log(`Iniciando sync de ${usuarios.length} usuarios...`);
+
+  for (const user of usuarios) {
+    const data = await criarUsuario(user);
+
+    if (data.id) {
+      console.log(`[OK]  ${user.email}`);
+    } else if (data.msg === "User already registered") {
+      console.log(`[JA EXISTE]  ${user.email}`);
+    } else {
+      console.error(`[ERRO]  ${user.email}`, data);
+    }
+
+    // Aguardar 200ms para evitar rate limit
+    await new Promise(r => setTimeout(r, 200));
+  }
+
+  console.log("Sincronizacao concluida!");
+}
+
+sincronizarTodos();</pre>
+    </div>
+  </div>
+
+  <hr>
+
+  <div class="section">
+    <h2>Credenciais</h2>
+    <p class="desc">Configurar como variaveis de ambiente no servidor da Atlantica Natural. Nunca expor no frontend.</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">Variaveis de Ambiente (.env)</span></div>
+      <pre>SUPABASE_URL      = https://xicjkwzwmmlxgnbfgkga.supabase.co
+
+SERVICE_ROLE_KEY  = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpY2prd3p3bW1seGduYmZna2dhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTE1MTQ0OSwiZXhwIjoyMDkwNzI3NDQ5fQ.3RuqGnodaYZyaXQqDGWPDd2ISR4t5zyEQbj11n24sbY</pre>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

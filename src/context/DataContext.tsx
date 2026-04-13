@@ -5,6 +5,7 @@ import { useAuth } from './AuthContext';
 export interface Course {
     id: string;
     title: string;
+    subtitle?: string; // New: For "IA PARA" style prefix
     instructor: string;
     instructorTitle?: string;
     duration: string;
@@ -19,6 +20,11 @@ export interface Course {
     lastLessonId?: string;
     description?: string;
     tags?: string[];
+    // Card Customization (Miniatura)
+    cardTitle?: string;
+    cardSubtitle?: string;
+    cardIcon?: string;
+    cardThumbnail?: string;
 }
 
 export interface Lesson {
@@ -198,6 +204,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 const sbCourses: Course[] = coursesRes.data?.map((c: any) => ({
                     id: c.id,
                     title: c.title,
+                    subtitle: c.subtitle || '', // Map subtitle
                     instructor: c.instructor,
                     instructorTitle: c.instructorTitle,
                     duration: c.duration,
@@ -210,6 +217,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     lastWatchedAt: 0,
                     description: c.description,
                     tags: c.tags || [],
+                    cardTitle: c.cardTitle || c.card_title || '',
+                    cardSubtitle: c.cardSubtitle || c.card_subtitle || '',
+                    cardIcon: c.cardIcon || c.card_icon || '',
+                    cardThumbnail: c.cardThumbnail || c.card_thumbnail || '',
                 })) || [];
                 
                 const mergedCourses = [...sbCourses];
@@ -318,7 +329,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const updateCourse = async (id: string, updated: Partial<Course>) => {
         setCourses(prev => { const next = prev.map(c => c.id === id ? { ...c, ...updated } : c); persistLocal({ courses: next }); return next; });
-        if (isSupabaseConfigured) await supabase.from('courses').update(updated).eq('id', id);
+        if (isSupabaseConfigured) {
+            const sbUpdate: any = { ...updated };
+            // Ensure snake_case for Supabase if needed, but since we use camelCase in our schema usually for these quoted columns:
+            await supabase.from('courses').update(sbUpdate).eq('id', id);
+        }
     };
 
     const deleteCourse = async (id: string) => {

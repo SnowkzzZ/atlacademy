@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>ATL Academy — API Reference</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* RESET */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', Arial, sans-serif;
+  background: #fff;
+  color: #111827;
+  font-size: 13.5px;
+  line-height: 1.7;
+}
+
+/* ──────────────────────────────────────────
+   COVER
+────────────────────────────────────────── */
+.cover {
+  background: linear-gradient(160deg, #050B14 0%, #0D1F3C 100%);
+  padding: 64px 80px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  min-height: 220px;
+}
+
+.cover-left h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+  margin-bottom: 10px;
+}
+
+.cover-left h1 em {
+  font-style: normal;
+  color: #00C8D4;
+}
+
+.cover-left p {
+  font-size: 13px;
+  color: rgba(255,255,255,0.4);
+  max-width: 420px;
+  line-height: 1.6;
+}
+
+.cover-right {
+  text-align: right;
+}
+
+.cover-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #00C8D4;
+  background: rgba(0,200,212,0.12);
+  border: 1px solid rgba(0,200,212,0.3);
+  border-radius: 50px;
+  padding: 4px 14px;
+  margin-bottom: 10px;
+}
+
+.cover-right .base-url {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: rgba(255,255,255,0.3);
+}
+
+/* ──────────────────────────────────────────
+   STATUS BAR
+────────────────────────────────────────── */
+.status-bar {
+  background: #0a8a4c;
+  padding: 9px 80px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  background: #4ade80;
+  border-radius: 50%;
+}
+
+/* ──────────────────────────────────────────
+   BODY
+────────────────────────────────────────── */
+.doc-body {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 48px 60px 80px;
+}
+
+/* ──────────────────────────────────────────
+   SECTIONS
+────────────────────────────────────────── */
+.section {
+  margin-bottom: 52px;
+  padding-bottom: 52px;
+  border-bottom: 1px solid #e5eaf2;
+}
+.section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.section-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #00C8D4;
+  margin-bottom: 6px;
+}
+
+.section h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0D1F3C;
+  margin-bottom: 10px;
+  line-height: 1.25;
+}
+
+.section p {
+  font-size: 13.5px;
+  color: #5a6475;
+  margin-bottom: 16px;
+  line-height: 1.7;
+}
+
+/* ──────────────────────────────────────────
+   ENDPOINT HEADER
+────────────────────────────────────────── */
+.ep-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f5f8fc;
+  border: 1px solid #dde5f0;
+  border-radius: 10px;
+  padding: 12px 18px;
+  margin-bottom: 20px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.ep-method {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.method-post { background: rgba(99,102,241,0.12); color: #6366f1; }
+.method-get  { background: rgba(16,185,129,0.12); color: #059669; }
+
+.ep-path {
+  font-size: 13px;
+  color: #1a2332;
+  font-weight: 500;
+}
+
+/* ──────────────────────────────────────────
+   ALERTS
+────────────────────────────────────────── */
+.alert {
+  border-radius: 8px;
+  padding: 13px 16px;
+  margin: 14px 0;
+  font-size: 13px;
+  line-height: 1.65;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.alert-icon { flex-shrink: 0; font-size: 15px; margin-top: 1px; }
+
+.alert-warn { background: #fffbeb; border: 1px solid #fde68a; border-left: 3px solid #f59e0b; color: #78350f; }
+.alert-info { background: #eff9fc; border: 1px solid #a5d8e6; border-left: 3px solid #00C8D4; color: #0c4a5e; }
+.alert-ok   { background: #f0fdf4; border: 1px solid #86efac; border-left: 3px solid #22c55e; color: #14532d; }
+
+/* ──────────────────────────────────────────
+   PARAM TABLE
+────────────────────────────────────────── */
+.param-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 13px;
+  border: 1px solid #e5eaf2;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.param-table thead { background: #0D1F3C; }
+.param-table th {
+  color: #fff;
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.param-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid #eef1f6;
+  color: #4b5563;
+  vertical-align: top;
+  line-height: 1.55;
+}
+
+.param-table tr:last-child td { border-bottom: none; }
+.param-table tr:nth-child(even) td { background: #f9fafb; }
+.param-table td:first-child {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: #1d4ed8;
+  font-weight: 500;
+}
+
+.badge-req { font-size: 9px; font-weight: 700; background: #fee2e2; color: #b91c1c; padding: 1px 7px; border-radius: 4px; }
+.badge-opt { font-size: 9px; font-weight: 700; background: #f3f4f6; color: #6b7280; padding: 1px 7px; border-radius: 4px; }
+
+/* ──────────────────────────────────────────
+   CODE BLOCKS
+────────────────────────────────────────── */
+.code-wrap {
+  background: #0d1117;
+  border: 1px solid #21262d;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 14px 0;
+  page-break-inside: avoid;
+}
+
+.code-bar {
+  background: #161b22;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  border-bottom: 1px solid #21262d;
+}
+
+.code-lang {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #58a6ff;
+}
+
+.code-dots { display: flex; gap: 5px; }
+.code-dots span { width: 9px; height: 9px; border-radius: 50%; }
+.dot-r { background: #ff5f56; }
+.dot-y { background: #ffbd2e; }
+.dot-g { background: #27c93f; }
+
+.code-wrap pre {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  line-height: 1.7;
+  padding: 18px 20px;
+  color: #c9d1d9;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Syntax colors */
+.kw  { color: #ff79c6; }
+.st  { color: #f1fa8c; }
+.fn  { color: #50fa7b; }
+.cm  { color: #6272a4; }
+.cn  { color: #bd93f9; }
+.url { color: #8be9fd; }
+
+/* ──────────────────────────────────────────
+   RESPONSE TAGS
+────────────────────────────────────────── */
+.response-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 5px;
+  display: inline-block;
+  margin: 18px 0 8px;
+}
+
+.resp-ok  { background: rgba(34,197,94,0.12); color: #16a34a; }
+.resp-err { background: rgba(239,68,68,0.12); color: #dc2626; }
+
+/* ──────────────────────────────────────────
+   INLINE CODE
+────────────────────────────────────────── */
+code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  background: #eef2f9;
+  color: #1d4ed8;
+  padding: 1px 6px;
+  border-radius: 4px;
+  word-break: break-all;
+}
+
+/* ──────────────────────────────────────────
+   FOOTER
+────────────────────────────────────────── */
+.doc-footer {
+  background: #050B14;
+  padding: 22px 60px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.25);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-logo { color: #00C8D4; font-weight: 700; }
+
+/* ──────────────────────────────────────────
+   PRINT / PDF
+   Hides browser chrome (URL bar, date)
+────────────────────────────────────────── */
+@page {
+  size: A4;
+  margin: 14mm 12mm 14mm 12mm;
+}
+
+@media print {
+  /* Remove browser-added header/footer (URL, date) */
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-size: 11px; line-height: 1.55; }
+
+  .cover {
+    padding: 36px 40px;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .cover-left h1 { font-size: 22px; }
+
+  .doc-body { padding: 28px 32px 50px; max-width: 100%; }
+
+  /* Code blocks: smaller font, guaranteed wrap */
+  .code-wrap pre {
+    font-size: 9.5px;
+    line-height: 1.5;
+    padding: 12px 14px;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    overflow: hidden;
+  }
+
+  /* Colors must print */
+  .code-wrap, .code-bar {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .param-table thead {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .alert, .ep-header, .response-label, .doc-footer {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Page break rules */
+  .section { page-break-inside: avoid; break-inside: avoid; margin-bottom: 28px; padding-bottom: 28px; }
+  .code-wrap { page-break-inside: avoid; break-inside: avoid; }
+  .param-table { page-break-inside: avoid; break-inside: avoid; }
+  h2 { page-break-after: avoid; break-after: avoid; }
+  .ep-header { page-break-after: avoid; break-after: avoid; }
+
+  /* Sections: reduce spacing for print */
+  .section h2 { font-size: 15px; margin-bottom: 8px; }
+  .section p { font-size: 11.5px; margin-bottom: 10px; }
+  .param-table { font-size: 11px; }
+  .param-table th { font-size: 9.5px; padding: 7px 10px; }
+  .param-table td { padding: 7px 10px; line-height: 1.45; }
+
+  .doc-footer {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    padding: 14px 32px;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ COVER ══ -->
+<div class="cover">
+  <div class="cover-left">
+    <h1>API Reference<br><em>ATL Academy</em></h1>
+    <p>Guia de integração para sincronizar usuários da Atlântica Natural com a plataforma ATL Academy.</p>
+  </div>
+  <div class="cover-right">
+    <div class="cover-badge">API Reference · v1.0</div><br>
+    <span class="base-url">xicjkwzwmmlxgnbfgkga.supabase.co</span>
+  </div>
+</div>
+
+
+
+<!-- ══ BODY ══ -->
+<div class="doc-body">
+
+  <!-- ══ SEÇÃO 1: AUTENTICAÇÃO ══ -->
+  <div class="section">
+    <div class="section-eyebrow">Autenticação</div>
+    <h2>Service Role Key</h2>
+    <p>A API da ATL Academy usa autenticação via <strong>Service Role Key</strong> — uma chave privada com acesso administrativo total. Deve ser enviada nos headers <code>apikey</code> e <code>Authorization</code> em todas as requisições.</p>
+
+
+
+    <div class="code-wrap">
+      <div class="code-bar">
+        <div class="code-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+        <span class="code-lang">HTTP Headers</span>
+      </div>
+      <pre><span class="cm"># Incluir estes headers em TODAS as requisições</span>
+
+apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIs
+        InJlZiI6InhpY2prd3p3bW1seGduYmZna2dhIiwicm9sZSI6InNlcnZpY2Vfcm9s
+        ZSIsImlhdCI6MTc3NTE1MTQ0OSwiZXhwIjoyMDkwNzI3NDQ5fQ.3RuqGnodaYZy
+        aXQqDGWPDd2ISR4t5zyEQbj11n24sbY
+
+Authorization: Bearer [mesmo valor do apikey]
+
+Content-Type: application/json</pre>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-bar">
+        <div class="code-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+        <span class="code-lang">.env</span>
+      </div>
+      <pre>SUPABASE_URL=https://xicjkwzwmmlxgnbfgkga.supabase.co
+ATL_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...</pre>
+    </div>
+  </div>
+
+  <!-- ══ SEÇÃO 2: CRIAR USUÁRIO ══ -->
+  <div class="section">
+    <div class="section-eyebrow">Endpoint</div>
+    <h2>Criar Usuário</h2>
+    <p>Registra um usuário da Atlântica Natural dentro da ATL Academy. Após a criação, o usuário poderá fazer login no painel ATL com o mesmo e-mail e senha.</p>
+
+    <div class="ep-header">
+      <span class="ep-method method-post">POST</span>
+      <span class="ep-path">/auth/v1/admin/users</span>
+    </div>
+
+    <table class="param-table">
+      <thead>
+        <tr><th>Campo</th><th>Tipo</th><th>Status</th><th>Descrição</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>email</td>
+          <td>string</td>
+          <td><span class="badge-req">obrigatório</span></td>
+          <td>E-mail único do usuário</td>
+        </tr>
+        <tr>
+          <td>password</td>
+          <td>string</td>
+          <td><span class="badge-req">obrigatório</span></td>
+          <td>Senha — mínimo 6 caracteres</td>
+        </tr>
+        <tr>
+          <td>email_confirm</td>
+          <td>boolean</td>
+          <td><span class="badge-opt">opcional</span></td>
+          <td>Enviar <code>true</code> para confirmar o e-mail automaticamente (recomendado)</td>
+        </tr>
+        <tr>
+          <td>user_metadata.full_name</td>
+          <td>string</td>
+          <td><span class="badge-opt">opcional</span></td>
+          <td>Nome completo do usuário</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="code-wrap">
+      <div class="code-bar">
+        <div class="code-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+        <span class="code-lang">Node.js</span>
+      </div>
+      <pre><span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(
+  <span class="st">`${SUPABASE_URL}/auth/v1/admin/users`</span>,
+  {
+    method: <span class="st">"POST"</span>,
+    headers: {
+      <span class="st">"apikey"</span>:        ATL_SERVICE_ROLE_KEY,
+      <span class="st">"Authorization"</span>: <span class="st">`Bearer ${ATL_SERVICE_ROLE_KEY}`</span>,
+      <span class="st">"Content-Type"</span>:  <span class="st">"application/json"</span>
+    },
+    body: <span class="fn">JSON.stringify</span>({
+      email:          <span class="st">"usuario@atlanticanatural.com.br"</span>,
+      password:       <span class="st">"senha123"</span>,
+      email_confirm:  <span class="cn">true</span>,
+      user_metadata:  { full_name: <span class="st">"Nome Completo"</span> }
+    })
+  }
+);
+<span class="kw">const</span> user = <span class="kw">await</span> res.<span class="fn">json</span>();
+console.<span class="fn">log</span>(user.id); <span class="cm">// UUID do novo usuário</span></pre>
+    </div>
+
+    <div class="response-label resp-ok">200 — Criado com sucesso</div>
+    <div class="code-wrap">
+      <div class="code-bar">
+        <div class="code-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+        <span class="code-lang">JSON Response</span>
+      </div>
+      <pre>{
+  <span class="st">"id"</span>:                  <span class="st">"9b1d2f3e-uuid-gerado"</span>,
+  <span class="st">"email"</span>:               <span class="st">"usuario@atlanticanatural.com.br"</span>,
+  <span class="st">"created_at"</span>:          <span class="st">"2026-04-13T17:00:00Z"</span>,
+  <span class="st">"email_confirmed_at"</span>:  <span class="st">"2026-04-13T17:00:00Z"</span>
+}</pre>
+    </div>
+
+    <div class="response-label resp-err">422 — E-mail já registrado</div>
+    <div class="code-wrap">
+      <div class="code-bar">
+        <div class="code-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+        <span class="code-lang">JSON Response</span>
+      </div>
+      <pre>{ <span class="st">"code"</span>: <span class="cn">422</span>, <span class="st">"msg"</span>: <span class="st">"User already registered"</span> }</pre>
+    </div>
+  </div>
+
+  <!-- ══ SEÇÃO 3: LISTAR USUÁRIOS ══ -->
+  <div class="section">
+    <div class="section-eyebrow">Endpoint</div>
+    <h2>Listar Usuários</h2>
+    <p>Retorna todos os usuários cadastrados na ATL Academy. Use antes da sincronização em lote para verificar quais usuários já existem.</p>
+
+    <div class="ep-header">
+      <span class="ep-method method-get">GET</span>
+      <span class="ep-path">/auth/v1/admin/users</span>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-bar">
+        <div class="code-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+        <span class="code-lang">Node.js</span>
+      </div>
+      <pre><span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(
+  <span class="st">`${SUPABASE_URL}/auth/v1/admin/users`</span>,
+  {
+    headers: {
+      <span class="st">"apikey"</span>:        ATL_SERVICE_ROLE_KEY,
+      <span class="st">"Authorization"</span>: <span class="st">`Bearer ${ATL_SERVICE_ROLE_KEY}`</span>
+    }
+  }
+);
+<span class="kw">const</span> { users } = <span class="kw">await</span> res.<span class="fn">json</span>();
+console.<span class="fn">log</span>(<span class="st">`Total: ${users.length} usuários`</span>);</pre>
+    </div>
+
+    <div class="response-label resp-ok">200 — OK</div>
+    <div class="code-wrap">
+      <div class="code-bar">
+        <div class="code-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+        <span class="code-lang">JSON Response</span>
+      </div>
+      <pre>{
+  <span class="st">"users"</span>: [
+    {
+      <span class="st">"id"</span>:               <span class="st">"uuid"</span>,
+      <span class="st">"email"</span>:            <span class="st">"usuario@email.com"</span>,
+      <span class="st">"created_at"</span>:       <span class="st">"2026-01-15T10:00:00Z"</span>,
+      <span class="st">"last_sign_in_at"</span>:  <span class="st">"2026-04-13T12:30:00Z"</span>
+    }
+  ],
+  <span class="st">"total"</span>: <span class="cn">142</span>
+}</pre>
+    </div>
+  </div>
+
+  <!-- ══ SEÇÃO 4: SYNC EM LOTE ══ -->
+  <div class="section">
+    <div class="section-eyebrow">Script</div>
+    <h2>Sincronização em Lote</h2>
+    <p>Use este script para importar todos os usuários da Atlântica Natural de uma só vez. Substitua o array <code>usuarios</code> com os dados reais exportados da Atlântica Natural.</p>
+
+    <div class="alert alert-warn">
+      <span class="alert-icon">⚠️</span>
+      <div><strong>Execução única:</strong> Rodar apenas uma vez para a importação inicial. Para novos usuários após isso, usar o endpoint <code>POST /auth/v1/admin/users</code> individualmente a cada novo cadastro.</div>
+    </div>
+
+
+
+    <div class="code-wrap">
+      <div class="code-bar">
+        <div class="code-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+        <span class="code-lang">sync.js — Node.js</span>
+      </div>
+      <pre><span class="kw">const</span> SUPABASE_URL = <span class="st">"https://xicjkwzwmmlxgnbfgkga.supabase.co"</span>;
+<span class="kw">const</span> KEY = process.env.ATL_SERVICE_ROLE_KEY;
+
+<span class="cm">// ← Substituir com os dados reais da Atlântica Natural</span>
+<span class="kw">const</span> usuarios = [
+  { email: <span class="st">"user1@email.com"</span>, senha: <span class="st">"senha1"</span>, nome: <span class="st">"Nome 1"</span> },
+  { email: <span class="st">"user2@email.com"</span>, senha: <span class="st">"senha2"</span>, nome: <span class="st">"Nome 2"</span> },
+];
+
+<span class="kw">async function</span> <span class="fn">criarUsuario</span>(u) {
+  <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="st">`${SUPABASE_URL}/auth/v1/admin/users`</span>, {
+    method: <span class="st">"POST"</span>,
+    headers: {
+      <span class="st">"apikey"</span>:        KEY,
+      <span class="st">"Authorization"</span>: <span class="st">`Bearer ${KEY}`</span>,
+      <span class="st">"Content-Type"</span>:  <span class="st">"application/json"</span>
+    },
+    body: <span class="fn">JSON.stringify</span>({
+      email:         u.email,
+      password:      u.senha,
+      email_confirm: <span class="cn">true</span>,
+      user_metadata: { full_name: u.nome }
+    })
+  });
+  <span class="kw">return</span> res.<span class="fn">json</span>();
+}
+
+<span class="kw">async function</span> <span class="fn">sincronizar</span>() {
+  console.<span class="fn">log</span>(<span class="st">`Iniciando sync de ${usuarios.length} usuários...`</span>);
+  <span class="kw">for</span> (<span class="kw">const</span> u <span class="kw">of</span> usuarios) {
+    <span class="kw">const</span> d = <span class="kw">await</span> <span class="fn">criarUsuario</span>(u);
+    <span class="kw">if</span> (d.id)                console.<span class="fn">log</span>(<span class="st">`✓  ${u.email}`</span>);
+    <span class="kw">else if</span> (d.code === <span class="cn">422</span>) console.<span class="fn">log</span>(<span class="st">`~  ${u.email} (já existe)`</span>);
+    <span class="kw">else</span>                   console.<span class="fn">error</span>(<span class="st">`✗  ${u.email}`</span>, d.msg);
+    <span class="kw">await new</span> <span class="fn">Promise</span>(r => <span class="fn">setTimeout</span>(r, <span class="cn">200</span>));
+  }
+  console.<span class="fn">log</span>(<span class="st">"Sync concluído!"</span>);
+}
+
+<span class="fn">sincronizar</span>();</pre>
+    </div>
+  </div>
+
+</div><!-- /doc-body -->
+
+<!-- ══ FOOTER ══ -->
+<div class="doc-footer">
+  <div><span class="footer-logo">ATL Academy</span> &nbsp;×&nbsp; Atlântica Natural</div>
+  <div>API Reference v1.0</div>
+</div>
+
+</body>
+</html>

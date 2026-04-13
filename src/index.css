@@ -113,6 +113,27 @@
   .text-glow {
     text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
   }
+
+  /* PREMIUM MODULE CAROUSEL & CARDS (ADAPTA STYLE) */
+  .module-carousel-container {
+    @apply relative overflow-hidden;
+    mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+  }
+
+  .module-card-vertical {
+    @apply relative flex flex-col aspect-[11/16] rounded-[24px] overflow-hidden bg-[#1A1A1A] transition-all duration-500 ease-out;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  }
+
+  .module-card-vertical:hover {
+    @apply -translate-y-2;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255,255,255,0.05);
+  }
+
+  .module-card-overlay-bottom {
+    @apply absolute bottom-0 left-0 right-0 p-6 pt-12 bg-gradient-to-t from-black/95 via-black/60 to-transparent backdrop-blur-[2px];
+  }
 }
 
 /* Custom Scrollbar */

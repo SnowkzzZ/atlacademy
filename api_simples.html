@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>ATL Academy - API de Integração</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    color: #1a1a2e;
+    background: #fff;
+    padding: 40px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  /* HEADER */
+  .header {
+    background: #0D1F3C;
+    color: #fff;
+    padding: 28px 32px;
+    border-radius: 10px;
+    margin-bottom: 32px;
+  }
+  .header h1 { font-size: 22px; color: #00C8D4; margin-bottom: 6px; }
+  .header p  { font-size: 12px; color: rgba(255,255,255,0.5); }
+
+  /* SECTIONS */
+  h2 {
+    font-size: 15px;
+    color: #0D1F3C;
+    margin: 28px 0 10px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #00C8D4;
+  }
+
+  p { margin-bottom: 8px; color: #444; line-height: 1.6; font-size: 13px; }
+
+  /* BOXES */
+  .info-box {
+    background: #f0f8ff;
+    border: 1px solid #bed8ef;
+    border-left: 4px solid #00C8D4;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin: 12px 0;
+    font-size: 12.5px;
+    color: #333;
+    line-height: 1.6;
+  }
+  .warn-box {
+    background: #fffbe6;
+    border: 1px solid #ffe58f;
+    border-left: 4px solid #f59e0b;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin: 12px 0;
+    font-size: 12.5px;
+    color: #7a5400;
+    line-height: 1.6;
+  }
+
+  /* CODE BLOCKS - KEY FIX: word-wrap + pre-wrap */
+  .code-block {
+    background: #1e2434;
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 10px 0 18px;
+    page-break-inside: avoid;
+  }
+  .code-header {
+    background: #131929;
+    padding: 7px 14px;
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #00C8D4;
+  }
+  .code-block pre {
+    padding: 14px 16px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 11.5px;
+    line-height: 1.65;
+    color: #d4e8f8;
+    white-space: pre-wrap;       /* CRITICAL: wrap long lines */
+    word-break: break-all;       /* CRITICAL: break very long tokens */
+    overflow-wrap: break-word;
+  }
+
+  /* TABLE */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    margin: 10px 0 18px;
+    page-break-inside: avoid;
+  }
+  thead tr { background: #0D1F3C; color: #fff; }
+  th { padding: 9px 12px; text-align: left; font-size: 11px; }
+  td { padding: 8px 12px; border-bottom: 1px solid #e8eef5; color: #444; vertical-align: top; }
+  tr:nth-child(even) td { background: #f5f9fc; }
+  td:first-child { font-family: 'Courier New', monospace; font-size: 11.5px; font-weight: bold; color: #0D1F3C; }
+
+  /* INLINE CODE */
+  code {
+    font-family: 'Courier New', monospace;
+    background: #eef2f8;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 11.5px;
+    color: #0a3d6b;
+    word-break: break-all;
+  }
+
+  /* FOOTER */
+  .footer {
+    margin-top: 48px;
+    padding-top: 16px;
+    border-top: 1px solid #dde5ef;
+    font-size: 11px;
+    color: #aaa;
+    text-align: center;
+  }
+
+  /* PRINT RULES */
+  @page {
+    margin: 18mm 15mm;
+    size: A4;
+  }
+  @media print {
+    body { padding: 0; }
+    .code-block, .code-block pre { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    thead tr { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    h2 { page-break-after: avoid; }
+    .code-block { page-break-inside: avoid; }
+    table { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>ATL Academy — API de Integração</h1>
+  <p>Guia técnico para sincronização de usuários da Atlântica Natural com a plataforma ATL Academy &nbsp;|&nbsp; Versão 1.0 &nbsp;|&nbsp; Abril de 2026</p>
+</div>
+
+<div class="warn-box">
+  ⚠️ <strong>Confidencial.</strong> As credenciais abaixo são de uso exclusivo no servidor backend da Atlântica Natural. Nunca expor no código-fonte público ou no frontend da aplicação.
+</div>
+
+<!-- BASE URL -->
+<h2>Base URL</h2>
+<div class="info-box">
+  <code>https://xicjkwzwmmlxgnbfgkga.supabase.co</code>
+</div>
+
+<!-- AUTH -->
+<h2>Autenticação — Headers Obrigatórios</h2>
+<p>Incluir os headers abaixo em <strong>todas</strong> as requisições feitas à API da ATL Academy:</p>
+<div class="code-block">
+  <div class="code-header">HTTP Headers</div>
+  <pre>apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
+YmFzZSIsInJlZiI6InhpY2prd3p3bW1seGduYmZna2dhIiwicm9sZSI6InNl
+cnZpY2Vfcm9sZSIsImlhdCI6MTc3NTE1MTQ0OSwiZXhwIjoyMDkwNzI3NDQ5
+fQ.3RuqGnodaYZyaXQqDGWPDd2ISR4t5zyEQbj11n24sbY
+
+Authorization: Bearer [mesmo valor do apikey acima]
+
+Content-Type: application/json</pre>
+</div>
+
+<!-- ENDPOINT 1: CRIAR -->
+<h2>Endpoint 1 — Criar Usuário</h2>
+<p>Cria um usuário da Atlântica Natural dentro da ATL Academy. Usar para cada novo usuário que deve ter acesso ao painel.</p>
+
+<table>
+  <thead>
+    <tr><th>Campo</th><th>Tipo</th><th>Obrigatório</th><th>Descrição</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>email</td>
+      <td>string</td>
+      <td>Sim</td>
+      <td>E-mail do usuário (deve ser único)</td>
+    </tr>
+    <tr>
+      <td>password</td>
+      <td>string</td>
+      <td>Sim</td>
+      <td>Senha (mínimo 6 caracteres)</td>
+    </tr>
+    <tr>
+      <td>email_confirm</td>
+      <td>boolean</td>
+      <td>Não</td>
+      <td>Enviar <code>true</code> para confirmar o e-mail automaticamente (recomendado)</td>
+    </tr>
+    <tr>
+      <td>user_metadata.full_name</td>
+      <td>string</td>
+      <td>Não</td>
+      <td>Nome completo do usuário</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="code-block">
+  <div class="code-header">Requisição — POST</div>
+  <pre>URL: POST /auth/v1/admin/users
+
+Body (JSON):
+{
+  "email": "usuario@atlanticanatural.com.br",
+  "password": "senha123",
+  "email_confirm": true,
+  "user_metadata": {
+    "full_name": "Nome do Usuário"
+  }
+}</pre>
+</div>
+
+<div class="code-block">
+  <div class="code-header">Resposta — Sucesso (200 OK)</div>
+  <pre>{
+  "id": "uuid-gerado-automaticamente",
+  "email": "usuario@atlanticanatural.com.br",
+  "created_at": "2026-04-13T17:00:00Z",
+  "email_confirmed_at": "2026-04-13T17:00:00Z"
+}</pre>
+</div>
+
+<div class="code-block">
+  <div class="code-header">Resposta — E-mail já existente (422)</div>
+  <pre>{ "code": 422, "msg": "User already registered" }</pre>
+</div>
+
+<!-- ENDPOINT 2: LISTAR -->
+<h2>Endpoint 2 — Listar Usuários</h2>
+<p>Retorna todos os usuários cadastrados na plataforma ATL Academy.</p>
+
+<div class="code-block">
+  <div class="code-header">Requisição — GET</div>
+  <pre>URL: GET /auth/v1/admin/users</pre>
+</div>
+
+<div class="code-block">
+  <div class="code-header">Resposta — Sucesso (200 OK)</div>
+  <pre>{
+  "users": [
+    {
+      "id": "uuid-do-usuario",
+      "email": "usuario@email.com",
+      "created_at": "2026-01-15T10:00:00Z",
+      "last_sign_in_at": "2026-04-13T12:30:00Z"
+    }
+  ],
+  "total": 142
+}</pre>
+</div>
+
+<!-- SYNC EM LOTE -->
+<h2>Script — Sincronização em Lote (Node.js)</h2>
+<p>Usar para importar todos os usuários da Atlântica Natural de uma vez só. Substituir o array <code>usuarios</code> com os dados reais.</p>
+
+<div class="code-block">
+  <div class="code-header">Node.js</div>
+  <pre>const URL = "https://xicjkwzwmmlxgnbfgkga.supabase.co";
+const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO...";
+// Usar a chave completa fornecida na seção Autenticação
+
+const usuarios = [
+  { email: "user1@email.com", senha: "senha1", nome: "Nome 1" },
+  { email: "user2@email.com", senha: "senha2", nome: "Nome 2" },
+];
+
+async function sincronizar() {
+  for (const u of usuarios) {
+    const res = await fetch(`${URL}/auth/v1/admin/users`, {
+      method: "POST",
+      headers: {
+        "apikey": KEY,
+        "Authorization": `Bearer ${KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        email: u.email,
+        password: u.senha,
+        email_confirm: true,
+        user_metadata: { full_name: u.nome }
+      })
+    });
+    const d = await res.json();
+    console.log(d.id ? `OK: ${u.email}` : `ERRO: ${u.email} - ${d.msg}`);
+    await new Promise(r => setTimeout(r, 200)); // evitar rate limit
+  }
+  console.log("Sincronização concluída!");
+}
+
+sincronizar();</pre>
+</div>
+
+<div class="footer">
+  ATL Academy × Atlântica Natural — API de Integração v1.0 — Abril de 2026 — Documento Confidencial
+</div>
+
+</body>
+</html>

@@ -6,7 +6,7 @@ import Navbar from '../components/Navbar';
 import { getYouTubeId, getYouTubeThumbnail, getYouTubeDuration, loadYouTubeAPI, fmtDuration } from '../lib/youtube';
 
 // ── Image compression ──────────────────────────────────────────────────────
-const compressImage = (file: File): Promise<string> => new Promise((resolve, reject) => {
+const compressImage = (file: File, isVertical = false): Promise<string> => new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = (event) => {
@@ -15,8 +15,10 @@ const compressImage = (file: File): Promise<string> => new Promise((resolve, rej
         img.onload = () => {
             const canvas = document.createElement('canvas');
             let w = img.width, h = img.height;
-            if (w > 1280) { h = h * 1280 / w; w = 1280; }
-            if (h > 720) { w = w * 720 / h; h = 720; }
+            const maxW = isVertical ? 1536 : 1280;
+            const maxH = isVertical ? 2752 : 720;
+            if (w > maxW) { h = h * maxW / w; w = maxW; }
+            if (h > maxH) { w = w * maxH / h; h = maxH; }
             canvas.width = w; canvas.height = h;
             const ctx = canvas.getContext('2d');
             ctx ? (ctx.drawImage(img, 0, 0, w, h), resolve(canvas.toDataURL('image/jpeg', 0.85))) : resolve(event.target?.result as string);
@@ -201,6 +203,8 @@ const Admin: React.FC = () => {
 
     // Lesson management (Cronograma)
     const [editingLessonsCourseId, setEditingLessonsCourseId] = useState<string | null>(null);
+    const [editingCardCourseId, setEditingCardCourseId] = useState<string | null>(null);
+    const [curCard, setCurCard] = useState<Partial<Course>>({});
     const [isAddingLesson, setIsAddingLesson] = useState(false);
     const [curLesson, setCurLesson] = useState<Partial<Lesson & { id?: string }>>({});
     const getCourseLesson = (courseId: string) => lessons.filter(l => l.courseId === courseId).sort((a, b) => a.position - b.position);
@@ -231,7 +235,7 @@ const Admin: React.FC = () => {
                 title: cur.title!, instructor: cur.instructor!, duration: cur.duration || '00h 00m',
                 icon: cur.icon || 'play_lesson', progress: 0, videoUrl: cur.videoUrl || '',
                 thumbnailUrl: cur.thumbnailUrl || '', description: cur.description,
-                instructorTitle: cur.instructorTitle, tags: cur.tags,
+                instructorTitle: cur.instructorTitle, subtitle: cur.subtitle, tags: cur.tags,
             });
         }
         setIsEditingCourse(false);
@@ -341,11 +345,15 @@ const Admin: React.FC = () => {
                                         <div className="space-y-4">
                                             <div className="space-y-1.5">
                                                 <label className="font-label text-[9px] uppercase text-white/40">Título *</label>
-                                                <input className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 focus:border-primary outline-none transition-all" value={cur.title || ''} onChange={e => setCur({ ...cur, title: e.target.value })} required placeholder="Ex: Estratégia de Vendas" />
+                                                <input className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 focus:border-primary outline-none transition-all" value={cur.title || ''} onChange={e => setCur({ ...cur, title: e.target.value })} required placeholder="Ex: MARKETING" />
                                             </div>
                                             <div className="space-y-1.5">
-                                                <label className="font-label text-[9px] uppercase text-white/40">Instrutor *</label>
-                                                <input className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 focus:border-primary outline-none transition-all" value={cur.instructor || ''} onChange={e => setCur({ ...cur, instructor: e.target.value })} required placeholder="Nome do instrutor" />
+                                                <label className="font-label text-[9px] uppercase text-white/40">Subtítulo (Ex: IA PARA)</label>
+                                                <input className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 focus:border-primary outline-none transition-all" value={cur.subtitle || ''} onChange={e => setCur({ ...cur, subtitle: e.target.value })} placeholder="Texto pequeno acima do título" />
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <label className="font-label text-[9px] uppercase text-white/40">Nome Exibição (Instrutor) *</label>
+                                                <input className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 focus:border-primary outline-none transition-all" value={cur.instructor || ''} onChange={e => setCur({ ...cur, instructor: e.target.value })} required placeholder="Ex: EDUARDO COELHO" />
                                             </div>
                                             <div className="space-y-1.5">
                                                 <label className="font-label text-[9px] uppercase text-white/40">Cargo do Instrutor</label>
@@ -443,7 +451,14 @@ const Admin: React.FC = () => {
                                                     <span className="material-symbols-outlined text-[16px]">event_note</span>
                                                     <span className="hidden sm:inline">Cronograma</span>
                                                 </button>
-                                                <button onClick={() => { setCur(course); setIsEditingCourse(true); setEditingLessonsCourseId(null); }} className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-label text-[9px] uppercase tracking-widest transition-all flex items-center gap-2 border border-white/5">
+                                                <button
+                                                    onClick={() => { setEditingCardCourseId(editingCardCourseId === course.id ? null : course.id); if (editingCardCourseId !== course.id) { setCurCard(course); } setEditingLessonsCourseId(null); }}
+                                                    className={`px-4 py-2.5 rounded-xl font-label text-[9px] uppercase tracking-widest transition-all flex items-center gap-2 border ${editingCardCourseId === course.id ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'}`}
+                                                >
+                                                    <span className="material-symbols-outlined text-[16px]">featured_video</span>
+                                                    <span className="hidden sm:inline">Miniatura</span>
+                                                </button>
+                                                <button onClick={() => { setCur(course); setIsEditingCourse(true); setEditingLessonsCourseId(null); setEditingCardCourseId(null); }} className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-label text-[9px] uppercase tracking-widest transition-all flex items-center gap-2 border border-white/5">
                                                     <span className="material-symbols-outlined text-[16px]">edit</span><span className="hidden sm:inline">Editar</span>
                                                 </button>
                                                 <button onClick={() => deleteCourse(course.id)} className="px-4 py-2.5 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/20 font-label text-[9px] uppercase tracking-widest transition-all flex items-center gap-2">
@@ -451,6 +466,110 @@ const Admin: React.FC = () => {
                                                 </button>
                                             </div>
                                         </div>
+
+                                        {/* Miniatura Panel */}
+                                        {editingCardCourseId === course.id && (
+                                            <div className="border-t border-white/5 bg-black/30 p-5 space-y-6">
+                                                <div className="flex items-center justify-between">
+                                                    <h5 className="font-headline text-sm uppercase tracking-widest text-primary">Personalizar Miniatura da Capa</h5>
+                                                    <p className="text-[9px] font-label uppercase text-white/30">Estes campos mudam apenas o visual do Card no Dashboard</p>
+                                                </div>
+
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                    {/* Preview */}
+                                                    <div className="space-y-4">
+                                                        <label className="font-label text-[9px] uppercase text-white/40">Pré-visualização do Card</label>
+                                                        <div className="flex justify-center">
+                                                            <div className="w-[200px]">
+                                                                <div className="module-card-vertical pointer-events-none opacity-90 scale-95 origin-center">
+                                                                    <div className="absolute inset-0 z-0">
+                                                                        {(curCard.cardThumbnail || curCard.thumbnailUrl) ? (
+                                                                            <img src={curCard.cardThumbnail || curCard.thumbnailUrl} className="w-full h-full object-cover opacity-80" alt="" />
+                                                                        ) : (
+                                                                            <div className="w-full h-full bg-gradient-to-br from-white/5 to-white/0" />
+                                                                        )}
+                                                                        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/80" />
+                                                                    </div>
+                                                                    <div className="absolute inset-0 flex items-center justify-center z-10">
+                                                                        <span className="material-symbols-outlined text-white/40 text-6xl">{curCard.cardIcon || curCard.icon || 'layers'}</span>
+                                                                    </div>
+                                                                    <div className="module-card-overlay-bottom z-20 flex flex-col items-center text-center p-4">
+                                                                        <p className="font-label text-[7px] text-white/40 tracking-[0.3em] uppercase mb-0.5">{curCard.cardSubtitle || curCard.subtitle || 'MODULO BASE'}</p>
+                                                                        <h3 className="font-headline text-sm font-bold text-white tracking-widest uppercase truncate w-full">{curCard.cardTitle || curCard.title}</h3>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Form */}
+                                                    <div className="space-y-5">
+                                                        <div className="space-y-1.5">
+                                                            <label className="font-label text-[9px] uppercase text-white/40">Título na Capa</label>
+                                                            <input 
+                                                                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-primary outline-none transition-all" 
+                                                                value={curCard.cardTitle || ''} 
+                                                                onChange={e => setCurCard(p => ({ ...p, cardTitle: e.target.value }))} 
+                                                                placeholder={course.title}
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-1.5">
+                                                            <label className="font-label text-[9px] uppercase text-white/40">Subtítulo na Capa</label>
+                                                            <input 
+                                                                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-primary outline-none transition-all" 
+                                                                value={curCard.cardSubtitle || ''} 
+                                                                onChange={e => setCurCard(p => ({ ...p, cardSubtitle: e.target.value }))} 
+                                                                placeholder={course.subtitle || 'Ex: IA PARA'}
+                                                            />
+                                                        </div>
+                                                        <IconPicker 
+                                                            value={curCard.cardIcon || curCard.icon || ''} 
+                                                            onChange={ic => setCurCard(p => ({ ...p, cardIcon: ic }))} 
+                                                        />
+                                                        <div className="space-y-1.5">
+                                                            <label className="font-label text-[9px] uppercase text-white/40">Imagem da Capa (Vertical 1536x2752)</label>
+                                                            <div className="flex gap-2">
+                                                                <input 
+                                                                    className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-primary transition-all" 
+                                                                    value={curCard.cardThumbnail || ''} 
+                                                                    onChange={e => setCurCard(p => ({ ...p, cardThumbnail: e.target.value }))} 
+                                                                    placeholder="URL da imagem vertical..."
+                                                                />
+                                                                <label className="cursor-pointer px-4 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center hover:bg-white/10 transition-colors">
+                                                                    <span className="material-symbols-outlined text-base">upload</span>
+                                                                    <input type="file" hidden accept="image/*" onChange={async (e) => {
+                                                                        const file = e.target.files?.[0];
+                                                                        if (file) {
+                                                                            try { 
+                                                                                const compressed = await compressImage(file, true);
+                                                                                setCurCard(p => ({ ...p, cardThumbnail: compressed })); 
+                                                                            } catch { alert('Erro ao processar imagem.'); }
+                                                                        }
+                                                                    }} />
+                                                                </label>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="pt-2">
+                                                            <button 
+                                                                onClick={() => {
+                                                                    updateCourse(course.id, {
+                                                                        cardTitle: curCard.cardTitle,
+                                                                        cardSubtitle: curCard.cardSubtitle,
+                                                                        cardIcon: curCard.cardIcon,
+                                                                        cardThumbnail: curCard.cardThumbnail
+                                                                    });
+                                                                    setEditingCardCourseId(null);
+                                                                }}
+                                                                className="w-full bg-primary text-black font-bold uppercase rounded-xl py-3 text-[10px] tracking-[2px] hover:bg-white transition-all shadow-lg"
+                                                            >
+                                                                Salvar Miniatura
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
 
                                         {/* Cronograma Panel */}
                                         {isManagingLessons && (
@@ -516,7 +635,7 @@ const Admin: React.FC = () => {
                                                                         const file = e.target.files?.[0];
                                                                         if (file) {
                                                                             try { 
-                                                                                const compressed = await compressImage(file);
+                                                                                const compressed = await compressImage(file, false);
                                                                                 setCurLesson(p => ({ ...p, thumbnailUrl: compressed })); 
                                                                             } catch { alert('Erro ao processar imagem.'); }
                                                                         }

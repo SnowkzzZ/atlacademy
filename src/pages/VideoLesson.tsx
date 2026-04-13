@@ -84,6 +84,9 @@ const VideoLesson: React.FC = () => {
     const videoRef = useRef<HTMLVideoElement>(null);
     const ytPlayerRef = useRef<any>(null);
     const progressIntervalRef = useRef<number | null>(null);
+    const isMountedRef = useRef(false);
+    
+    const DEBUG_VERSION = "v2.1";
     
     // Estados do Player e Capa
     const [isPlayerStarted, setIsPlayerStarted] = useState(false);
@@ -91,54 +94,72 @@ const VideoLesson: React.FC = () => {
     const lastPlayerTimeRef = useRef<number>(currentWatchedSeconds);
 
     // ── PLAYER LIFECYCLE ──────────────────────────────────────────────────
+    // IMPORTANTE: O player YouTube só é criado APÓS o clique manual no play.
+    // Isso elimina qualquer possibilidade de autoplay — quando o player é criado,
+    // já sabemos que o usuário pediu para reproduzir.
     useEffect(() => {
-        if (!ytVideoId || !currentItemId || dataLoading) return;
-        
+        if (!ytVideoId || !currentItemId || dataLoading || !isPlayerStarted) return;
+
+        const startPoll = () => {
+            if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+            progressIntervalRef.current = window.setInterval(() => {
+                if (ytPlayerRef.current?.getCurrentTime && ytPlayerRef.current?.getPlayerState) {
+                    const status = ytPlayerRef.current.getPlayerState();
+                    const currentTime = ytPlayerRef.current.getCurrentTime();
+                    const duration = ytPlayerRef.current.getDuration();
+                    if (status === 1 && duration > 0) {
+                        const delta = currentTime - lastPlayerTimeRef.current;
+                        if (delta > 0 && delta < 5) lastAccumulatedRef.current += delta;
+                        lastPlayerTimeRef.current = currentTime;
+                        const progress = Math.min(Math.floor((lastAccumulatedRef.current / duration) * 100), 100);
+                        updateProgress(currentItemId, lastAccumulatedRef.current, progress, currentTime);
+                    } else {
+                        lastPlayerTimeRef.current = currentTime;
+                    }
+                }
+            }, 3000);
+        };
+
         const initPlayer = async () => {
             try {
                 await loadYouTubeAPI();
-                
-                // If the player already exists, just change the video
-                // Se mudar de lição, resetamos a capa
-            setIsPlayerStarted(false);
-            
-            if (ytPlayerRef.current && ytPlayerRef.current.loadVideoById) {
-                    console.log('[Player] Reusing existing player for:', ytVideoId);
+
+                // Se já existe player, muda o vídeo direto com loadVideoById (mantém autoplay)
+                if (ytPlayerRef.current?.loadVideoById) {
+                    console.log('[Player] Reutilizando player — loadVideoById:', ytVideoId);
                     ytPlayerRef.current.loadVideoById({
                         videoId: ytVideoId,
-                        startSeconds: currentLastPosition
+                        startSeconds: currentLastPosition > 5 ? currentLastPosition : 0
                     });
+                    startPoll();
                     return;
                 }
 
-                // Otherwise, wait for DOM and create it
-                await new Promise(r => setTimeout(r, 300));
+                // Aguarda a div existir no DOM (renderizada porque isPlayerStarted = true)
+                await new Promise(r => setTimeout(r, 150));
                 const el = document.getElementById(ytPlayerId);
-                if (!el) return;
+                if (!el) { console.warn('[Player] div não encontrada no DOM'); return; }
 
-                console.log('[Player] Initializing new player for:', ytVideoId);
+                console.log('[Player] Criando player com autoplay:1 após clique manual');
                 ytPlayerRef.current = new (window as any).YT.Player(ytPlayerId, {
                     videoId: ytVideoId,
                     playerVars: {
-                        autoplay: 0,
+                        autoplay: 1,   // seguro: chegamos aqui apenas após clique do usuário
+                        start:    currentLastPosition > 5 ? Math.floor(currentLastPosition) : 0,
                         modestbranding: 1,
                         rel: 0,
-                        start: Math.floor(currentLastPosition),
                         origin: window.location.origin
                     },
                     events: {
-                        onReady: (e: any) => {
-                            if (currentLastPosition > 0) e.target.seekTo(currentLastPosition, true);
-                            startPoll();
-                        },
+                        onReady: () => { startPoll(); },
                         onStateChange: (e: any) => {
-                            // YT.PlayerState.ENDED = 0
+                            // Avança para próxima lição ao terminar (state 0 = ended)
                             if (e.data === 0) {
-                                const cls = lessons.filter(l => l.courseId === activeCourse?.id).sort((a,b) => a.position - b.position);
+                                const cls = lessons
+                                    .filter(l => l.courseId === activeCourse?.id)
+                                    .sort((a, b) => a.position - b.position);
                                 const idx = cls.findIndex(l => l.id === activeLesson?.id);
-                                if (idx !== -1 && idx < cls.length - 1) {
-                                    changeLesson(cls[idx+1].id);
-                                }
+                                if (idx !== -1 && idx < cls.length - 1) changeLesson(cls[idx + 1].id);
                             }
                         }
                     }
@@ -150,46 +171,24 @@ const VideoLesson: React.FC = () => {
 
         initPlayer();
 
-        const startPoll = () => {
-            if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
-            progressIntervalRef.current = window.setInterval(() => {
-                if (ytPlayerRef.current && ytPlayerRef.current.getCurrentTime && ytPlayerRef.current.getPlayerState) {
-                    const status = ytPlayerRef.current.getPlayerState();
-                    const currentTime = ytPlayerRef.current.getCurrentTime();
-                    const duration = ytPlayerRef.current.getDuration();
-                    
-                    // Se estiver tocando, a capa some (caso não tenha sumido pelo clique)
-                    if (status === 1 && !isPlayerStarted) {
-                        setIsPlayerStarted(true);
-                    }
-                    
-                    // YT.PlayerState.PLAYING = 1
-                    if (status === 1 && duration > 0) {
-                        const delta = currentTime - lastPlayerTimeRef.current;
-                        
-                        // Se o avanço for pequeno ( < 5s), contamos como tempo assistido real
-                        if (delta > 0 && delta < 5) {
-                            lastAccumulatedRef.current += delta;
-                        }
-                        
-                        lastPlayerTimeRef.current = currentTime;
-                        
-                        const progress = Math.min(Math.floor((lastAccumulatedRef.current / duration) * 100), 100);
-                        updateProgress(currentItemId, lastAccumulatedRef.current, progress, currentTime);
-                    } else {
-                        // Apenas atualizamos a última posição para evitar saltos se pausar e voltar
-                        lastPlayerTimeRef.current = currentTime;
-                    }
-                }
-            }, 3000);
-        };
-
         return () => {
-            // We don't destroy the player here unless the whole component unmounts
-            // because subsequent effects for the SAME component will reuse it.
             if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
         };
-    }, [currentItemId, ytVideoId, dataLoading]);
+    }, [currentItemId, ytVideoId, dataLoading, isPlayerStarted]);
+
+    // Reseta capa ao trocar de lição e pausa player existente
+    useEffect(() => {
+        isMountedRef.current = true;
+        setIsPlayerStarted(false);
+        lastAccumulatedRef.current = currentWatchedSeconds;
+        lastPlayerTimeRef.current  = currentWatchedSeconds;
+        if (ytPlayerRef.current?.pauseVideo) {
+            ytPlayerRef.current.pauseVideo();
+        }
+        return () => { isMountedRef.current = false; };
+    }, [currentItemId]);
+
+
 
     // Clean up player on UNMOUNT only
     useEffect(() => {
@@ -272,7 +271,12 @@ const VideoLesson: React.FC = () => {
                             <div className="relative aspect-video bg-black rounded-xl md:rounded-3xl overflow-hidden border border-white/5 shadow-2xl ring-1 ring-white/5">
                                 {currentVideoUrl ? (
                                     ytVideoId ? (
-                                        <div id={ytPlayerId} className="w-full h-full" />
+                                        // Div do player só existe no DOM após clique — sem iframe = sem autoplay
+                                        isPlayerStarted
+                                            ? <div key={`${currentItemId}-active`} id={ytPlayerId} className="w-full h-full" />
+                                            : <div key={`${currentItemId}-placeholder`} className="w-full h-full bg-black flex items-center justify-center">
+                                                <span className="text-white/5 font-label text-[8px] uppercase tracking-widest">{DEBUG_VERSION} READY</span>
+                                              </div>
                                     ) : (
                                         <video
                                             key={currentVideoUrl}
@@ -314,9 +318,12 @@ const VideoLesson: React.FC = () => {
                                         <button 
                                             onClick={() => {
                                                 setIsPlayerStarted(true);
-                                                if (ytPlayerRef.current) {
-                                                    ytPlayerRef.current.playVideo();
-                                                } else if (videoRef.current) {
+                                                // O player será criado pelo useEffect que escuta isPlayerStarted
+                                                // Para vídeo HTML5 (não YouTube)
+                                                if (videoRef.current) {
+                                                    if (currentLastPosition > 5) {
+                                                        videoRef.current.currentTime = currentLastPosition;
+                                                    }
                                                     videoRef.current.play();
                                                 }
                                             }}
