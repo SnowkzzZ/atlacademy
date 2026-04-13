@@ -73,6 +73,7 @@ const Dashboard: React.FC = () => {
                         <div className="absolute inset-0 bg-primary opacity-5 blur-3xl rounded-full scale-125"></div>
                     )}
                 </div>
+                <div className="hero-overlay"></div>
             </div>
 
             <motion.main
@@ -90,13 +91,13 @@ const Dashboard: React.FC = () => {
                         </motion.div>
 
                         <motion.div variants={itemVariants} className="space-y-4 md:space-y-6 relative z-20">
-                            <div className="inline-flex premium-pill items-center gap-2 md:gap-3">
-                                <span className="w-1.5 h-1.5 bg-primary rounded-full shadow-[0_0_12px_#00FD86] animate-pulse"></span>
-                                <span className="text-[10px] tracking-[0.2em]">ÁREA DO MEMBRO EXCLUSIVO</span>
+                            <div className="hero-badge font-label text-[10px] tracking-[0.2em]">
+                                <span className="pulse-dot mr-2 mt-1"></span>
+                                ÁREA DO MEMBRO EXCLUSIVO
                             </div>
 
                             <h1
-                                className="font-headline font-bold tracking-tight uppercase text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-white/30 drop-shadow-2xl w-full text-center"
+                                className="hero-title font-headline font-bold tracking-tight uppercase drop-shadow-2xl w-full text-center"
                                 style={{ fontSize: 'clamp(1.75rem, 5vw, 6rem)', lineHeight: 1.05, wordBreak: 'break-word', padding: '0 1rem' }}
                             >
                                 {heroCourse ? heroCourse.title.split(':')[0] : 'Bem-vindo à ATL'}
@@ -111,10 +112,10 @@ const Dashboard: React.FC = () => {
                         <motion.div
                             variants={itemVariants}
                             whileHover={{ y: -5, scale: 1.01 }}
-                            className="liquid-glass-card w-[calc(100%-2rem)] md:w-full max-w-3xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-8 mx-4 mt-4 md:mt-16"
+                            className="card-progresso w-[calc(100%-2rem)] md:w-full max-w-3xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-8 mx-4 mt-4 md:mt-16"
                         >
                             <div className="flex items-center gap-6 w-full md:w-auto">
-                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-white/10 to-transparent border border-white/10 flex items-center justify-center shrink-0 shadow-lg">
+                                <div className="avatar-instrutor w-12 h-12 flex items-center justify-center shrink-0">
                                     <span className="material-symbols-outlined text-white/70 text-[22px]">person</span>
                                 </div>
                                 <div className="text-left overflow-hidden">
@@ -128,19 +129,18 @@ const Dashboard: React.FC = () => {
                                     <span>PROGRESSO ATIVO</span>
                                     <span className="text-primary font-bold">{heroProgress}%</span>
                                 </div>
-                                <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden shadow-inner">
+                                <div className="progress-bar-bg w-full shadow-inner">
                                     <motion.div
                                         initial={{ width: 0 }}
                                         animate={{ width: `${heroProgress}%` }}
                                         transition={{ duration: 1.2, delay: 1 }}
-                                        className="h-full bg-gradient-to-r from-primary/40 to-primary rounded-full relative"
+                                        className="progress-bar-fill"
                                     >
-                                        <div className="absolute right-0 top-0 bottom-0 w-8 bg-white/30 blur-[4px]"></div>
                                     </motion.div>
                                 </div>
                             </div>
 
-                            <Link to={heroLink} className="w-full md:w-auto bg-white text-black px-10 py-4 rounded-2xl font-headline font-bold text-[11px] tracking-[0.2em] hover:bg-primary transition-all shadow-[0_20px_40px_rgba(255,255,255,0.1)] uppercase">
+                            <Link to={heroLink} className="btn-neon w-full md:w-auto px-10 py-4 font-headline text-[11px] tracking-[0.2em] uppercase text-center flex items-center justify-center">
                                 {isHeroStarted ? 'Continuar Aula' : 'Iniciar Aula'}
                             </Link>
                         </motion.div>
@@ -194,44 +194,41 @@ const Dashboard: React.FC = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-12">
                         {courses.filter(c => c.progress > 0 || (courses.length <= 3)).sort((a,b) => (b.lastWatchedAt || 0) - (a.lastWatchedAt || 0)).slice(0, 3).map((course, idx) => {
                             const colors = ['bg-primary', 'bg-blue-500', 'bg-purple-500'];
-                            const textColors = ['text-primary', 'text-blue-400', 'text-purple-400'];
                             const cName = colors[idx % 3];
-                            const tName = textColors[idx % 3];
                             
                             const courseLink = course.lastLessonId ? `/lesson/${course.lastLessonId}` : `/lesson/${course.id}`;
 
                             return (
                                 <motion.div key={course.id} whileHover={{ y: -8 }} transition={{ duration: 0.5 }}>
-                                    <Link to={courseLink} className="liquid-glass-card group flex flex-col aspect-[4/5] md:h-[520px] overflow-hidden relative">
+                                    <Link to={courseLink} className="course-card group flex flex-col aspect-[4/5] md:h-[520px] relative">
                                         <div className="flex-1 p-10 flex flex-col justify-between relative overflow-hidden">
                                             {course.thumbnailUrl ? (
                                                 <div className="absolute inset-0 z-0">
                                                     <img src={course.thumbnailUrl} className="w-full h-full object-cover opacity-50 group-hover:opacity-70 transition-all duration-1000 mix-blend-overlay grayscale-[30%] group-hover:grayscale-0 group-hover:scale-110" alt="" />
-                                                    <div className="absolute inset-0 bg-gradient-to-t from-[#030303] via-[#030303]/40 to-transparent"></div>
-                                                    <div className="absolute inset-0 bg-gradient-to-r from-[#030303]/60 via-transparent to-transparent"></div>
+                                                    <div className="course-card-overlay"></div>
                                                 </div>
                                             ) : (
                                                 <div className={`absolute top-0 right-0 w-72 h-72 ${cName}/10 rounded-full blur-3xl group-hover:${cName}/20 transition-colors duration-1000`}></div>
                                             )}
 
-                                            <div className="w-20 h-20 rounded-[28px] bg-white/[0.03] border border-white/10 flex items-center justify-center relative z-10 backdrop-blur-xl group-hover:scale-110 transition-all duration-700 shadow-2xl">
+                                            <div className="course-icon-top w-20 h-20 flex items-center justify-center relative z-10 group-hover:scale-110 transition-all duration-700 shadow-2xl">
                                                 <span className="material-symbols-outlined text-white/50 group-hover:text-white text-4xl transition-colors">{course.icon}</span>
                                             </div>
 
                                             <div className="relative z-10 space-y-4">
                                                 <div className="flex gap-2">
-                                                    <span className={`px-3 py-1 rounded-full bg-white/5 border border-white/10 font-label text-[8px] tracking-[0.2em] ${tName} uppercase`}>MODULO BASE</span>
+                                                    <span className="badge-modulo font-label tracking-[0.2em] uppercase">MODULO BASE</span>
                                                 </div>
                                                 <h3 className="font-headline text-3xl font-bold leading-[1.1] group-hover:text-white transition-colors">{course.title}</h3>
                                                 <p className="text-white/40 text-sm font-body">Com {course.instructor}</p>
                                             </div>
                                         </div>
 
-                                        <div className="h-2 w-full bg-white/5 relative">
+                                        <div className="progress-bar-bg absolute bottom-0 left-0 right-0 h-1 rounded-none bg-transparent">
                                             <motion.div
                                                 initial={{ width: 0 }}
                                                 animate={{ width: course.progress + '%' }}
-                                                className={`h-full bg-gradient-to-r from-${cName}/20 to-${cName.replace('bg-', '')} shadow-[0_0_20px_rgba(0, 245, 255,0.2)]`}
+                                                className="progress-bar-fill rounded-none"
                                             ></motion.div>
                                         </div>
                                     </Link>
@@ -250,9 +247,9 @@ const Dashboard: React.FC = () => {
                     <div className="grid grid-cols-2 md:flex md:flex-wrap gap-3 md:gap-6">
                         {sectors.map((sector) => (
                             <motion.div key={sector.id} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                <Link to="/explore" className="px-3 py-3 md:px-10 md:py-6 liquid-glass rounded-xl md:rounded-full flex items-center gap-2 md:gap-6 hover:bg-white/[0.08] transition-all group w-full">
-                                    <span className="w-1.5 h-1.5 md:w-2.5 md:h-2.5 rounded-full bg-white/10 group-hover:bg-primary group-hover:shadow-[0_0_10px_#00F5FF] transition-all shrink-0"></span>
-                                    <span className="font-label text-[8px] md:text-xs tracking-[0.15em] md:tracking-[0.3em] uppercase text-white/60 group-hover:text-white transition-colors leading-tight">{sector.name}</span>
+                                <Link to="/explore" className="intelligence-pill px-4 py-3 md:px-8 md:py-5 w-full">
+                                    <span className="pulse-dot shrink-0"></span>
+                                    <span className="font-label text-[8px] md:text-sm tracking-[0.1em] uppercase leading-tight">{sector.name}</span>
                                 </Link>
                             </motion.div>
                         ))}

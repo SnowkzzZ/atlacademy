@@ -139,7 +139,233 @@
 
 .no-scrollbar {
   -ms-overflow-style: none;
-  /* IE and Edge */
   scrollbar-width: none;
-  /* Firefox */
+}
+
+/* ==========================================================
+   2. NAVBAR
+   ========================================================== */
+.navbar-premium {
+  background: rgba(5, 11, 20, 0.9);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+}
+
+.nav-item-active {
+  background-color: #00F0FF;
+  color: #050B14;
+  font-weight: bold;
+  border-radius: 8px;
+}
+
+.nav-central-comando {
+  border: 1px solid #00F0FF;
+  color: #00F0FF;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.nav-icon {
+  transition: color 0.3s ease;
+}
+.nav-icon:hover {
+  color: #00F0FF;
+  text-shadow: 0 0 10px rgba(0, 240, 255, 0.15);
+}
+
+/* ==========================================================
+   3. HERO SECTION (TREINAMENTO ATL NEX)
+   ========================================================== */
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top, 
+    #050B14 0%, 
+    rgba(5, 11, 20, 0.4) 50%, 
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+.hero-title {
+  color: #E8F4F8;
+  border-bottom: 1px solid rgba(0, 240, 255, 0.15);
+  padding-bottom: 8px;
+}
+
+.hero-badge {
+  background: rgba(0, 240, 255, 0.1);
+  border: 1px solid #00F0FF;
+  color: #00F0FF;
+  padding: 4px 12px;
+  border-radius: 50px;
+  display: inline-flex;
+  backdrop-filter: blur(4px);
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-badge::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  width: 100%;
+  background: #00F0FF;
+  box-shadow: 0 0 10px #00F0FF;
+  animation: scanlineCyan 2s linear infinite;
+}
+
+@keyframes scanlineCyan {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* ==========================================================
+   4. CARD DE PROGRESSO DO ALUNO (GLASSMORPHISM)
+   ========================================================== */
+.card-progresso {
+  background: rgba(10, 22, 40, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  transition: all 0.5s ease;
+}
+
+.avatar-instrutor {
+  border: 2px solid #00F0FF;
+  border-radius: 50%;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.15);
+}
+
+.progress-bar-bg {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 50px;
+  overflow: hidden;
+  height: 8px;
+}
+
+.progress-bar-fill {
+  background: linear-gradient(90deg, #00BFFF, #00F0FF);
+  height: 100%;
+  border-radius: 50px;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-bar-fill::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  animation: shine 2s infinite;
+}
+
+@keyframes shine {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.btn-neon {
+  background-color: #00F0FF;
+  color: #050B14;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.btn-neon:hover {
+  background-color: #00BFFF;
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.15);
+}
+
+/* ==========================================================
+   5. CARDS DE CURSOS (TRANSMISSÕES ATIVAS)
+   ========================================================== */
+.course-card {
+  background: #0A1628;
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.course-card:hover {
+  transform: translateY(-4px);
+  border-color: #00F0FF;
+  box-shadow: 0 10px 30px rgba(0, 240, 255, 0.15);
+}
+
+.course-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(10,22,40,1) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.badge-modulo {
+  background: rgba(0, 240, 255, 0.15);
+  color: #00F0FF;
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.course-icon-top {
+  background: #0D1F3C;
+  color: #00F0FF;
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  border-radius: 12px;
+}
+
+/* ==========================================================
+   6. SETORES DE INTELIGÊNCIA (PILLS & PULSE DOT)
+   ========================================================== */
+.intelligence-pill {
+  background: #0D1F3C;
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  color: #00F0FF;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.intelligence-pill:hover {
+  background: rgba(0, 240, 255, 0.05);
+  border-color: #00F0FF;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.15);
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #00F0FF;
+  border-radius: 50%;
+  box-shadow: 0 0 0 0 rgba(0, 240, 255, 0.7);
+  animation: pulseNeon 1.5s infinite;
+}
+
+@keyframes pulseNeon {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(0, 240, 255, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 6px rgba(0, 240, 255, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(0, 240, 255, 0);
+  }
 }

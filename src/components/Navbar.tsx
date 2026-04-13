@@ -28,7 +28,7 @@ const Navbar: React.FC<{ isFixed?: boolean }> = ({ isFixed = true }) => {
                 transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                 className="max-w-[1440px] mx-auto pointer-events-auto"
             >
-                <div className={`liquid-glass-soft transition-all duration-500 px-4 md:px-8 py-3 flex justify-between items-center ${scrolled ? 'rounded-full bg-black/40 backdrop-blur-3xl border-white/10' : 'rounded-[2rem] bg-white/[0.02]'}`}>
+                <div className={`navbar-premium transition-all duration-500 px-4 md:px-8 py-3 flex justify-between items-center ${scrolled ? 'rounded-full' : 'rounded-[2rem]'}`}>
 
                     {/* Left Side: Logo */}
                     <div className="flex items-center">
@@ -53,17 +53,10 @@ const Navbar: React.FC<{ isFixed?: boolean }> = ({ isFixed = true }) => {
                         ].map((link) => (
                             <Link
                                 key={link.name}
-                                className={`relative px-6 py-2 rounded-full font-label text-[9px] font-semibold tracking-[0.2em] uppercase transition-all duration-500 overflow-hidden group`}
+                                className={`relative px-6 py-2 rounded-full font-label text-[9px] font-semibold tracking-[0.2em] uppercase transition-all duration-300 ${isActive(link.path) ? 'nav-item-active' : 'text-white/40 hover:text-white'}`}
                                 to={link.path}
                             >
-                                <span className={`relative z-10 ${isActive(link.path) ? 'text-black' : 'text-white/40 group-hover:text-white'}`}>{link.name}</span>
-                                {isActive(link.path) && (
-                                    <motion.div
-                                        layoutId="nav-bg"
-                                        className="absolute inset-0 bg-primary rounded-full shadow-[0_0_20px_rgba(0, 245, 255,0.4)]"
-                                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                                    />
-                                )}
+                                {link.name}
                             </Link>
                         ))}
                         
@@ -71,9 +64,9 @@ const Navbar: React.FC<{ isFixed?: boolean }> = ({ isFixed = true }) => {
                         {isMasterAdmin && (
                             <Link
                                 to="/painel"
-                                className="relative px-6 py-2 rounded-full font-label text-[9px] font-bold tracking-[0.2em] uppercase transition-all duration-500 overflow-hidden group bg-primary/10 border border-primary/20 hover:bg-primary hover:text-black"
+                                className="nav-central-comando font-label text-[9px] font-bold tracking-[0.2em] px-6 py-2 uppercase hover:bg-[#00F0FF] hover:text-[#050B14]"
                             >
-                                <span className="relative z-10 text-primary group-hover:text-black">CENTRAL DE COMANDO</span>
+                                CENTRAL DE COMANDO
                             </Link>
                         )}
                     </div>
@@ -82,21 +75,20 @@ const Navbar: React.FC<{ isFixed?: boolean }> = ({ isFixed = true }) => {
                     <div className="flex items-center gap-2 md:gap-4">
                         <div className="hidden md:flex items-center gap-2">
                             <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="w-9 h-9 rounded-full border border-white/10 flex items-center justify-center bg-white/[0.03] hover:bg-white/[0.08] transition-colors">
-                                <span className="material-symbols-outlined text-white/50 text-[16px]">search</span>
+                                <span className="material-symbols-outlined text-white/50 nav-icon text-[16px]">search</span>
                             </motion.button>
                             <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="w-9 h-9 rounded-full border border-white/10 flex items-center justify-center bg-white/[0.03] hover:bg-white/[0.08] transition-colors relative">
                                 <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-primary rounded-full shadow-[0_0_10px_#00F5FF]"></div>
-                                <span className="material-symbols-outlined text-white/50 text-[16px]">notifications</span>
+                                <span className="material-symbols-outlined text-white/50 nav-icon text-[16px]">notifications</span>
                             </motion.button>
                         </div>
 
                         <Link to="/profile" className="group">
                             <motion.div
                                 whileHover={{ scale: 1.05 }}
-                                className="w-9 h-9 md:w-11 md:h-11 rounded-full border border-white/10 flex items-center justify-center bg-white/[0.03] group-hover:border-primary/40 transition-colors relative overflow-hidden"
+                                className="w-9 h-9 md:w-11 md:h-11 rounded-full border border-white/10 flex items-center justify-center bg-white/[0.03] transition-colors relative overflow-hidden"
                             >
-                                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                <span className="material-symbols-outlined text-white/50 group-hover:text-white text-base md:text-lg transition-colors">person</span>
+                                <span className="material-symbols-outlined text-white/50 nav-icon text-base md:text-lg">person</span>
                             </motion.div>
                         </Link>
 
