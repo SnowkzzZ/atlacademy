@@ -38,7 +38,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ course, index }) => {
                 </div>
 
                 {/* Bottom Content (Glass Footer) */}
-                <div className="module-card-overlay-bottom backdrop-blur-md z-20 flex flex-col items-center text-center">
+                <div className="module-card-overlay-bottom flex flex-col items-center text-center">
                     <p className="font-label text-[8px] md:text-[10px] text-white/40 tracking-[0.3em] uppercase mb-1">
                         {dispSubtitle}
                     </p>

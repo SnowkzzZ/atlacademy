@@ -489,7 +489,7 @@ const Admin: React.FC = () => {
                                                                             <div className="w-full h-full bg-gradient-to-br from-white/5 to-white/0" />
                                                                         )}
                                                                     </div>
-                                                                    <div className="module-card-overlay-bottom backdrop-blur-md z-20 flex flex-col items-center text-center">
+                                                                    <div className="module-card-overlay-bottom flex flex-col items-center text-center">
                                                                         <p className="font-label text-[7px] text-white/40 tracking-[0.3em] uppercase mb-0.5">{curCard.cardSubtitle || curCard.subtitle || 'MODULO BASE'}</p>
                                                                         <h3 className="font-headline text-sm font-bold text-white tracking-widest uppercase truncate w-full">{curCard.cardTitle || curCard.title}</h3>
                                                                     </div>
