@@ -62,7 +62,10 @@ const Dashboard: React.FC = () => {
 
             {/* FULL BLEED BACKGROUND HERO */}
             <div className="absolute top-0 left-0 right-0 w-full h-[60vh] md:h-[80vh] z-0 overflow-hidden pointer-events-none">
-                <div className="w-full h-full">
+                <div 
+                    className="w-full h-full" 
+                    style={{ maskImage: 'linear-gradient(to top, transparent 0%, transparent 5%, black 40%, black 100%)', WebkitMaskImage: 'linear-gradient(to top, transparent 0%, transparent 5%, black 40%, black 100%)' }}
+                >
                     {heroCourse?.thumbnailUrl ? (
                         <img src={heroCourse.thumbnailUrl} className="w-full h-full object-cover opacity-60 brightness-[0.5] grayscale contrast-125 mix-blend-luminosity object-top" alt="" />
                     ) : (
