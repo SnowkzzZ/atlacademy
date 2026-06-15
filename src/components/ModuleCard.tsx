@@ -37,27 +37,33 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ course, index }) => {
                     )}
                 </div>
 
-                {/* Bottom Content (Glass Footer) */}
-                <div className="module-card-overlay-bottom flex flex-col items-center text-center">
-                    <p className="font-label text-[8px] md:text-[10px] text-white/40 tracking-[0.3em] uppercase mb-1 flex items-center gap-1">
-                        {course.icon && <span className="material-symbols-outlined text-[10px]">{course.icon}</span>}
-                        {dispSubtitle}
-                    </p>
-                    <h3 className="font-headline text-lg md:text-2xl font-bold text-white tracking-widest uppercase truncate w-full group-hover:text-primary transition-all">
-                        {dispTitle}
-                    </h3>
-                    <div className="mt-3 py-1 px-4 rounded-full bg-white/5 border border-white/5 group-hover:bg-white/10 group-hover:border-white/10 transition-all">
-                        <p className="font-label text-[8px] md:text-[9px] text-white/30 tracking-widest uppercase">
-                            {course.instructor}
-                        </p>
+                {/* Top-Left Icon Overlay */}
+                {course.icon && (
+                    <div className="absolute top-4 left-4 z-20 w-8 h-8 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center group-hover:bg-primary/20 group-hover:border-primary/50 transition-all duration-300 shadow-lg">
+                        <span className="material-symbols-outlined text-[14px] text-white/80 group-hover:text-primary transition-colors">{course.icon}</span>
                     </div>
-                </div>
+                )}
 
-                {/* Hover progress indicator or detail */}
+                {/* Hover progress indicator */}
                 <div className="absolute top-4 right-4 z-20 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-x-2 group-hover:translate-x-0">
                     <div className="bg-black/60 backdrop-blur-md border border-white/10 rounded-full px-3 py-1 flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
                         <span className="text-[8px] font-bold text-white uppercase tracking-widest">{course.progress}%</span>
+                    </div>
+                </div>
+
+                {/* Bottom Content (Glass Footer) */}
+                <div className="module-card-overlay-bottom flex flex-col items-center text-center">
+                    <p className="font-label text-[9px] md:text-[11px] text-white/50 tracking-[0.3em] uppercase mb-1">
+                        {dispSubtitle}
+                    </p>
+                    <h3 className="font-headline text-xl md:text-3xl font-bold text-white tracking-widest uppercase truncate w-full group-hover:text-primary transition-colors drop-shadow-md">
+                        {dispTitle}
+                    </h3>
+                    <div className="mt-3 py-1.5 px-4 rounded-full bg-white/5 border border-white/10 group-hover:bg-white/10 group-hover:border-white/20 transition-all shadow-lg">
+                        <p className="font-label text-[8px] md:text-[9px] text-white/60 tracking-widest uppercase">
+                            {course.instructor}
+                        </p>
                     </div>
                 </div>
             </Link>
