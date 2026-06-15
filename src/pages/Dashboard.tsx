@@ -9,7 +9,7 @@ import ModuleCard from '../components/ModuleCard';
 import AnimatedStatCard from '../components/AnimatedStatCard';
 
 const Dashboard: React.FC = () => {
-    const { courses, sectors, isLoading } = useData();
+    const { courses, lessons, sectors, isLoading } = useData();
 
     if (isLoading) {
         return (
@@ -27,9 +27,12 @@ const Dashboard: React.FC = () => {
     const totalMinutesWatched = Math.floor((totalWatchedSeconds % 3600) / 60);
 
     const heroCourse = [...courses].sort((a, b) => (b.lastWatchedAt || 0) - (a.lastWatchedAt || 0))[0] || (courses.length > 0 ? courses[0] : null);
+    const heroLesson = lessons ? [...lessons].sort((a, b) => (b.lastWatchedAt || 0) - (a.lastWatchedAt || 0))[0] : null;
+    const heroImage = heroLesson?.thumbnailUrl || heroCourse?.thumbnailUrl || heroCourse?.cardThumbnail || null;
     
     // Diagnostic
-    if (heroCourse) console.log(`[Dashboard] Hero: ${heroCourse.title}`);
+    if (heroCourse) console.log(`[Dashboard] Hero Course: ${heroCourse.title}`);
+    if (heroLesson) console.log(`[Dashboard] Hero Lesson: ${heroLesson.title}`);
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -52,12 +55,28 @@ const Dashboard: React.FC = () => {
     };
 
     return (
-        <div className="font-body text-white/90 selection:bg-primary selection:text-black min-h-screen relative bg-surface-container-lowest overflow-x-hidden">
-            <div className="fixed inset-0 z-0">
-                <div className="absolute inset-0 bg-surface-container-lowest"></div>
-                <div className="absolute top-[-20%] left-[-10%] w-[80%] h-[80%] rounded-full bg-primary/5 blur-3xl"></div>
+        <div className="font-body text-white/90 selection:bg-primary selection:text-black min-h-screen relative bg-[#05080F] overflow-x-hidden">
+            {/* Base Background */}
+            <div className="fixed inset-0 z-0 bg-[#05080F]"></div>
+
+            {/* Cinematic Header Background (Hero Image) */}
+            <div className="absolute top-0 left-0 w-full h-[70vh] md:h-[90vh] z-0 overflow-hidden pointer-events-none">
+                {heroImage ? (
+                    <motion.img 
+                        initial={{ opacity: 0, scale: 1.1 }}
+                        animate={{ opacity: 0.35, scale: 1 }}
+                        transition={{ duration: 1.5, ease: "easeOut" }}
+                        src={heroImage} 
+                        className="w-full h-full object-cover blur-[8px] saturate-150 mix-blend-screen" 
+                        alt="" 
+                    />
+                ) : (
+                    <div className="absolute top-[-20%] left-[-10%] w-[80%] h-[80%] rounded-full bg-primary/10 blur-3xl"></div>
+                )}
+                {/* Fade to background color */}
+                <div className="absolute inset-0 bg-gradient-to-b from-[#05080F]/20 via-[#05080F]/60 to-[#05080F]"></div>
                 <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-blue-500/5 blur-3xl"></div>
-                <div className="dot-grid absolute inset-0 opacity-[0.02]"></div>
+                <div className="dot-grid absolute inset-0 opacity-[0.03]"></div>
             </div>
 
             <Navbar />
