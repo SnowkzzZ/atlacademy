@@ -27,11 +27,18 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ course, index }) => {
                 {/* Background Image Wrapper (Inner mask to prevent Safari hover bugs) */}
                 <div className="absolute inset-0 z-0 overflow-hidden rounded-[32px] bg-[#05080F]">
                     {dispThumb ? (
-                        <img 
-                            src={dispThumb} 
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out origin-center" 
-                            alt={dispTitle}
-                        />
+                        <>
+                            <img 
+                                src={dispThumb} 
+                                className="absolute inset-0 w-full h-full object-cover blur-xl opacity-50 scale-125 saturate-150" 
+                                alt=""
+                            />
+                            <img 
+                                src={dispThumb} 
+                                className="relative z-10 w-full h-full object-contain group-hover:scale-105 transition-transform duration-700 ease-out origin-center" 
+                                alt={dispTitle}
+                            />
+                        </>
                     ) : (
                         <div className="w-full h-full bg-gradient-to-br from-white/5 to-white/0" />
                     )}
