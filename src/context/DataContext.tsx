@@ -126,7 +126,7 @@ function lsSaveProgress(itemId: string, entry: ProgressEntry) {
 }
 
 // ── localStorage content helpers (Dual-Sync Fallback) ─────────────────────
-const LS_CONTENT_KEY = 'atl_content_v2';
+const LS_CONTENT_KEY = 'atl_content_v3';
 
 interface ContentSync {
     courses: Course[];
