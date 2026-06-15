@@ -256,16 +256,21 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     id: l.id,
                     courseId: l.courseId || l.course_id || '',
                     title: l.title,
-                    videoUrl: l.videoUrl,
-                    thumbnailUrl: l.thumbnailUrl,
+                    videoUrl: l.videoUrl || l.video_url || '',
+                    thumbnailUrl: l.thumbnailUrl || l.thumbnail_url || '',
                     duration: l.duration,
-                    totalSeconds: l.totalSeconds,
+                    totalSeconds: l.totalSeconds || l.total_seconds || 0,
                     position: l.position || 0,
                     progress: 0,
                     watchedSeconds: 0,
                 })) || [];
 
                 const mergedLessons = [...sbLessons];
+                if (local.lessons && local.lessons.length > 0) {
+                    const sbIds = new Set(sbLessons.map(l => l.id));
+                    const missingLocals = local.lessons.filter((l: any) => !sbIds.has(l.id));
+                    mergedLessons.push(...missingLocals);
+                }
                 
                 setSectors(sectorsRes.data && sectorsRes.data.length > 0 ? sectorsRes.data : local.sectors.length > 0 ? local.sectors : defaultSectors);
                 setArticles(articlesRes.data && articlesRes.data.length > 0 ? articlesRes.data : local.articles.length > 0 ? local.articles : defaultArticles);
