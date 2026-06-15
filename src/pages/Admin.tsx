@@ -21,7 +21,7 @@ const compressImage = (file: File, isVertical = false): Promise<string> => new P
             if (h > maxH) { w = w * maxH / h; h = maxH; }
             canvas.width = w; canvas.height = h;
             const ctx = canvas.getContext('2d');
-            ctx ? (ctx.drawImage(img, 0, 0, w, h), resolve(canvas.toDataURL('image/jpeg', 0.85))) : resolve(event.target?.result as string);
+            ctx ? (ctx.drawImage(img, 0, 0, w, h), resolve(canvas.toDataURL('image/jpeg', 0.95))) : resolve(event.target?.result as string);
         };
         img.onerror = reject;
     };
@@ -377,7 +377,7 @@ const Admin: React.FC = () => {
                                                             const file = e.target.files?.[0];
                                                             if (!file) return;
                                                             if (file.size > 20 * 1024 * 1024) { alert('Máximo 20MB'); return; }
-                                                            try { setCur({ ...cur, thumbnailUrl: await compressImage(file) }); } catch { alert('Erro ao processar imagem.'); }
+                                                            try { setCur({ ...cur, thumbnailUrl: await compressImage(file, true) }); } catch { alert('Erro ao processar imagem.'); }
                                                         }} />
                                                     </label>
                                                 </div>
