@@ -24,12 +24,12 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ course, index }) => {
             className="shrink-0 w-[240px] md:w-[300px]"
         >
             <Link to={courseLink} className="module-card-vertical group block">
-                {/* Background Image */}
-                <div className="absolute inset-0 z-0">
+                {/* Background Image Wrapper (Inner mask to prevent Safari hover bugs) */}
+                <div className="absolute inset-0 z-0 overflow-hidden rounded-[32px] bg-[#05080F]">
                     {dispThumb ? (
                         <img 
                             src={dispThumb} 
-                            className="w-full h-full object-cover group-hover:scale-105 transition-all duration-700 ease-out" 
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out origin-center" 
                             alt={dispTitle}
                         />
                     ) : (

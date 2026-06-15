@@ -121,6 +121,7 @@
 
   .module-card-vertical {
     @apply relative flex flex-col aspect-[9/16] rounded-[32px] overflow-hidden bg-[#0A0A0A] transition-all duration-500 ease-out border border-white/10;
+    transform: translateZ(0); /* Hardware acceleration for smooth transitions */
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.05);
   }
 
