@@ -28,15 +28,8 @@ const Dashboard: React.FC = () => {
 
     const heroCourse = [...courses].sort((a, b) => (b.lastWatchedAt || 0) - (a.lastWatchedAt || 0))[0] || (courses.length > 0 ? courses[0] : null);
     
-    // Find the actual lesson to link to (either the last watched one or the first one)
-    const heroLessonId = heroCourse?.lastLessonId;
-    const heroLink = heroCourse ? (heroLessonId ? `/lesson/${heroLessonId}` : `/lesson/${heroCourse.id}`) : "/explore";
-
-    const heroProgress = heroCourse ? heroCourse.progress : 0;
-    const isHeroStarted = heroCourse && (heroCourse.watchedSeconds || 0) > 0;
-    
     // Diagnostic
-    if (heroCourse) console.log(`[Dashboard] Hero: ${heroCourse.title}, Progress: ${heroCourse.progress}%, Watched: ${heroCourse.watchedSeconds}s`);
+    if (heroCourse) console.log(`[Dashboard] Hero: ${heroCourse.title}`);
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -69,91 +62,35 @@ const Dashboard: React.FC = () => {
 
             <Navbar />
 
-            {/* FULL BLEED BACKGROUND HERO */}
-            <div className="absolute top-0 left-0 right-0 w-full h-[60vh] md:h-[80vh] z-0 overflow-hidden pointer-events-none">
-                <div 
-                    className="w-full h-full" 
-                    style={{ maskImage: 'linear-gradient(to top, transparent 0%, transparent 5%, black 40%, black 100%)', WebkitMaskImage: 'linear-gradient(to top, transparent 0%, transparent 5%, black 40%, black 100%)' }}
-                >
-                    {heroCourse?.thumbnailUrl ? (
-                        <img src={heroCourse.thumbnailUrl} className="w-full h-full object-cover opacity-60 brightness-[0.5] grayscale contrast-125 mix-blend-luminosity object-top" alt="" />
-                    ) : (
-                        <div className="absolute inset-0 bg-primary opacity-5 blur-3xl rounded-full scale-125"></div>
-                    )}
-                </div>
-                <div className="hero-overlay"></div>
-            </div>
-
+            {/* Cinematic Logo Header */}
             <motion.main
                 initial="hidden"
                 animate="visible"
                 variants={containerVariants}
                 className="relative z-10 max-w-[1440px] mx-auto px-6 md:px-10 pb-8 md:pb-32 space-y-8 md:space-y-24"
             >
-                {/* Cinematic Liquid Glass Hero */}
-                <section className="pt-0 relative flex flex-col items-center justify-start min-h-[auto] md:min-h-[50vh] mt-20 md:mt-48">
-                    <div className="relative z-10 flex flex-col items-center text-center space-y-4 w-full max-w-5xl pt-16 pb-0 md:py-16">
-                        <motion.div variants={itemVariants} className="relative mt-2 mb-4 flex flex-col items-center">
-                            <div className="absolute inset-0 bg-primary opacity-20 blur-3xl rounded-full scale-125"></div>
-                            <img src={logoBase64} alt="ATL Logo" className="drop-shadow-[0_0_60px_rgba(255,255,255,0.4)] relative z-10 w-auto h-[120px] md:h-[180px]" />
-                        </motion.div>
+            <section className="pt-0 relative flex flex-col items-center justify-start mt-20 md:mt-32 mb-10 md:mb-16">
+                <div className="relative z-10 flex flex-col items-center text-center space-y-4 w-full max-w-5xl pt-16 pb-0 md:py-8">
+                    <motion.div variants={itemVariants} className="relative mt-2 mb-4 flex flex-col items-center">
+                        <div className="absolute inset-0 bg-primary opacity-20 blur-3xl rounded-full scale-125"></div>
+                        <img src={logoBase64} alt="ATL Logo" className="drop-shadow-[0_0_60px_rgba(255,255,255,0.4)] relative z-10 w-auto h-[120px] md:h-[180px]" />
+                    </motion.div>
 
-                        <motion.div variants={itemVariants} className="space-y-4 md:space-y-6 relative z-20">
-                            <div className="hero-badge font-label text-[10px] tracking-[0.2em]">
-                                <span className="pulse-dot mr-2 mt-1"></span>
-                                ÁREA DO MEMBRO EXCLUSIVO
-                            </div>
+                    <motion.div variants={itemVariants} className="space-y-4 md:space-y-6 relative z-20">
+                        <div className="hero-badge font-label text-[10px] tracking-[0.2em]">
+                            <span className="pulse-dot mr-2 mt-1"></span>
+                            ÁREA DO MEMBRO EXCLUSIVO
+                        </div>
 
-                            <h1
-                                className="hero-title font-headline font-bold tracking-tight uppercase drop-shadow-2xl w-full text-center"
-                                style={{ fontSize: 'clamp(1.75rem, 5vw, 6rem)', lineHeight: 1.05, wordBreak: 'break-word', padding: '0 1rem' }}
-                            >
-                                {heroCourse ? heroCourse.title.split(':')[0] : 'Bem-vindo à ATL'}
-                                {heroCourse && heroCourse.title.includes(':') && (
-                                    <><br /><span className="text-white/20 font-light" style={{ fontSize: '0.6em' }}>{heroCourse.title.split(':')[1]}</span></>
-                                )}
-                            </h1>
-                        </motion.div>
-
-                        <div className="h-0 md:h-12"></div>
-
-                        <motion.div
-                            variants={itemVariants}
-                            whileHover={{ y: -5, scale: 1.01 }}
-                            className="card-progresso w-[calc(100%-2rem)] md:w-full max-w-3xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-8 mx-4 mt-4 md:mt-16"
+                        <h1
+                            className="hero-title font-headline font-bold tracking-tight uppercase drop-shadow-2xl w-full text-center"
+                            style={{ fontSize: 'clamp(1.75rem, 5vw, 6rem)', lineHeight: 1.05, wordBreak: 'break-word', padding: '0 1rem' }}
                         >
-                            <div className="flex items-center gap-6 w-full md:w-auto">
-                                <div className="avatar-instrutor w-12 h-12 flex items-center justify-center shrink-0">
-                                    <span className="material-symbols-outlined text-white/70 text-[22px]">person</span>
-                                </div>
-                                <div className="text-left overflow-hidden">
-                                    <p className="text-white font-bold text-sm md:text-base truncate">{heroCourse ? heroCourse.instructor : 'Equipe ATL'}</p>
-                                    <p className="text-white/40 font-label text-[10px] tracking-[0.2em] uppercase">Instrutor Destaque</p>
-                                </div>
-                            </div>
-
-                            <div className="flex-1 w-full md:max-w-xs">
-                                <div className="flex justify-between font-label text-[10px] tracking-[0.3em] text-white/40 mb-3">
-                                    <span>PROGRESSO ATIVO</span>
-                                    <span className="text-primary font-bold">{heroProgress}%</span>
-                                </div>
-                                <div className="progress-bar-bg w-full shadow-inner">
-                                    <motion.div
-                                        initial={{ width: 0 }}
-                                        animate={{ width: `${heroProgress}%` }}
-                                        transition={{ duration: 1.2, delay: 1 }}
-                                        className="progress-bar-fill"
-                                    >
-                                    </motion.div>
-                                </div>
-                            </div>
-
-                            <Link to={heroLink} className="btn-neon w-full md:w-auto px-10 py-4 font-headline text-[11px] tracking-[0.2em] uppercase text-center flex items-center justify-center">
-                                {isHeroStarted ? 'Continuar Aula' : 'Iniciar Aula'}
-                            </Link>
-                        </motion.div>
-                    </div>
-                </section>
+                            Bem-vindo à ATL
+                        </h1>
+                    </motion.div>
+                </div>
+            </section>
 
                 {/* PREMIUM "MÓDULOS" HORIZONTAL CAROUSEL (ADAPTA STYLE) */}
                 <motion.section variants={itemVariants} className="space-y-8 md:space-y-12">

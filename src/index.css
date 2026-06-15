@@ -120,7 +120,7 @@
   }
 
   .module-card-vertical {
-    @apply relative flex flex-col aspect-[11/16] rounded-[24px] overflow-hidden bg-[#1A1A1A] transition-all duration-500 ease-out;
+    @apply relative flex flex-col aspect-[9/16] rounded-[24px] overflow-hidden bg-[#1A1A1A] transition-all duration-500 ease-out;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   }
 

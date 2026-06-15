@@ -362,23 +362,13 @@ const Admin: React.FC = () => {
                                                 <label className="font-label text-[9px] uppercase text-white/40">Cargo do Instrutor</label>
                                                 <input className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 focus:border-primary outline-none transition-all" value={cur.instructorTitle || ''} onChange={e => setCur({ ...cur, instructorTitle: e.target.value })} placeholder="Ex: CEO da ATL Academy" />
                                             </div>
-                                            <div className="space-y-1.5">
-                                                <label className="font-label text-[9px] uppercase text-white/40 flex justify-between"><span>Duração</span><span className="text-primary/50 text-[8px]">Auto-preenchida</span></label>
-                                                <input className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 focus:border-primary outline-none transition-all" value={cur.duration || ''} onChange={e => setCur({ ...cur, duration: e.target.value })} placeholder="Ex: 1h 30m" />
-                                            </div>
                                             <IconPicker value={cur.icon || 'play_lesson'} onChange={icon => setCur({ ...cur, icon })} />
                                         </div>
 
                                         {/* RIGHT */}
                                         <div className="space-y-4">
-                                            <VideoUrlInput
-                                                value={cur.videoUrl || ''}
-                                                onUrlChange={url => setCur({ ...cur, videoUrl: url })}
-                                                onDurationDetected={(duration, totalSeconds) => setCur(p => ({ ...p, duration, totalSeconds }))}
-                                                onThumbnailDetected={thumbnailUrl => setCur(p => ({ ...p, thumbnailUrl }))}
-                                            />
                                             <div className="space-y-1.5">
-                                                <label className="font-label text-[9px] uppercase text-white/40 flex justify-between"><span>Thumbnail</span><span className="text-primary/40 text-[8px]">Auto-preenchida p/ YouTube</span></label>
+                                                <label className="font-label text-[9px] uppercase text-white/40 flex justify-between"><span>Thumbnail (9:16)</span></label>
                                                 <div className="flex gap-2">
                                                     <input className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 focus:border-primary outline-none transition-all text-sm" value={cur.thumbnailUrl || ''} onChange={e => setCur({ ...cur, thumbnailUrl: e.target.value })} placeholder="URL ou faça upload" />
                                                     <label className="cursor-pointer px-4 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center hover:bg-white/10 transition-colors">
@@ -392,7 +382,7 @@ const Admin: React.FC = () => {
                                                     </label>
                                                 </div>
                                                 {cur.thumbnailUrl && (
-                                                    <div className="relative aspect-video rounded-2xl border border-white/10 overflow-hidden bg-black/40 group mt-2">
+                                                    <div className="relative w-40 aspect-[9/16] rounded-2xl border border-white/10 overflow-hidden bg-black/40 group mt-2">
                                                         <img src={cur.thumbnailUrl} className="w-full h-full object-cover opacity-60 mix-blend-luminosity grayscale" alt="" />
                                                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
                                                         <button type="button" onClick={() => setCur({ ...cur, thumbnailUrl: '' })} className="absolute bottom-2 right-2 text-red-400 hover:text-red-300">
