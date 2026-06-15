@@ -29,7 +29,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ course, index }) => {
                     {dispThumb ? (
                         <img 
                             src={dispThumb} 
-                            className="w-full h-full object-cover group-hover:scale-105 group-hover:blur-[2px] transition-all duration-700 ease-out" 
+                            className="w-full h-full object-cover group-hover:scale-105 transition-all duration-700 ease-out" 
                             alt={dispTitle}
                         />
                     ) : (
@@ -46,15 +46,15 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ course, index }) => {
                 </div>
 
                 {/* Bottom Content (Glass Footer) */}
-                <div className="module-card-overlay-bottom flex flex-col items-center text-center">
-                    <p className="font-label text-[10px] text-white/80 tracking-[0.3em] font-bold uppercase mb-1 flex items-center justify-center gap-1">
+                <div className="module-card-overlay-bottom flex flex-col items-center text-center pb-10">
+                    <p className="font-label text-[10px] text-white/90 tracking-[0.3em] font-bold uppercase mb-1 flex items-center justify-center gap-1.5">
                         {dispSubtitle}
-                        {course.icon && <span className="material-symbols-outlined text-[10px] text-primary">{course.icon}</span>}
+                        {course.icon && <span className="material-symbols-outlined text-[12px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>{course.icon}</span>}
                     </p>
-                    <h3 className="font-headline text-2xl md:text-[28px] leading-tight font-black text-white uppercase drop-shadow-lg w-full group-hover:scale-105 transition-transform duration-500">
+                    <h3 className="font-headline text-[26px] md:text-[32px] leading-[1.1] font-black text-white uppercase drop-shadow-2xl w-full group-hover:scale-105 transition-transform duration-500">
                         {dispTitle}
                     </h3>
-                    <p className="font-label text-[9px] text-primary/80 tracking-[0.2em] uppercase mt-3 group-hover:text-primary transition-colors">
+                    <p className="font-label text-[10px] text-primary tracking-[0.2em] uppercase mt-4">
                         {course.instructor}
                     </p>
                 </div>
