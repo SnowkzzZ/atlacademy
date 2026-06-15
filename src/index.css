@@ -120,18 +120,30 @@
   }
 
   .module-card-vertical {
-    @apply relative flex flex-col aspect-[9/16] rounded-[24px] overflow-hidden bg-[#1A1A1A] transition-all duration-500 ease-out;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    @apply relative flex flex-col aspect-[9/16] rounded-[32px] overflow-hidden bg-[#0A0A0A] transition-all duration-500 ease-out border border-white/10;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.05);
   }
 
   .module-card-vertical:hover {
-    @apply -translate-y-2;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255,255,255,0.05);
+    @apply -translate-y-2 border-white/20;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8), 0 0 30px rgba(255, 255, 255, 0.1);
   }
 
   .module-card-overlay-bottom {
-    @apply absolute bottom-0 left-0 right-0 h-[50%] flex flex-col justify-end p-6 z-20;
-    background: linear-gradient(to top, rgba(5, 11, 20, 0.95) 0%, rgba(5, 11, 20, 0.4) 60%, transparent 100%);
+    @apply absolute bottom-0 left-0 right-0 h-[55%] flex flex-col justify-end p-8 z-20 items-center text-center;
+    background: linear-gradient(to top, rgba(10, 10, 15, 0.95) 0%, rgba(255, 255, 255, 0.05) 100%);
+  }
+
+  .module-card-overlay-bottom::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    mask-image: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%);
+    -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%);
+    pointer-events: none;
   }
 }
 

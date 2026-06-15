@@ -29,20 +29,13 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ course, index }) => {
                     {dispThumb ? (
                         <img 
                             src={dispThumb} 
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" 
+                            className="w-full h-full object-cover group-hover:scale-105 group-hover:blur-[2px] transition-all duration-700 ease-out" 
                             alt={dispTitle}
                         />
                     ) : (
                         <div className="w-full h-full bg-gradient-to-br from-white/5 to-white/0" />
                     )}
                 </div>
-
-                {/* Top-Left Icon Overlay */}
-                {course.icon && (
-                    <div className="absolute top-4 left-4 z-20 w-8 h-8 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center group-hover:bg-primary/20 group-hover:border-primary/50 transition-all duration-300 shadow-lg">
-                        <span className="material-symbols-outlined text-[14px] text-white/80 group-hover:text-primary transition-colors">{course.icon}</span>
-                    </div>
-                )}
 
                 {/* Hover progress indicator */}
                 <div className="absolute top-4 right-4 z-20 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-x-2 group-hover:translate-x-0">
@@ -54,17 +47,16 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ course, index }) => {
 
                 {/* Bottom Content (Glass Footer) */}
                 <div className="module-card-overlay-bottom flex flex-col items-center text-center">
-                    <p className="font-label text-[9px] md:text-[11px] text-white/50 tracking-[0.3em] uppercase mb-1">
+                    <p className="font-label text-[10px] text-white/80 tracking-[0.3em] font-bold uppercase mb-1 flex items-center justify-center gap-1">
                         {dispSubtitle}
+                        {course.icon && <span className="material-symbols-outlined text-[10px] text-primary">{course.icon}</span>}
                     </p>
-                    <h3 className="font-headline text-xl md:text-3xl font-bold text-white tracking-widest uppercase truncate w-full group-hover:text-primary transition-colors drop-shadow-md">
+                    <h3 className="font-headline text-2xl md:text-[28px] leading-tight font-black text-white uppercase drop-shadow-lg w-full group-hover:scale-105 transition-transform duration-500">
                         {dispTitle}
                     </h3>
-                    <div className="mt-3 py-1.5 px-4 rounded-full bg-white/5 border border-white/10 group-hover:bg-white/10 group-hover:border-white/20 transition-all shadow-lg">
-                        <p className="font-label text-[8px] md:text-[9px] text-white/60 tracking-widest uppercase">
-                            {course.instructor}
-                        </p>
-                    </div>
+                    <p className="font-label text-[9px] text-primary/80 tracking-[0.2em] uppercase mt-3 group-hover:text-primary transition-colors">
+                        {course.instructor}
+                    </p>
                 </div>
             </Link>
         </motion.div>
