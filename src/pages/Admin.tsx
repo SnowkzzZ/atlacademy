@@ -588,7 +588,7 @@ const Admin: React.FC = () => {
                                                             setIsAddingLesson(false);
                                                         } catch (err: any) {
                                                             console.error('Lesson Save Error:', err);
-                                                            alert('Erro ao salvar aula. Verifique o console ou tente novamente usando uma imagem por upload (anexo).');
+                                                            alert(`Erro ao salvar aula no banco de dados: ${err?.message || err}. A aula foi salva apenas localmente.`);
                                                         }
                                                     }} className="bg-white/[0.03] border border-white/10 rounded-xl p-5 space-y-4">
                                                         <div className="flex items-center justify-between mb-2">
