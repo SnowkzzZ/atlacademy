@@ -511,10 +511,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 last_watched_at: lastWatchedAt
             }, { onConflict: 'user_id,course_id' });
             if (error) {
-                console.error('[DataContext] Error saving online progress:', error);
-                alert('Erro de Sincronia Supabase: ' + error.message + ' \n\nDetalhes: ' + JSON.stringify(error));
+                console.error('[DataContext] Error saving online progress:', error.message, error);
             } else {
-                console.log(`[DataContext] Saved online!`);
+                console.log(`[DataContext] Progress saved online: ${itemId} → ${newProgress}%`);
             }
         }
     };

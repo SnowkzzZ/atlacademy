@@ -274,25 +274,46 @@ const Admin: React.FC = () => {
 
     // ── ADMIN PANEL ──
     return (
-        <div className="bg-[#030303] text-white/90 min-h-screen font-body relative pb-32">
+        <div className="bg-[#030303] text-white/90 min-h-screen font-body relative">
             <div className="fixed inset-0 z-0 pointer-events-none">
                 <div className="absolute inset-0 bg-[#030303]"></div>
-                <header className="relative z-10 max-w-[1440px] mx-auto px-4 md:px-6 pt-6 md:pt-10 pb-6 flex items-center justify-between border-b border-white/[0.05] mb-6 md:mb-12">
-                <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
-                    <h1 className="font-headline text-lg md:text-3xl font-bold tracking-tight uppercase">Painel de Controle</h1>
-                    <div className="h-6 w-px bg-white/10 hidden md:block"></div>
+                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/5 blur-3xl"></div>
+                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-500/5 blur-3xl"></div>
+                <div className="dot-grid absolute inset-0 opacity-[0.03]"></div>
+            </div>
+
+            <Navbar />
+
+            <div className="relative z-10 pt-20 md:pt-28">
+                <main className="max-w-[1440px] mx-auto px-4 md:px-10 py-6 md:py-10 space-y-8 md:space-y-12">
+                {/* ── COMMAND CENTER HEADER ── */}
+                <div className="flex flex-col gap-4 border-b border-white/10 pb-6 md:pb-8">
+                    {/* Title Row */}
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                        <div className="min-w-0">
+                            <p className="font-label text-[9px] text-white/30 tracking-[3px] uppercase mb-1">Painel de Controle</p>
+                            <h1 className="font-headline text-3xl sm:text-4xl md:text-5xl font-bold uppercase tracking-tight text-white/90 leading-tight">Central de Comando</h1>
+                            <p className="font-label text-[8px] md:text-[10px] text-white/30 tracking-[2px] md:tracking-[3px] uppercase mt-1.5">Gerenciamento de Conteúdo Global</p>
+                        </div>
+                        <button onClick={handleLogout} className="w-full sm:w-auto shrink-0 px-5 py-3 rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/10 transition-colors uppercase font-label text-[10px] tracking-[2px] flex items-center justify-center gap-2">
+                            <span className="material-symbols-outlined text-[16px]">exit_to_app</span> Sair
+                        </button>
+                    </div>
+                    {/* Sync Status Row */}
                     <div className="flex items-center gap-3">
-                        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border ${
+                        <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border ${
                             syncStatus === 'local-mode' ? 'bg-orange-500/10 border-orange-500/20' : 
                             syncStatus === 'error' ? 'bg-red-500/10 border-red-500/20' :
                             'bg-primary/10 border-primary/20'
                         }`}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${isSyncing ? 'animate-spin border-t-transparent border-white' : 'animate-pulse'} ${
+                            <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                                isSyncing ? 'animate-spin border border-t-transparent border-white' : 'animate-pulse'
+                            } ${
                                 syncStatus === 'local-mode' ? 'bg-orange-400 shadow-[0_0_8px_#FB923C]' : 
                                 syncStatus === 'error' ? 'bg-red-400 shadow-[0_0_8px_#EF4444]' :
                                 'bg-primary shadow-[0_0_8px_#00FD86]'
                             }`}></span>
-                            <span className={`text-[9px] font-bold tracking-widest uppercase ${
+                            <span className={`text-[9px] font-bold tracking-widest uppercase whitespace-nowrap ${
                                 syncStatus === 'local-mode' ? 'text-orange-400' : 
                                 syncStatus === 'error' ? 'text-red-400' :
                                 'text-primary'
@@ -304,24 +325,6 @@ const Admin: React.FC = () => {
                             </span>
                         </div>
                     </div>
-                </div>
-            </header>
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/5 blur-3xl"></div>
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-500/5 blur-3xl"></div>
-                <div className="dot-grid absolute inset-0 opacity-[0.03]"></div>
-            </div>
-            <Navbar />
-
-            <main className="relative z-10 max-w-[1440px] mx-auto px-4 md:px-10 py-10 md:py-32 space-y-8 md:space-y-12">
-                {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-white/10 pb-6 md:pb-8">
-                    <div className="flex-1 min-w-0">
-                        <h1 className="font-headline text-2xl md:text-5xl font-bold uppercase tracking-tight text-white/90 break-words">Central de Comando</h1>
-                        <p className="font-label text-[8px] md:text-xs text-white/40 tracking-[2px] md:tracking-[3px] uppercase mt-1">Gerenciamento de Conteúdo Global</p>
-                    </div>
-                    <button onClick={handleLogout} className="w-full md:w-auto px-6 py-3.5 rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/10 transition-colors uppercase font-label text-[10px] tracking-[2px] flex items-center justify-center gap-2">
-                        <span className="material-symbols-outlined text-[16px]">exit_to_app</span> Sair do Painel
-                    </button>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-10">
@@ -816,6 +819,7 @@ const Admin: React.FC = () => {
                     </div>
                 </div>
             </footer>
+            </div>
         </div>
     );
 };

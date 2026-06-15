@@ -6,9 +6,10 @@ interface AuthContextType {
     user: User | null;
     session: Session | null;
     isLoading: boolean;
+    isAdmin: boolean;
 }
 
-const AuthContext = createContext<AuthContextType>({ user: null, session: null, isLoading: true });
+const AuthContext = createContext<AuthContextType>({ user: null, session: null, isLoading: true, isAdmin: false });
 
 // Helper to create the master user mock
 const createMasterUser = (): User => ({
@@ -74,7 +75,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, []);
 
     return (
-        <AuthContext.Provider value={{ user, session, isLoading }}>
+        <AuthContext.Provider value={{ user, session, isLoading, isAdmin: user?.id === 'admin-master' || user?.email === 'juliano.atl' }}>
             {children}
         </AuthContext.Provider>
     );

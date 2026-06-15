@@ -5,12 +5,11 @@ import { logoBase64 } from '../logoBase64';
 import { useAuth } from '../context/AuthContext';
 
 const Navbar: React.FC<{ isFixed?: boolean }> = ({ isFixed = true }) => {
-    const { user } = useAuth();
+    const { isAdmin } = useAuth();
     const location = useLocation();
     const [isMenuOpen, setIsMenuOpen] = React.useState(false);
     const [scrolled, setScrolled] = React.useState(false);
 
-    const isMasterAdmin = user?.email === 'juliano.atl';
 
     React.useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -61,7 +60,7 @@ const Navbar: React.FC<{ isFixed?: boolean }> = ({ isFixed = true }) => {
                         ))}
                         
                         {/* Master Admin Special Card */}
-                        {isMasterAdmin && (
+                        {isAdmin && (
                             <Link
                                 to="/painel"
                                 className="nav-central-comando font-label text-[9px] font-bold tracking-[0.2em] px-6 py-2 uppercase hover:bg-[#00F0FF] hover:text-[#050B14]"
@@ -132,7 +131,7 @@ const Navbar: React.FC<{ isFixed?: boolean }> = ({ isFixed = true }) => {
                                 ))}
 
                                 {/* Mobile Master Admin Card */}
-                                {isMasterAdmin && (
+                                {isAdmin && (
                                     <motion.div
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
