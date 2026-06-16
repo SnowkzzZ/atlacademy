@@ -130,6 +130,10 @@ const Explore: React.FC = () => {
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
                             {filteredCourses.map((course) => {
                                 const courseLink = course.lastLessonId ? `/lesson/${course.lastLessonId}` : `/lesson/${course.id}`;
+                                const dispTitle = course.cardTitle || course.title;
+                                const dispSubtitle = course.cardSubtitle || course.subtitle;
+                                const dispThumb = course.cardThumbnail || course.thumbnailUrl;
+                                const dispIcon = course.cardIcon || course.icon;
                                 return (
                                     <motion.div 
                                         key={course.id}
@@ -141,10 +145,10 @@ const Explore: React.FC = () => {
                                             className="group flex flex-col p-6 md:p-8 relative overflow-hidden h-[340px] md:h-[380px] bg-white/[0.01] border border-white/[0.06] rounded-[2.5rem] transition-all duration-500 hover:border-white/[0.12] hover:bg-white/[0.03] shadow-lg"
                                         >
                                             {/* Card Background / Thumbnail */}
-                                            {course.thumbnailUrl ? (
+                                            {dispThumb ? (
                                                 <div className="absolute inset-0 z-0">
                                                     <img 
-                                                        src={course.thumbnailUrl} 
+                                                        src={dispThumb} 
                                                         className="w-full h-full object-cover opacity-[0.25] group-hover:opacity-40 transition-all duration-1000 mix-blend-overlay grayscale group-hover:grayscale-0 group-hover:scale-105" 
                                                         alt="" 
                                                     />
@@ -156,15 +160,15 @@ const Explore: React.FC = () => {
 
                                             {/* Icon Badge */}
                                             <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-white/[0.03] border border-white/[0.08] flex items-center justify-center relative z-10 backdrop-blur-xl mb-6 group-hover:bg-primary/10 group-hover:border-primary/20 transition-all duration-500">
-                                                <span className="material-symbols-outlined text-white/50 group-hover:text-primary text-xl md:text-2xl font-light transition-colors">{course.cardIcon || course.icon}</span>
+                                                <span className="material-symbols-outlined text-white/50 group-hover:text-primary text-xl md:text-2xl font-light transition-colors">{dispIcon}</span>
                                             </div>
 
                                             {/* Bottom details */}
                                             <div className="flex-1 flex flex-col justify-end space-y-3 relative z-10">
-                                                {course.subtitle && (
-                                                    <span className="font-label text-[8px] text-white/40 tracking-[0.25em] uppercase font-bold">{course.subtitle}</span>
+                                                {dispSubtitle && (
+                                                    <span className="font-label text-[8px] text-white/40 tracking-[0.25em] uppercase font-bold">{dispSubtitle}</span>
                                                 )}
-                                                <h3 className="font-headline text-lg md:text-xl font-bold leading-snug text-white/90 group-hover:text-white transition-colors uppercase line-clamp-2">{course.title}</h3>
+                                                <h3 className="font-headline text-lg md:text-xl font-bold leading-snug text-white/90 group-hover:text-white transition-colors uppercase line-clamp-2">{dispTitle}</h3>
 
                                                 <div className="pt-4 border-t border-white/[0.06] flex justify-between items-center mt-2 group-hover:border-white/[0.12] transition-colors">
                                                     <span className="text-white/40 text-[10px] uppercase tracking-widest font-semibold">{course.instructor}</span>

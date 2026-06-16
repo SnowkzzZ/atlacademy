@@ -481,7 +481,7 @@ const Admin: React.FC = () => {
                                             <div className="border-t border-white/5 bg-black/30 p-5 space-y-6">
                                                 <div className="flex items-center justify-between">
                                                     <h5 className="font-headline text-sm uppercase tracking-widest text-primary">Personalizar Miniatura da Capa</h5>
-                                                    <p className="text-[9px] font-label uppercase text-white/30">Estes campos mudam apenas o visual do Card no Dashboard</p>
+                                                    <p className="text-[9px] font-label uppercase text-white/30">Estes campos personalizam o visual do Card na Dashboard e no Explorar Redes</p>
                                                 </div>
 
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
