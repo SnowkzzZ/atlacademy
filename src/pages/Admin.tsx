@@ -214,8 +214,6 @@ const Admin: React.FC = () => {
 
     // Lesson management (Cronograma)
     const [editingLessonsCourseId, setEditingLessonsCourseId] = useState<string | null>(null);
-    const [editingCardCourseId, setEditingCardCourseId] = useState<string | null>(null);
-    const [curCard, setCurCard] = useState<Partial<Course>>({});
     const [isAddingLesson, setIsAddingLesson] = useState(false);
     const [curLesson, setCurLesson] = useState<Partial<Lesson & { id?: string }>>({});
     const getCourseLesson = (courseId: string) => lessons.filter(l => l.courseId === courseId).sort((a, b) => a.position - b.position);
@@ -247,6 +245,10 @@ const Admin: React.FC = () => {
                 icon: cur.icon || 'play_lesson', progress: 0, videoUrl: cur.videoUrl || '',
                 thumbnailUrl: cur.thumbnailUrl || '', description: cur.description,
                 instructorTitle: cur.instructorTitle, subtitle: cur.subtitle, tags: cur.tags,
+                cardTitle: cur.cardTitle || '',
+                cardSubtitle: cur.cardSubtitle || '',
+                cardIcon: cur.cardIcon || '',
+                cardThumbnail: cur.cardThumbnail || ''
             });
         }
         setIsEditingCourse(false);
@@ -422,6 +424,57 @@ const Admin: React.FC = () => {
                                         </div>
                                     </div>
 
+                                    {/* Custom Card Appearance Section */}
+                                    <div className="space-y-4 border-t border-white/5 pt-5">
+                                        <h4 className="font-label text-[10px] text-primary uppercase tracking-[2px] font-bold">Aparência Personalizada do Card (Dashboard & Explorar)</h4>
+                                        <p className="text-[9px] text-white/40 font-label uppercase">Use estes campos opcionais se desejar que o card deste módulo apresente títulos, imagem ou ícone diferentes das informações principais</p>
+                                        
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                            {/* LEFT */}
+                                            <div className="space-y-4">
+                                                <div className="space-y-1.5">
+                                                    <label className="font-label text-[9px] uppercase text-white/40">Título Personalizado na Capa</label>
+                                                    <input className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 focus:border-primary outline-none transition-all text-sm" value={cur.cardTitle || ''} onChange={e => setCur({ ...cur, cardTitle: e.target.value })} placeholder="Ex: MÓDULO MARKETING" />
+                                                </div>
+                                                <div className="space-y-1.5">
+                                                    <label className="font-label text-[9px] uppercase text-white/40">Subtítulo Personalizado na Capa</label>
+                                                    <input className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 focus:border-primary outline-none transition-all text-sm" value={cur.cardSubtitle || ''} onChange={e => setCur({ ...cur, cardSubtitle: e.target.value })} placeholder="Ex: MARKETING AVANÇADO" />
+                                                </div>
+                                                <IconPicker value={cur.cardIcon || ''} onChange={icon => setCur({ ...cur, cardIcon: icon })} />
+                                            </div>
+                                            
+                                            {/* RIGHT */}
+                                            <div className="space-y-4">
+                                                <div className="space-y-1.5">
+                                                    <label className="font-label text-[9px] uppercase text-white/40 flex justify-between"><span>Imagem da Capa Personalizada (9:16)</span></label>
+                                                    <div className="flex gap-2">
+                                                        <input className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-primary transition-all" value={cur.cardThumbnail || ''} onChange={e => setCur({ ...cur, cardThumbnail: e.target.value })} placeholder="URL da imagem vertical..." />
+                                                        <label className="cursor-pointer px-4 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center hover:bg-white/10 transition-colors">
+                                                            <span className="material-symbols-outlined text-base">upload</span>
+                                                            <input type="file" hidden accept="image/*" onChange={async (e) => {
+                                                                const file = e.target.files?.[0];
+                                                                if (file) {
+                                                                    try { 
+                                                                        const compressed = await compressImage(file, true);
+                                                                        setCur({ ...cur, cardThumbnail: compressed }); 
+                                                                    } catch { alert('Erro ao processar imagem.'); }
+                                                                }
+                                                            }} />
+                                                        </label>
+                                                    </div>
+                                                    {cur.cardThumbnail && (
+                                                        <div className="relative w-28 aspect-[9/16] rounded-2xl border border-white/10 overflow-hidden bg-black/40 group mt-2">
+                                                            <img src={cur.cardThumbnail} className="w-full h-full object-cover" alt="" />
+                                                            <button type="button" onClick={() => setCur({ ...cur, cardThumbnail: '' })} className="absolute bottom-2 right-2 text-red-400 hover:text-red-300">
+                                                                <span className="material-symbols-outlined text-base">delete</span>
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <button type="submit" className="w-full bg-white text-black font-bold uppercase rounded-xl py-4 text-xs tracking-[2px] hover:bg-primary transition-all shadow-lg">Salvar Módulo</button>
                                 </form>
                             </div>
@@ -460,14 +513,7 @@ const Admin: React.FC = () => {
                                                     <span className="material-symbols-outlined text-[16px]">event_note</span>
                                                     <span className="hidden sm:inline">Cronograma</span>
                                                 </button>
-                                                <button
-                                                    onClick={() => { setEditingCardCourseId(editingCardCourseId === course.id ? null : course.id); if (editingCardCourseId !== course.id) { setCurCard(course); } setEditingLessonsCourseId(null); }}
-                                                    className={`px-4 py-2.5 rounded-xl font-label text-[9px] uppercase tracking-widest transition-all flex items-center gap-2 border ${editingCardCourseId === course.id ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'}`}
-                                                >
-                                                    <span className="material-symbols-outlined text-[16px]">featured_video</span>
-                                                    <span className="hidden sm:inline">Miniatura</span>
-                                                </button>
-                                                <button onClick={() => { setCur(course); setIsEditingCourse(true); setEditingLessonsCourseId(null); setEditingCardCourseId(null); }} className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-label text-[9px] uppercase tracking-widest transition-all flex items-center gap-2 border border-white/5">
+                                                <button onClick={() => { setCur(course); setIsEditingCourse(true); setEditingLessonsCourseId(null); }} className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-label text-[9px] uppercase tracking-widest transition-all flex items-center gap-2 border border-white/5">
                                                     <span className="material-symbols-outlined text-[16px]">edit</span><span className="hidden sm:inline">Editar</span>
                                                 </button>
                                                 <button onClick={() => deleteCourse(course.id)} className="px-4 py-2.5 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/20 font-label text-[9px] uppercase tracking-widest transition-all flex items-center gap-2">
@@ -475,108 +521,6 @@ const Admin: React.FC = () => {
                                                 </button>
                                             </div>
                                         </div>
-
-                                        {/* Miniatura Panel */}
-                                        {editingCardCourseId === course.id && (
-                                            <div className="border-t border-white/5 bg-black/30 p-5 space-y-6">
-                                                <div className="flex items-center justify-between">
-                                                    <h5 className="font-headline text-sm uppercase tracking-widest text-primary">Personalizar Miniatura da Capa</h5>
-                                                    <p className="text-[9px] font-label uppercase text-white/30">Estes campos personalizam o visual do Card na Dashboard e no Explorar Redes</p>
-                                                </div>
-
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                    {/* Preview */}
-                                                    <div className="space-y-4">
-                                                        <label className="font-label text-[9px] uppercase text-white/40">Pré-visualização do Card</label>
-                                                        <div className="flex justify-center">
-                                                            <div className="w-[200px]">
-                                                                <div className="module-card-vertical pointer-events-none opacity-90 scale-95 origin-center">
-                                                                    <div className="absolute inset-0 z-0">
-                                                                        {(curCard.cardThumbnail || curCard.thumbnailUrl) ? (
-                                                                            <img src={curCard.cardThumbnail || curCard.thumbnailUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" alt="" />
-                                                                        ) : (
-                                                                            <div className="w-full h-full bg-gradient-to-br from-white/5 to-white/0" />
-                                                                        )}
-                                                                    </div>
-                                                                    <div className="module-card-overlay-bottom flex flex-col items-center text-center">
-                                                                        <p className="font-label text-[7px] text-white/40 tracking-[0.3em] uppercase mb-0.5">{curCard.cardSubtitle || curCard.subtitle || 'MODULO BASE'}</p>
-                                                                        <h3 className="font-headline text-sm font-bold text-white tracking-widest uppercase truncate w-full">{curCard.cardTitle || curCard.title}</h3>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Form */}
-                                                    <div className="space-y-5">
-                                                        <div className="space-y-1.5">
-                                                            <label className="font-label text-[9px] uppercase text-white/40">Título na Capa</label>
-                                                            <input 
-                                                                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-primary outline-none transition-all" 
-                                                                value={curCard.cardTitle || ''} 
-                                                                onChange={e => setCurCard(p => ({ ...p, cardTitle: e.target.value }))} 
-                                                                placeholder={course.title}
-                                                            />
-                                                        </div>
-                                                        <div className="space-y-1.5">
-                                                            <label className="font-label text-[9px] uppercase text-white/40">Subtítulo na Capa</label>
-                                                            <input 
-                                                                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-primary outline-none transition-all" 
-                                                                value={curCard.cardSubtitle || ''} 
-                                                                onChange={e => setCurCard(p => ({ ...p, cardSubtitle: e.target.value }))} 
-                                                                placeholder={course.subtitle || 'Ex: IA PARA'}
-                                                            />
-                                                        </div>
-                                                        <div className="space-y-1.5">
-                                                            <IconPicker 
-                                                                value={curCard.cardIcon || ''} 
-                                                                onChange={icon => setCurCard(p => ({ ...p, cardIcon: icon }))} 
-                                                            />
-                                                        </div>
-                                                        <div className="space-y-1.5">
-                                                            <label className="font-label text-[9px] uppercase text-white/40">Imagem da Capa (Vertical 1536x2752)</label>
-                                                            <div className="flex gap-2">
-                                                                <input 
-                                                                    className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-primary transition-all" 
-                                                                    value={curCard.cardThumbnail || ''} 
-                                                                    onChange={e => setCurCard(p => ({ ...p, cardThumbnail: e.target.value }))} 
-                                                                    placeholder="URL da imagem vertical..."
-                                                                />
-                                                                <label className="cursor-pointer px-4 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center hover:bg-white/10 transition-colors">
-                                                                    <span className="material-symbols-outlined text-base">upload</span>
-                                                                    <input type="file" hidden accept="image/*" onChange={async (e) => {
-                                                                        const file = e.target.files?.[0];
-                                                                        if (file) {
-                                                                            try { 
-                                                                                const compressed = await compressImage(file, true);
-                                                                                setCurCard(p => ({ ...p, cardThumbnail: compressed })); 
-                                                                            } catch { alert('Erro ao processar imagem.'); }
-                                                                        }
-                                                                    }} />
-                                                                </label>
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="pt-2">
-                                                            <button 
-                                                                onClick={() => {
-                                                                    updateCourse(course.id, {
-                                                                        cardTitle: curCard.cardTitle,
-                                                                        cardSubtitle: curCard.cardSubtitle,
-                                                                        cardIcon: curCard.cardIcon,
-                                                                        cardThumbnail: curCard.cardThumbnail
-                                                                    });
-                                                                    setEditingCardCourseId(null);
-                                                                }}
-                                                                className="w-full bg-primary text-black font-bold uppercase rounded-xl py-3 text-[10px] tracking-[2px] hover:bg-white transition-all shadow-lg"
-                                                            >
-                                                                Salvar Miniatura
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
 
                                         {/* Cronograma Panel */}
                                         {isManagingLessons && (
