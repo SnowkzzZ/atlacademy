@@ -129,14 +129,19 @@ const Dashboard: React.FC = () => {
                     <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-10 w-full max-w-5xl mx-auto pt-10 md:py-8 px-4">
                         {/* Left Info Column */}
                         <div className="flex flex-col items-center lg:items-start text-center lg:text-left space-y-4 md:space-y-6 max-w-lg">
-                            <motion.div variants={itemVariants} className="hero-badge font-label text-[10px] tracking-[0.2em] w-fit">
-                                <span className="pulse-dot mr-2 mt-1"></span>
-                                ÁREA DO MEMBRO EXCLUSIVO
+                            <motion.div variants={itemVariants} className="hero-badge w-fit cursor-default select-none">
+                                <span className="material-symbols-outlined text-[13px] text-primary animate-pulse leading-none mr-1.5">workspace_premium</span>
+                                <span className="font-label text-[9px] font-bold tracking-[0.25em] text-white/95 uppercase">
+                                    ÁREA DO MEMBRO EXCLUSIVO
+                                </span>
+                                <span className="w-1.5 h-1.5 rounded-full bg-primary relative flex items-center justify-center ml-2 shrink-0">
+                                    <span className="absolute inset-0 rounded-full bg-primary animate-ping opacity-75"></span>
+                                </span>
                             </motion.div>
                             <motion.h1
                                 variants={itemVariants}
-                                className="hero-title font-headline font-bold tracking-tight uppercase drop-shadow-2xl"
-                                style={{ fontSize: 'clamp(2rem, 4.5vw, 4.5rem)', lineHeight: 1.05 }}
+                                className="hero-title font-headline font-extrabold tracking-tight uppercase drop-shadow-[0_0_30px_rgba(255,255,255,0.1)] text-transparent bg-clip-text bg-gradient-to-r from-white via-white/95 to-white/70"
+                                style={{ fontSize: 'clamp(2.5rem, 5vw, 4.8rem)', lineHeight: 1.02 }}
                             >
                                 Bem-vindo à ATL
                             </motion.h1>
@@ -192,9 +197,9 @@ const Dashboard: React.FC = () => {
                                             </div>
                                             <Link 
                                                 to={lastWatchedLesson.id ? `/lesson/${lastWatchedLesson.id}` : '#'}
-                                                className="inline-flex items-center gap-2 bg-white text-black hover:bg-neutral-200 font-headline font-bold text-[8px] tracking-[2px] px-4 py-2.5 rounded-full uppercase transition-all shadow-md active:scale-95"
+                                                className="inline-flex items-center gap-2 bg-gradient-to-r from-[#00F0FF] to-[#00BFFF] hover:from-[#00D6E6] hover:to-[#00A3D9] text-black font-headline font-bold text-[9px] tracking-[2px] px-5 py-3 rounded-full uppercase transition-all shadow-[0_0_20px_rgba(0,240,255,0.25)] hover:shadow-[0_0_30px_rgba(0,240,255,0.45)] hover:scale-[1.03] active:scale-95"
                                             >
-                                                Retomar Aula <span className="material-symbols-outlined text-[10px] font-bold">play_arrow</span>
+                                                Retomar Aula <span className="material-symbols-outlined text-[11px] font-bold">play_arrow</span>
                                             </Link>
                                         </div>
                                     </div>
@@ -210,9 +215,14 @@ const Dashboard: React.FC = () => {
                         </motion.div>
 
                         <motion.div variants={itemVariants} className="space-y-4 md:space-y-6 relative z-20">
-                            <div className="hero-badge font-label text-[10px] tracking-[0.2em] w-fit mx-auto">
-                                <span className="pulse-dot mr-2 mt-1"></span>
-                                ÁREA DO MEMBRO EXCLUSIVO
+                            <div className="hero-badge w-fit mx-auto cursor-default select-none">
+                                <span className="material-symbols-outlined text-[13px] text-primary animate-pulse leading-none mr-1.5">workspace_premium</span>
+                                <span className="font-label text-[9px] font-bold tracking-[0.25em] text-white/95 uppercase">
+                                    ÁREA DO MEMBRO EXCLUSIVO
+                                </span>
+                                <span className="w-1.5 h-1.5 rounded-full bg-primary relative flex items-center justify-center ml-2 shrink-0">
+                                    <span className="absolute inset-0 rounded-full bg-primary animate-ping opacity-75"></span>
+                                </span>
                             </div>
 
                             <h1

@@ -219,32 +219,29 @@
 }
 
 .hero-badge {
-  background: rgba(0, 240, 255, 0.1);
-  border: 1px solid #00F0FF;
-  color: #00F0FF;
-  padding: 4px 12px;
-  border-radius: 50px;
   display: inline-flex;
-  backdrop-filter: blur(4px);
-  position: relative;
-  overflow: hidden;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, rgba(0, 240, 255, 0.08) 0%, rgba(0, 191, 255, 0.02) 100%);
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  backdrop-filter: blur(16px);
+  box-shadow: 
+    0 4px 20px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 0 15px rgba(0, 240, 255, 0.05);
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.hero-badge::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  height: 2px;
-  width: 100%;
-  background: #00F0FF;
-  box-shadow: 0 0 10px #00F0FF;
-  animation: scanlineCyan 2s linear infinite;
-}
-
-@keyframes scanlineCyan {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+.hero-badge:hover {
+  border-color: rgba(0, 240, 255, 0.5);
+  background: linear-gradient(90deg, rgba(0, 240, 255, 0.12) 0%, rgba(0, 191, 255, 0.04) 100%);
+  box-shadow: 
+    0 8px 30px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 0 25px rgba(0, 240, 255, 0.15);
+  transform: translateY(-1px);
 }
 
 /* ==========================================================
