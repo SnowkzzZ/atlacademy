@@ -7,7 +7,7 @@ import { getYouTubeId, getYouTubeThumbnail, getYouTubeDuration, loadYouTubeAPI, 
 import { Reorder } from 'framer-motion';
 
 // ── Image compression ──────────────────────────────────────────────────────
-const compressImage = (file: File, isSquare = false): Promise<string> => new Promise((resolve, reject) => {
+const compressImage = (file: File, mode: 'vertical' | 'square' | 'landscape' = 'landscape'): Promise<string> => new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = (event) => {
@@ -17,7 +17,7 @@ const compressImage = (file: File, isSquare = false): Promise<string> => new Pro
             const canvas = document.createElement('canvas');
             let w = img.width, h = img.height;
             
-            if (isSquare) {
+            if (mode === 'square') {
                 // Crop to square (1:1)
                 const size = Math.min(w, h);
                 const sx = (w - size) / 2;
@@ -35,8 +35,17 @@ const compressImage = (file: File, isSquare = false): Promise<string> => new Pro
                 } else {
                     resolve(event.target?.result as string);
                 }
+            } else if (mode === 'vertical') {
+                // Keep portrait (9:16)
+                const maxW = 1536;
+                const maxH = 2752;
+                if (w > maxW) { h = h * maxW / w; w = maxW; }
+                if (h > maxH) { w = w * maxH / h; h = maxH; }
+                canvas.width = w; canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                ctx ? (ctx.drawImage(img, 0, 0, w, h), resolve(canvas.toDataURL('image/webp', 0.95))) : resolve(event.target?.result as string);
             } else {
-                // Standard widescreen 16:9 or auto
+                // Standard widescreen 16:9
                 const maxW = 1280;
                 const maxH = 720;
                 if (w > maxW) { h = h * maxW / w; w = maxW; }
@@ -423,7 +432,7 @@ const Admin: React.FC = () => {
                                         {/* RIGHT */}
                                         <div className="space-y-4">
                                             <div className="space-y-1.5">
-                                                <label className="font-label text-[9px] uppercase text-white/40 flex justify-between"><span>Thumbnail (1:1)</span></label>
+                                                <label className="font-label text-[9px] uppercase text-white/40 flex justify-between"><span>Thumbnail (9:16)</span></label>
                                                 <div className="flex gap-2">
                                                     <input className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 focus:border-primary outline-none transition-all text-sm" value={cur.thumbnailUrl || ''} onChange={e => setCur({ ...cur, thumbnailUrl: e.target.value })} placeholder="URL ou faça upload" />
                                                     <label className="cursor-pointer px-4 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center hover:bg-white/10 transition-colors">
@@ -432,12 +441,12 @@ const Admin: React.FC = () => {
                                                             const file = e.target.files?.[0];
                                                             if (!file) return;
                                                             if (file.size > 20 * 1024 * 1024) { alert('Máximo 20MB'); return; }
-                                                            try { setCur({ ...cur, thumbnailUrl: await compressImage(file, true) }); } catch { alert('Erro ao processar imagem.'); }
+                                                            try { setCur({ ...cur, thumbnailUrl: await compressImage(file, 'vertical') }); } catch { alert('Erro ao processar imagem.'); }
                                                         }} />
                                                     </label>
                                                 </div>
                                                 {cur.thumbnailUrl && (
-                                                    <div className="relative w-40 aspect-square rounded-2xl border border-white/10 overflow-hidden bg-black/40 group mt-2">
+                                                    <div className="relative w-40 aspect-[9/16] rounded-2xl border border-white/10 overflow-hidden bg-black/40 group mt-2">
                                                         <img src={cur.thumbnailUrl} className="w-full h-full object-cover" alt="" />
                                                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
                                                         <button type="button" onClick={() => setCur({ ...cur, thumbnailUrl: '' })} className="absolute bottom-2 right-2 text-red-400 hover:text-red-300">
@@ -483,16 +492,16 @@ const Admin: React.FC = () => {
                                             {/* RIGHT */}
                                             <div className="space-y-4">
                                                 <div className="space-y-1.5">
-                                                    <label className="font-label text-[9px] uppercase text-white/40 flex justify-between"><span>Imagem da Capa Personalizada (1:1)</span></label>
+                                                    <label className="font-label text-[9px] uppercase text-white/40 flex justify-between"><span>Imagem da Capa Personalizada (9:16)</span></label>
                                                     <div className="flex gap-2">
-                                                        <input className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-primary transition-all" value={cur.cardThumbnail || ''} onChange={e => setCur({ ...cur, cardThumbnail: e.target.value })} placeholder="URL da imagem quadrada..." />
+                                                        <input className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-primary transition-all" value={cur.cardThumbnail || ''} onChange={e => setCur({ ...cur, cardThumbnail: e.target.value })} placeholder="URL da imagem vertical..." />
                                                         <label className="cursor-pointer px-4 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center hover:bg-white/10 transition-colors">
                                                             <span className="material-symbols-outlined text-base">upload</span>
                                                             <input type="file" hidden accept="image/*" onChange={async (e) => {
                                                                 const file = e.target.files?.[0];
                                                                 if (file) {
                                                                     try { 
-                                                                        const compressed = await compressImage(file, true);
+                                                                        const compressed = await compressImage(file, 'vertical');
                                                                         setCur({ ...cur, cardThumbnail: compressed }); 
                                                                     } catch { alert('Erro ao processar imagem.'); }
                                                                 }
@@ -500,7 +509,7 @@ const Admin: React.FC = () => {
                                                         </label>
                                                     </div>
                                                     {cur.cardThumbnail && (
-                                                        <div className="relative w-28 aspect-square rounded-2xl border border-white/10 overflow-hidden bg-black/40 group mt-2">
+                                                        <div className="relative w-28 aspect-[9/16] rounded-2xl border border-white/10 overflow-hidden bg-black/40 group mt-2">
                                                             <img src={cur.cardThumbnail} className="w-full h-full object-cover" alt="" />
                                                             <button type="button" onClick={() => setCur({ ...cur, cardThumbnail: '' })} className="absolute bottom-2 right-2 text-red-400 hover:text-red-300">
                                                                 <span className="material-symbols-outlined text-base">delete</span>
@@ -628,7 +637,7 @@ const Admin: React.FC = () => {
                                                             }}
                                                         />
                                                         <div className="space-y-1.5">
-                                                            <label className="font-label text-[9px] uppercase text-white/40 flex justify-between"><span>Thumbnail da Aula</span><span className="text-primary/40 text-[8px]">Auto-preenchida p/ YouTube</span></label>
+                                                            <label className="font-label text-[9px] uppercase text-white/40 flex justify-between"><span>Thumbnail da Aula (1:1)</span><span className="text-primary/40 text-[8px]">Auto-preenchida p/ YouTube</span></label>
                                                             <div className="flex gap-2">
                                                                 <input className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-primary text-sm transition-all" value={curLesson.thumbnailUrl || ''} onChange={e => setCurLesson(p => ({ ...p, thumbnailUrl: e.target.value }))} placeholder="URL ou faça upload" />
                                                                 <label className="cursor-pointer px-4 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center hover:bg-white/10 transition-colors">
@@ -637,7 +646,7 @@ const Admin: React.FC = () => {
                                                                         const file = e.target.files?.[0];
                                                                         if (file) {
                                                                             try { 
-                                                                                const compressed = await compressImage(file, false);
+                                                                                const compressed = await compressImage(file, 'square');
                                                                                 setCurLesson(p => ({ ...p, thumbnailUrl: compressed })); 
                                                                             } catch { alert('Erro ao processar imagem.'); }
                                                                         }
@@ -645,7 +654,7 @@ const Admin: React.FC = () => {
                                                                 </label>
                                                             </div>
                                                             {curLesson.thumbnailUrl && (
-                                                                <div className="relative aspect-video rounded-xl border border-white/10 overflow-hidden bg-black/40 group mt-2">
+                                                                <div className="relative w-28 aspect-square rounded-xl border border-white/10 overflow-hidden bg-black/40 group mt-2">
                                                                     <img src={curLesson.thumbnailUrl} className="w-full h-full object-cover" alt="" />
                                                                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
                                                                     <button type="button" onClick={() => setCurLesson(p => ({ ...p, thumbnailUrl: '' }))} className="absolute bottom-2 right-2 text-red-400 hover:text-red-300">
@@ -672,7 +681,7 @@ const Admin: React.FC = () => {
                                                 <div className="space-y-2">
                                                     {courseLessons.map((lesson, idx) => (
                                                         <div key={lesson.id} className="flex items-center gap-3 p-3.5 bg-white/[0.03] rounded-xl border border-white/5 group/lesson">
-                                                            <div className="w-12 aspect-video rounded-lg bg-white/5 border border-white/10 flex items-center justify-center relative overflow-hidden shrink-0">
+                                                            <div className="w-12 aspect-square rounded-lg bg-white/5 border border-white/10 flex items-center justify-center relative overflow-hidden shrink-0">
                                                                 {lesson.thumbnailUrl ? (
                                                                     <img src={lesson.thumbnailUrl} className="absolute inset-0 w-full h-full object-cover" alt="" />
                                                                 ) : (

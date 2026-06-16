@@ -509,7 +509,7 @@ const VideoLesson: React.FC = () => {
                                                                     onClick={() => changeLesson(lesson.id)}
                                                                     className={`w-full group text-left p-2 rounded-3xl border transition-all duration-500 flex items-center gap-5 ${isActive ? 'bg-primary/10 border-primary/40 shadow-[0_20px_50px_rgba(0,245,255,0.1)]' : 'bg-transparent border-transparent hover:bg-white/[0.04] hover:border-white/10'}`}
                                                                 >
-                                                                    <div className="relative w-28 aspect-video rounded-2xl overflow-hidden shadow-2xl shrink-0">
+                                                                    <div className="relative w-20 aspect-square rounded-2xl overflow-hidden shadow-2xl shrink-0">
                                                                         {lesson.thumbnailUrl ? (
                                                                             <img src={lesson.thumbnailUrl} className={`w-full h-full object-cover transition-all duration-1000 ${isActive ? 'scale-110 brightness-110' : 'opacity-40 brightness-75 group-hover:opacity-100 group-hover:scale-105'}`} alt="" />
                                                                         ) : (
