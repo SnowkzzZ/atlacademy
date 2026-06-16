@@ -270,7 +270,8 @@ const Admin: React.FC = () => {
                 cardTitle: cur.cardTitle || '',
                 cardSubtitle: cur.cardSubtitle || '',
                 cardIcon: cur.cardIcon || '',
-                cardThumbnail: cur.cardThumbnail || ''
+                cardThumbnail: cur.cardThumbnail || '',
+                sectorId: cur.sectorId
             });
         }
         setIsEditingCourse(false);
@@ -330,9 +331,14 @@ const Admin: React.FC = () => {
                             <h1 className="font-headline text-3xl sm:text-4xl md:text-5xl font-bold uppercase tracking-tight text-white/90 leading-tight">Central de Comando</h1>
                             <p className="font-label text-[8px] md:text-[10px] text-white/30 tracking-[2px] md:tracking-[3px] uppercase mt-1.5">Gerenciamento de Conteúdo Global</p>
                         </div>
-                        <button onClick={handleLogout} className="w-full sm:w-auto shrink-0 px-5 py-3 rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/10 transition-colors uppercase font-label text-[10px] tracking-[2px] flex items-center justify-center gap-2">
-                            <span className="material-symbols-outlined text-[16px]">exit_to_app</span> Sair
-                        </button>
+                        <div className="flex gap-2 w-full sm:w-auto flex-col sm:flex-row">
+                            <button onClick={() => { if (confirm('Isso irá limpar todo o cache local do seu navegador e recarregar os dados do Supabase. Deseja continuar?')) clearLocalCache(); }} className="px-5 py-3 rounded-xl border border-yellow-500/20 bg-yellow-500/5 hover:bg-yellow-500/10 text-yellow-400 transition-colors uppercase font-label text-[10px] tracking-[2px] flex items-center justify-center gap-2">
+                                <span className="material-symbols-outlined text-[16px]">refresh</span> Limpar Cache Local
+                            </button>
+                            <button onClick={handleLogout} className="px-5 py-3 rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/10 transition-colors uppercase font-label text-[10px] tracking-[2px] flex items-center justify-center gap-2">
+                                <span className="material-symbols-outlined text-[16px]">exit_to_app</span> Sair
+                            </button>
+                        </div>
                     </div>
                     {/* Sync Status Row */}
                     <div className="flex items-center gap-3">
@@ -401,6 +407,15 @@ const Admin: React.FC = () => {
                                             <div className="space-y-1.5">
                                                 <label className="font-label text-[9px] uppercase text-white/40">Cargo do Instrutor</label>
                                                 <input className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 focus:border-primary outline-none transition-all" value={cur.instructorTitle || ''} onChange={e => setCur({ ...cur, instructorTitle: e.target.value })} placeholder="Ex: CEO da ATL Academy" />
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <label className="font-label text-[9px] uppercase text-white/40">Modalidade / Categoria</label>
+                                                <select className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 focus:border-primary outline-none transition-all text-sm text-white" value={cur.sectorId || ''} onChange={e => setCur({ ...cur, sectorId: e.target.value || undefined })}>
+                                                    <option value="" className="bg-[#0f0f0f]">Sem modalidade</option>
+                                                    {sectors.map(s => (
+                                                        <option key={s.id} value={s.id} className="bg-[#0f0f0f]">{s.name}</option>
+                                                    ))}
+                                                </select>
                                             </div>
                                             <IconPicker value={cur.icon || 'play_lesson'} onChange={icon => setCur({ ...cur, icon })} />
                                         </div>
@@ -524,6 +539,15 @@ const Admin: React.FC = () => {
                                                         <span>{course.duration}</span>
                                                         {getYouTubeId(course.videoUrl || '') && <span className="text-red-400 flex items-center gap-0.5"><span className="material-symbols-outlined text-[10px]">smart_display</span>YT</span>}
                                                         {courseLessons.length > 0 && <span className="text-primary/70 flex items-center gap-0.5"><span className="material-symbols-outlined text-[10px]">menu_book</span>{courseLessons.length} aula{courseLessons.length !== 1 ? 's' : ''}</span>}
+                                                        {(() => {
+                                                            const s = sectors.find(sec => sec.id === course.sectorId);
+                                                            return s ? (
+                                                                <>
+                                                                    <span className="w-1 h-1 bg-white/20 rounded-full"></span>
+                                                                    <span className="text-primary/95 font-bold flex items-center gap-0.5"><span className="material-symbols-outlined text-[10px]">category</span>{s.name}</span>
+                                                                </>
+                                                            ) : null;
+                                                        })()}
                                                     </div>
                                                 </div>
                                             </div>
@@ -538,7 +562,7 @@ const Admin: React.FC = () => {
                                                 <button onClick={() => { setCur(course); setIsEditingCourse(true); setEditingLessonsCourseId(null); }} className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-label text-[9px] uppercase tracking-widest transition-all flex items-center gap-2 border border-white/5">
                                                     <span className="material-symbols-outlined text-[16px]">edit</span><span className="hidden sm:inline">Editar</span>
                                                 </button>
-                                                <button onClick={() => deleteCourse(course.id)} className="px-4 py-2.5 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/20 font-label text-[9px] uppercase tracking-widest transition-all flex items-center gap-2">
+                                                <button onClick={() => { if (confirm(`Deseja realmente excluir o módulo "${course.title}"?`)) deleteCourse(course.id); }} className="px-4 py-2.5 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/20 font-label text-[9px] uppercase tracking-widest transition-all flex items-center gap-2">
                                                     <span className="material-symbols-outlined text-[16px]">delete</span>
                                                 </button>
                                             </div>

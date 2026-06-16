@@ -11,24 +11,13 @@ const Explore: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'courses' | 'newsletters'>('courses');
     const [selectedArticle, setSelectedArticle] = useState<any>(null);
 
-    // Intelligent filtering by search term and sector matching course tags/title
+    // Filter courses by search term and exact sector/modality ID
     const filteredCourses = courses.filter(course => {
         const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
             course.instructor.toLowerCase().includes(searchTerm.toLowerCase());
         
         if (activeSector === 'ALL') return matchesSearch;
-
-        const sector = sectors.find(s => s.id === activeSector);
-        if (!sector) return matchesSearch;
-
-        const sectorNameLower = sector.name.toLowerCase();
-        const hasMatchingTag = (course.tags || []).some(tag => 
-            tag.toLowerCase().includes(sectorNameLower) || 
-            sectorNameLower.includes(tag.toLowerCase())
-        );
-        const titleMatches = course.title.toLowerCase().includes(sectorNameLower);
-
-        return matchesSearch && (hasMatchingTag || titleMatches);
+        return matchesSearch && course.sectorId === activeSector;
     });
 
     return (

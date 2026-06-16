@@ -26,6 +26,7 @@ export interface Course {
     cardIcon?: string;
     cardThumbnail?: string;
     position?: number;
+    sectorId?: string;
 }
 
 export interface Lesson {
@@ -249,6 +250,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     cardIcon: c.cardIcon || c.card_icon || '',
                     cardThumbnail: c.cardThumbnail || c.card_thumbnail || '',
                     position: (c.position !== undefined && c.position !== null) ? c.position : 9999,
+                    sectorId: c.sectorId || c.sector_id || '',
                 })) : [];
                 
                 // If Supabase call returned successfully, trust it completely. Otherwise fallback to local or state.
@@ -404,7 +406,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 "cardTitle": course.cardTitle || '',
                 "cardSubtitle": course.cardSubtitle || '',
                 "cardIcon": course.cardIcon || '',
-                "cardThumbnail": course.cardThumbnail || ''
+                "cardThumbnail": course.cardThumbnail || '',
+                "sectorId": course.sectorId || null
             };
             const { data, error } = await supabaseAdmin.from('courses').insert([sbInsert]).select().single();
             if (!error && data) setCourses(prev => { const next = prev.map(c => c.id === tempId ? { ...data, progress: 0 } : c).sort((a, b) => (a.position ?? 9999) - (b.position ?? 9999)); persistLocal({ courses: next }); return next; });
@@ -434,6 +437,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (updated.cardIcon !== undefined) sbUpdate["cardIcon"] = updated.cardIcon;
             if (updated.cardThumbnail !== undefined) sbUpdate["cardThumbnail"] = updated.cardThumbnail;
             if (updated.position !== undefined) sbUpdate.position = updated.position;
+            if (updated.sectorId !== undefined) sbUpdate["sectorId"] = updated.sectorId || null;
 
             if (Object.keys(sbUpdate).length > 0) {
                 const { error } = await supabaseAdmin.from('courses').update(sbUpdate).eq('id', id);
