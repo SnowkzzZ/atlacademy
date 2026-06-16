@@ -241,7 +241,7 @@ const Admin: React.FC = () => {
     const [editingSectorName, setEditingSectorName] = useState('');
 
     const [isEditingArticle, setIsEditingArticle] = useState(false);
-    const [curArticle, setCurArticle] = useState<{ id?: string; sectorId: string; title: string; content: string; author: string }>({ sectorId: '', title: '', content: '', author: 'ATL Academy' });
+    const [curArticle, setCurArticle] = useState<{ id?: string; sectorId: string; title: string; content: string; author: string; subtitle?: string; thumbnailUrl?: string }>({ sectorId: '', title: '', content: '', author: 'ATL Academy', subtitle: '', thumbnailUrl: '' });
 
     // Lesson management (Cronograma)
     const [editingLessonsCourseId, setEditingLessonsCourseId] = useState<string | null>(null);
@@ -760,7 +760,7 @@ const Admin: React.FC = () => {
                             <h2 className="font-headline text-xl font-bold uppercase tracking-tight">Hub de Inteligência</h2>
                             <p className="font-label text-[10px] text-white/30 tracking-widest uppercase mt-1">Tutoriais e artigos por setor</p>
                         </div>
-                        <button onClick={() => { setCurArticle({ sectorId: sectors[0]?.id || '', title: '', content: '', author: 'ATL Academy' }); setIsEditingArticle(true); }} className="w-full sm:w-auto premium-pill py-3 bg-primary/10 text-primary border-primary/20 hover:bg-primary hover:text-black transition-all">+ Novo Artigo</button>
+                        <button onClick={() => { setCurArticle({ sectorId: sectors[0]?.id || '', title: '', content: '', author: 'ATL Academy', subtitle: '', thumbnailUrl: '' }); setIsEditingArticle(true); }} className="w-full sm:w-auto premium-pill py-3 bg-primary/10 text-primary border-primary/20 hover:bg-primary hover:text-black transition-all">+ Novo Artigo</button>
                     </div>
 
                     {isEditingArticle && (
@@ -769,27 +769,80 @@ const Admin: React.FC = () => {
                                 <h3 className="font-headline text-lg text-primary uppercase">{curArticle.id ? 'Editar' : 'Novo'} Artigo</h3>
                                 <button onClick={() => setIsEditingArticle(false)} className="text-white/40 hover:text-white font-label text-[10px] uppercase tracking-widest">Cancelar</button>
                             </div>
-                            <form onSubmit={e => { e.preventDefault(); if (!curArticle.title || !curArticle.sectorId || !curArticle.content) return; if (curArticle.id) { updateArticle(curArticle.id, curArticle); } else { addArticle({ sectorId: curArticle.sectorId, title: curArticle.title, content: curArticle.content, author: curArticle.author }); } setIsEditingArticle(false); setCurArticle({ sectorId: '', title: '', content: '', author: 'ATL Academy' }); }} className="space-y-4">
+                            <form onSubmit={e => { 
+                                e.preventDefault(); 
+                                if (!curArticle.title || !curArticle.sectorId || !curArticle.content) return; 
+                                if (curArticle.id) { 
+                                    updateArticle(curArticle.id, curArticle); 
+                                } else { 
+                                    addArticle({ 
+                                        sectorId: curArticle.sectorId, 
+                                        title: curArticle.title, 
+                                        content: curArticle.content, 
+                                        author: curArticle.author || 'ATL Academy', 
+                                        subtitle: curArticle.subtitle || '', 
+                                        thumbnailUrl: curArticle.thumbnailUrl || '' 
+                                    }); 
+                                } 
+                                setIsEditingArticle(false); 
+                                setCurArticle({ sectorId: '', title: '', content: '', author: 'ATL Academy', subtitle: '', thumbnailUrl: '' }); 
+                            }} className="space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <label className="font-label text-[10px] text-white/40 uppercase tracking-widest">Setor *</label>
-                                        <select value={curArticle.sectorId} onChange={e => setCurArticle(p => ({ ...p, sectorId: e.target.value }))} required className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 outline-none focus:border-primary text-sm text-white">
+                                        <select value={curArticle.sectorId || ''} onChange={e => setCurArticle(p => ({ ...p, sectorId: e.target.value }))} required className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 outline-none focus:border-primary text-sm text-white">
                                             <option value="" disabled>Selecionar Setor...</option>
                                             {sectors.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                                         </select>
                                     </div>
                                     <div className="space-y-2">
                                         <label className="font-label text-[10px] text-white/40 uppercase tracking-widest">Autor</label>
-                                        <input value={curArticle.author} onChange={e => setCurArticle(p => ({ ...p, author: e.target.value }))} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 outline-none focus:border-primary text-sm transition-all" placeholder="ATL Academy" />
+                                        <input value={curArticle.author || ''} onChange={e => setCurArticle(p => ({ ...p, author: e.target.value }))} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 outline-none focus:border-primary text-sm transition-all" placeholder="ATL Academy" />
                                     </div>
                                 </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="font-label text-[10px] text-white/40 uppercase tracking-widest">Subtítulo (Ex: Newsletter #145)</label>
+                                        <input value={curArticle.subtitle || ''} onChange={e => setCurArticle(p => ({ ...p, subtitle: e.target.value }))} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 outline-none focus:border-primary text-sm transition-all" placeholder="Ex: Newsletter #145" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="font-label text-[10px] text-white/40 uppercase tracking-widest flex justify-between"><span>Imagem do Card (Newsletter)</span></label>
+                                        <div className="flex gap-2">
+                                            <input value={curArticle.thumbnailUrl || ''} onChange={e => setCurArticle(p => ({ ...p, thumbnailUrl: e.target.value }))} className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 outline-none focus:border-primary text-sm transition-all" placeholder="URL ou faça upload" />
+                                            <label className="cursor-pointer px-4 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center hover:bg-white/10 transition-colors">
+                                                <span className="material-symbols-outlined text-base">upload</span>
+                                                <input type="file" className="hidden" accept="image/*" onChange={async e => {
+                                                    const file = e.target.files?.[0];
+                                                    if (!file) return;
+                                                    try {
+                                                        const compressed = await compressImage(file, 'landscape');
+                                                        setCurArticle(p => ({ ...p, thumbnailUrl: compressed }));
+                                                    } catch {
+                                                        alert('Erro ao processar imagem.');
+                                                    }
+                                                }} />
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {curArticle.thumbnailUrl && (
+                                    <div className="relative w-40 aspect-video rounded-xl border border-white/10 overflow-hidden bg-black/40 group mt-2">
+                                        <img src={curArticle.thumbnailUrl} className="w-full h-full object-cover" alt="" />
+                                        <button type="button" onClick={() => setCurArticle(p => ({ ...p, thumbnailUrl: '' }))} className="absolute bottom-2 right-2 text-red-400 hover:text-red-300">
+                                            <span className="material-symbols-outlined text-base">delete</span>
+                                        </button>
+                                    </div>
+                                )}
+
                                 <div className="space-y-2">
                                     <label className="font-label text-[10px] text-white/40 uppercase tracking-widest">Título *</label>
-                                    <input value={curArticle.title} onChange={e => setCurArticle(p => ({ ...p, title: e.target.value }))} required className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 outline-none focus:border-primary text-sm" />
+                                    <input value={curArticle.title || ''} onChange={e => setCurArticle(p => ({ ...p, title: e.target.value }))} required className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 outline-none focus:border-primary text-sm" />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="font-label text-[10px] text-white/40 uppercase tracking-widest">Conteúdo *</label>
-                                    <textarea value={curArticle.content} onChange={e => setCurArticle(p => ({ ...p, content: e.target.value }))} required rows={8} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 outline-none focus:border-primary text-sm resize-y font-mono" />
+                                    <textarea value={curArticle.content || ''} onChange={e => setCurArticle(p => ({ ...p, content: e.target.value }))} required rows={8} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 outline-none focus:border-primary text-sm resize-y font-mono" />
                                 </div>
                                 <button type="submit" className="px-8 py-3.5 bg-primary text-black font-label font-bold text-[10px] uppercase tracking-[2px] rounded-xl hover:bg-white transition-all">Publicar Artigo</button>
                             </form>
@@ -809,11 +862,12 @@ const Admin: React.FC = () => {
                                     <div key={article.id} className="liquid-glass-soft p-5 flex flex-col gap-3 border-white/5 hover:border-white/10 transition-all">
                                         {sector && <span className="text-[9px] tracking-widest uppercase font-label text-primary/70">{sector.name}</span>}
                                         <h4 className="font-headline text-base font-bold text-white leading-tight">{article.title}</h4>
+                                        {article.subtitle && <p className="text-[10px] text-primary/70 uppercase tracking-wider font-label">{article.subtitle}</p>}
                                         <p className="text-white/30 text-xs leading-relaxed flex-1 line-clamp-2">{article.content.replace(/\*\*/g, '').split('\n').filter(l => l.trim())[0]}</p>
                                         <div className="flex items-center justify-between pt-3 border-t border-white/[0.05]">
                                             <span className="text-white/20 font-label text-[9px] tracking-widest uppercase">{article.author}</span>
                                             <div className="flex gap-2">
-                                                <button onClick={() => { setCurArticle({ id: article.id, sectorId: article.sectorId, title: article.title, content: article.content, author: article.author }); setIsEditingArticle(true); }} className="text-white/30 hover:text-white p-1"><span className="material-symbols-outlined text-[16px]">edit</span></button>
+                                                <button onClick={() => { setCurArticle({ id: article.id, sectorId: article.sectorId, title: article.title, content: article.content, author: article.author, subtitle: article.subtitle || '', thumbnailUrl: article.thumbnailUrl || '' }); setIsEditingArticle(true); }} className="text-white/30 hover:text-white p-1"><span className="material-symbols-outlined text-[16px]">edit</span></button>
                                                 <button onClick={() => deleteArticle(article.id)} className="text-white/20 hover:text-red-400 p-1"><span className="material-symbols-outlined text-[16px]">delete</span></button>
                                             </div>
                                         </div>

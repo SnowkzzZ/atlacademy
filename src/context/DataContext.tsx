@@ -57,6 +57,8 @@ export interface Article {
     content: string;
     author: string;
     createdAt: number;
+    subtitle?: string;
+    thumbnailUrl?: string;
 }
 
 interface DataContextType {

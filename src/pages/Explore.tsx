@@ -1,15 +1,39 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { useData } from '../context/DataContext';
 import { motion } from 'framer-motion';
 
 const Explore: React.FC = () => {
     const { courses, sectors, articles } = useData();
+    const [searchParams] = useSearchParams();
+    const tabParam = searchParams.get('tab');
+    const focusSearch = searchParams.get('focus') === 'search';
+
     const [searchTerm, setSearchTerm] = useState('');
     const [activeSector, setActiveSector] = useState('ALL');
-    const [activeTab, setActiveTab] = useState<'courses' | 'newsletters'>('courses');
+    const [activeTab, setActiveTab] = useState<'courses' | 'newsletters'>(
+        tabParam === 'newsletters' ? 'newsletters' : 'courses'
+    );
     const [selectedArticle, setSelectedArticle] = useState<any>(null);
+    const searchInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        const tab = searchParams.get('tab');
+        if (tab === 'newsletters') {
+            setActiveTab('newsletters');
+        } else if (tab === 'courses') {
+            setActiveTab('courses');
+        }
+    }, [searchParams]);
+
+    useEffect(() => {
+        if (focusSearch && searchInputRef.current) {
+            setTimeout(() => {
+                searchInputRef.current?.focus();
+            }, 150);
+        }
+    }, [focusSearch, activeTab]);
 
     // Filter courses by search term and exact sector/modality ID
     const filteredCourses = courses.filter(course => {
@@ -18,6 +42,16 @@ const Explore: React.FC = () => {
         
         if (activeSector === 'ALL') return matchesSearch;
         return matchesSearch && course.sectorId === activeSector;
+    });
+
+    // Filter newsletters (articles) by search term and sector
+    const filteredArticles = articles.filter(article => {
+        const matchesSearch = article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (article.subtitle || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            article.content.toLowerCase().includes(searchTerm.toLowerCase());
+        
+        if (activeSector === 'ALL') return matchesSearch;
+        return matchesSearch && article.sectorId === activeSector;
     });
 
     return (
@@ -65,27 +99,28 @@ const Explore: React.FC = () => {
                     </div>
                 </div>
 
+                {/* Sleek Search Bar (Shared) */}
+                <div className="w-full max-w-3xl mx-auto mb-10">
+                    <div className="relative flex items-center bg-white/[0.02] border border-white/[0.06] rounded-full p-2 focus-within:border-primary/50 focus-within:bg-white/[0.04] transition-all duration-300">
+                        <span className="material-symbols-outlined pl-4 text-white/30 text-lg md:text-xl">search</span>
+                        <input
+                            ref={searchInputRef}
+                            type="text"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder={activeTab === 'courses' ? "Pesquisar módulos, instrutores..." : "Pesquisar newsletters, comunicados..."}
+                            className="w-full bg-transparent border-none pl-3 pr-4 py-3 md:py-4 text-white placeholder:text-white/20 focus:outline-none focus:ring-0 font-body text-sm md:text-base"
+                        />
+                        {searchTerm && (
+                            <button onClick={() => setSearchTerm('')} className="p-1 mr-2 text-white/30 hover:text-white transition-colors">
+                                <span className="material-symbols-outlined text-sm">close</span>
+                            </button>
+                        )}
+                    </div>
+                </div>
+
                 {activeTab === 'courses' && (
                     <div className="space-y-12 md:space-y-20 animate-in fade-in duration-500">
-                        {/* Sleek Search Bar */}
-                        <div className="w-full max-w-3xl mx-auto">
-                            <div className="relative flex items-center bg-white/[0.02] border border-white/[0.06] rounded-full p-2 focus-within:border-primary/50 focus-within:bg-white/[0.04] transition-all duration-300">
-                                <span className="material-symbols-outlined pl-4 text-white/30 text-lg md:text-xl">search</span>
-                                <input
-                                    type="text"
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    placeholder="Pesquisar módulos, instrutores..."
-                                    className="w-full bg-transparent border-none pl-3 pr-4 py-3 md:py-4 text-white placeholder:text-white/20 focus:outline-none focus:ring-0 font-body text-sm md:text-base"
-                                />
-                                {searchTerm && (
-                                    <button onClick={() => setSearchTerm('')} className="p-1 mr-2 text-white/30 hover:text-white transition-colors">
-                                        <span className="material-symbols-outlined text-sm">close</span>
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-
                         {/* Interactive Sector Filter Pills */}
                         <div className="w-full">
                             <div className="flex overflow-x-auto no-scrollbar gap-2.5 pb-2 md:justify-center md:flex-wrap px-4">
@@ -184,63 +219,83 @@ const Explore: React.FC = () => {
                 )}
 
                 {activeTab === 'newsletters' && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto animate-in fade-in duration-500">
-                        {articles.map((article, idx) => {
-                            const dateStr = new Date(article.createdAt || Date.now()).toLocaleDateString('pt-BR', {
-                                day: 'numeric',
-                                month: 'short',
-                                year: 'numeric'
-                            });
-                            const sectorName = sectors.find(s => s.id === article.sectorId)?.name || 'Geral';
-                            
-                            return (
-                                <motion.div
-                                    key={article.id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    viewport={{ once: true }}
-                                    transition={{ duration: 0.6, delay: idx * 0.1 }}
-                                    className="group relative bg-white/[0.01] border border-white/[0.06] rounded-[2.5rem] p-8 hover:bg-white/[0.02] hover:border-white/[0.12] transition-all duration-500 flex flex-col justify-between gap-6 shadow-xl overflow-hidden"
+                    <div className="space-y-12 md:space-y-20 animate-in fade-in duration-500">
+                        {/* Interactive Sector Filter Pills */}
+                        <div className="w-full">
+                            <div className="flex overflow-x-auto no-scrollbar gap-2.5 pb-2 md:justify-center md:flex-wrap px-4">
+                                <button
+                                    onClick={() => setActiveSector('ALL')}
+                                    className={`px-6 py-2.5 rounded-full font-label text-[9px] font-bold tracking-[0.2em] uppercase transition-all duration-300 border ${
+                                        activeSector === 'ALL'
+                                            ? 'bg-white text-black border-white shadow-xl'
+                                            : 'bg-white/[0.02] text-white/40 border-white/[0.06] hover:text-white hover:border-white/20'
+                                    }`}
                                 >
-                                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                    
-                                    <div className="space-y-4 relative z-10">
-                                        <div className="flex items-center gap-3">
-                                            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-primary/10 border border-primary/20 font-label text-[8px] tracking-[0.2em] uppercase text-primary font-bold">
-                                                {sectorName}
+                                    TODOS OS SETORES
+                                </button>
+                                {sectors.map(sector => (
+                                    <button
+                                        key={sector.id}
+                                        onClick={() => setActiveSector(sector.id)}
+                                        className={`px-6 py-2.5 rounded-full font-label text-[9px] font-bold tracking-[0.2em] uppercase transition-all duration-300 border ${
+                                            activeSector === sector.id
+                                                ? 'bg-white text-black border-white shadow-xl'
+                                                : 'bg-white/[0.02] text-white/40 border-white/[0.06] hover:text-white hover:border-white/20'
+                                        }`}
+                                    >
+                                        {sector.name}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Newsletter Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
+                            {filteredArticles.map((article) => (
+                                <motion.div 
+                                    key={article.id}
+                                    whileHover={{ y: -6 }}
+                                    transition={{ duration: 0.4 }}
+                                >
+                                    <div
+                                        onClick={() => setSelectedArticle(article)}
+                                        className="group flex flex-col p-4 pb-6 relative overflow-hidden aspect-[4/5] bg-white border border-white/10 rounded-[2.5rem] transition-all duration-500 shadow-2xl cursor-pointer select-none text-black"
+                                    >
+                                        {/* Cover Photo */}
+                                        <div className="w-full aspect-[4/3] rounded-2xl overflow-hidden bg-neutral-100 border border-neutral-200 shrink-0">
+                                            {article.thumbnailUrl ? (
+                                                <img 
+                                                    src={article.thumbnailUrl} 
+                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
+                                                    alt={article.title}
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center bg-neutral-200">
+                                                    <span className="material-symbols-outlined text-neutral-400 text-3xl">mail</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        {/* Content */}
+                                        <div className="flex-1 flex flex-col justify-center py-2 text-center">
+                                            <span className="font-label text-[10px] text-neutral-400 uppercase tracking-[0.2em] font-bold mb-1">
+                                                {article.subtitle || 'Newsletter'}
                                             </span>
+                                            <h4 className="font-headline text-sm md:text-base font-extrabold text-neutral-900 leading-snug line-clamp-3 uppercase px-1">
+                                                {article.title}
+                                            </h4>
                                         </div>
-                                        <h3 className="font-headline text-lg md:text-xl font-bold text-white uppercase tracking-tight group-hover:text-primary transition-colors leading-snug">
-                                            {article.title}
-                                        </h3>
-                                        <p className="text-white/40 text-xs md:text-sm font-body leading-relaxed line-clamp-3">
-                                            {article.content.replace(/[#*`]/g, '')}
-                                        </p>
-                                    </div>
-                                    
-                                    <div className="flex items-center justify-between pt-6 border-t border-white/[0.06] mt-4 relative z-10">
-                                        <div className="flex items-center gap-2 text-white/30 font-label text-[9px] uppercase tracking-wider font-semibold">
-                                            <span>{article.author}</span>
-                                            <span>•</span>
-                                            <span>{dateStr}</span>
-                                        </div>
-                                        <button
-                                            onClick={() => setSelectedArticle(article)}
-                                            className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl font-label text-[8px] uppercase tracking-[2px] font-bold hover:bg-primary hover:text-black hover:border-primary transition-all duration-300 active:scale-95"
-                                        >
-                                            Ler Completo
-                                        </button>
                                     </div>
                                 </motion.div>
-                            );
-                        })}
-                        {articles.length === 0 && (
-                            <div className="col-span-full text-center py-20 border border-white/[0.05] rounded-[2.5rem] bg-white/[0.01]">
-                                <span className="material-symbols-outlined text-white/10 text-5xl mb-4 font-light">mail</span>
-                                <h3 className="text-white/50 font-headline text-lg uppercase tracking-wider">Nenhum comunicado disponível</h3>
-                                <p className="text-white/30 text-xs mt-1">Nossos editores não publicaram nenhuma novidade no momento.</p>
-                            </div>
-                        )}
+                            ))}
+
+                            {filteredArticles.length === 0 && (
+                                <div className="col-span-full text-center py-20 border border-white/[0.05] rounded-[2.5rem] bg-white/[0.01]">
+                                    <span className="material-symbols-outlined text-white/10 text-5xl mb-4 font-light">mail</span>
+                                    <h3 className="text-white/50 font-headline text-lg uppercase tracking-wider">Nenhum comunicado disponível</h3>
+                                    <p className="text-white/30 text-xs mt-1">Nossos editores não publicaram nenhuma novidade no momento.</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
 

@@ -1,5 +1,5 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
 import { logoBase64 } from '../logoBase64';
@@ -18,8 +18,10 @@ const fmtTime = (secs: number) => {
 };
 
 const Dashboard: React.FC = () => {
-    const { courses, lessons, sectors, isLoading } = useData();
+    const { courses, lessons, sectors, articles, isLoading } = useData();
     const { isAdmin } = useAuth();
+    const navigate = useNavigate();
+    const [selectedArticle, setSelectedArticle] = useState<any>(null);
 
     if (isLoading) {
         return (
@@ -69,6 +71,15 @@ const Dashboard: React.FC = () => {
     if (heroCourse) console.log(`[Dashboard] Hero Course: ${heroCourse.title}`);
     if (heroLesson) console.log(`[Dashboard] Hero Lesson: ${heroLesson.title}`);
     if (lastWatchedLesson) console.log(`[Dashboard] Last Watched Lesson: ${lastWatchedLesson.title}`);
+
+    const sortedArticles = [...articles].sort((a, b) => {
+        const courseA = courses.find(c => c.sectorId === a.sectorId);
+        const courseB = courses.find(c => c.sectorId === b.sectorId);
+        const posA = courseA ? (courseA.position ?? 9999) : 9999;
+        const posB = courseB ? (courseB.position ?? 9999) : 9999;
+        if (posA !== posB) return posA - posB;
+        return (b.createdAt || 0) - (a.createdAt || 0);
+    });
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -395,54 +406,67 @@ const Dashboard: React.FC = () => {
                     </div>
                 </motion.section>
 
-                {/* ATL NEWS / ANNOUNCEMENTS */}
-                <motion.section variants={itemVariants} className="space-y-12 pb-6">
-                    <div className="space-y-2 px-2">
-                        <span className="font-label text-primary text-[8px] md:text-[10px] tracking-[0.4em] uppercase font-bold">Atualizações Recentes</span>
-                        <h2 className="font-headline text-2xl md:text-4xl font-bold tracking-tight">Comunicados ATL</h2>
+                {/* Newsletters Section */}
+                <motion.section variants={itemVariants} className="space-y-16 pb-6">
+                    <div className="flex justify-between items-end px-2">
+                        <div className="space-y-2">
+                            <span className="font-label text-primary text-[10px] tracking-[0.4em] uppercase">Atl Academy Intelligence</span>
+                            <h2 className="font-headline text-4xl md:text-6xl font-bold tracking-tight">Newsletters</h2>
+                        </div>
+                        <Link className="premium-pill" to="/explore?tab=newsletters">Ver tudo <span className="ml-1 text-[10px]">↗</span></Link>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-                        <div className="relative group bg-white/[0.01] border border-white/[0.06] rounded-[2.5rem] p-8 md:p-10 flex flex-col justify-between gap-6 hover:bg-white/[0.02] hover:border-white/[0.1] transition-all duration-500 shadow-lg">
-                            <div className="space-y-4">
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 font-label text-[8px] tracking-[0.2em] uppercase text-primary font-bold">
-                                    CONTEÚDO ACADÊMICO
-                                </span>
-                                <h3 className="font-headline text-lg md:text-xl font-bold text-white uppercase tracking-tight group-hover:text-primary transition-colors leading-snug">
-                                    Novos Módulos Disponíveis e Carregamento Local
-                                </h3>
-                                <p className="text-white/40 text-xs md:text-sm font-body leading-relaxed">
-                                    Todas as transmissões e trilhas ativas foram sincronizadas com o banco de dados. Os novos uploads via arquivo texto no desktop já foram indexados e estão prontos para consumo.
-                                </p>
+                    <div className="module-carousel-container relative">
+                        <div
+                            className="flex gap-4 md:gap-8 overflow-x-auto pb-12 px-4 md:px-6 no-scrollbar snap-x snap-mandatory"
+                            style={{
+                                WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 6%, black 88%, transparent 100%)',
+                                maskImage: 'linear-gradient(to right, transparent 0%, black 6%, black 88%, transparent 100%)'
+                            }}
+                        >
+                            {/* Search Card */}
+                            <div 
+                                onClick={() => navigate('/explore?tab=newsletters&focus=search')}
+                                className="shrink-0 w-[240px] md:w-[300px] aspect-[4/5] rounded-[2rem] bg-white/[0.02] border border-white/[0.08] hover:bg-white/[0.04] hover:border-white/[0.15] hover:border-primary/40 transition-all duration-500 shadow-2xl flex flex-col items-center justify-center gap-4 cursor-pointer select-none"
+                            >
+                                <div className="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/[0.08] flex items-center justify-center">
+                                    <span className="material-symbols-outlined text-white/50 text-3xl font-light">search</span>
+                                </div>
+                                <span className="font-headline text-base font-bold text-white uppercase tracking-[0.2em]">Pesquisar</span>
                             </div>
-                            <div className="flex items-center gap-3 pt-6 border-t border-white/[0.06] text-white/30 font-label text-[9px] uppercase tracking-wider font-semibold">
-                                <span>Sarah Chen</span>
-                                <span>•</span>
-                                <span>15 Jun</span>
-                                <span>•</span>
-                                <span>3 min de leitura</span>
-                            </div>
-                        </div>
 
-                        <div className="relative group bg-white/[0.01] border border-white/[0.06] rounded-[2.5rem] p-8 md:p-10 flex flex-col justify-between gap-6 hover:bg-white/[0.02] hover:border-white/[0.1] transition-all duration-500 shadow-lg">
-                            <div className="space-y-4">
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 font-label text-[8px] tracking-[0.2em] uppercase text-blue-400 font-bold">
-                                    SISTEMA & INFRA
-                                </span>
-                                <h3 className="font-headline text-lg md:text-xl font-bold text-white uppercase tracking-tight group-hover:text-blue-400 transition-colors leading-snug">
-                                    Implementação do Player Inteligente e Rastreamento
-                                </h3>
-                                <p className="text-white/40 text-xs md:text-sm font-body leading-relaxed">
-                                    Agora a plataforma salva automaticamente seu progresso em tempo real e armazena sua posição no localStorage. A Central de Comando recebeu novos ajustes de segurança SSL.
-                                </p>
-                            </div>
-                            <div className="flex items-center gap-3 pt-6 border-t border-white/[0.06] text-white/30 font-label text-[9px] uppercase tracking-wider font-semibold">
-                                <span>ATL Dev Team</span>
-                                <span>•</span>
-                                <span>14 Jun</span>
-                                <span>•</span>
-                                <span>4 min de leitura</span>
-                            </div>
+                            {/* Newsletter Cards */}
+                            {sortedArticles.map((article) => (
+                                <div
+                                    key={article.id}
+                                    onClick={() => setSelectedArticle(article)}
+                                    className="shrink-0 w-[240px] md:w-[300px] aspect-[4/5] rounded-[2rem] bg-white p-4 border border-white/10 hover:scale-[1.02] hover:shadow-primary/5 transition-all duration-500 shadow-2xl flex flex-col justify-between cursor-pointer select-none group text-black"
+                                >
+                                    {/* Cover Photo */}
+                                    <div className="w-full aspect-[4/3] rounded-2xl overflow-hidden bg-neutral-100 border border-neutral-200 shrink-0">
+                                        {article.thumbnailUrl ? (
+                                            <img 
+                                                src={article.thumbnailUrl} 
+                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
+                                                alt={article.title}
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center bg-neutral-200">
+                                                <span className="material-symbols-outlined text-neutral-400 text-3xl">mail</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                    {/* Content */}
+                                    <div className="flex-1 flex flex-col justify-center py-2 text-center">
+                                        <span className="font-label text-[10px] text-neutral-400 uppercase tracking-[0.2em] font-bold mb-1">
+                                            {article.subtitle || 'Newsletter'}
+                                        </span>
+                                        <h4 className="font-headline text-sm md:text-base font-extrabold text-neutral-900 leading-snug line-clamp-3 uppercase px-1">
+                                            {article.title}
+                                        </h4>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </motion.section>
@@ -451,6 +475,56 @@ const Dashboard: React.FC = () => {
 
             {/* NEW FORUM SECTION */}
             <ForumSection />
+
+            {/* Newsletter Detail Modal */}
+            {selectedArticle && (
+                <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 md:p-6 bg-black/85 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="relative w-full max-w-3xl max-h-[85vh] bg-neutral-950 border border-white/10 rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl">
+                        {/* Decorative glowing gradient inside header */}
+                        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
+                        
+                        {/* Header */}
+                        <div className="p-6 md:p-10 border-b border-white/5 flex items-start justify-between bg-white/[0.01]">
+                            <div className="space-y-3">
+                                <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-primary/10 border border-primary/20 font-label text-[8px] tracking-[0.2em] uppercase text-primary font-bold">
+                                    {sectors.find(s => s.id === selectedArticle.sectorId)?.name || 'Geral'}
+                                </span>
+                                <h2 className="font-headline text-2xl md:text-3xl font-extrabold text-white uppercase tracking-tight leading-snug">
+                                    {selectedArticle.title}
+                                </h2>
+                                <div className="flex items-center gap-3 text-white/40 font-label text-[9px] uppercase tracking-wider font-semibold">
+                                    <span>Por {selectedArticle.author}</span>
+                                    <span>•</span>
+                                    <span>{new Date(selectedArticle.createdAt || Date.now()).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setSelectedArticle(null)}
+                                className="w-10 h-10 rounded-full border border-white/10 bg-white/[0.02] flex items-center justify-center hover:bg-white/10 text-white/60 hover:text-white transition-all shrink-0 active:scale-95"
+                            >
+                                <span className="material-symbols-outlined text-lg">close</span>
+                            </button>
+                        </div>
+                        
+                        {/* Content */}
+                        <div className="flex-1 overflow-y-auto p-6 md:p-10 custom-scrollbar-premium space-y-6">
+                            <div className="text-white/70 font-body text-sm md:text-base leading-relaxed whitespace-pre-wrap">
+                                {selectedArticle.content}
+                            </div>
+                        </div>
+                        
+                        {/* Footer */}
+                        <div className="p-6 border-t border-white/5 bg-white/[0.01] flex justify-end">
+                            <button
+                                onClick={() => setSelectedArticle(null)}
+                                className="px-6 py-3 bg-white text-black hover:bg-neutral-200 font-headline font-bold text-[10px] tracking-[2px] rounded-xl uppercase transition-all active:scale-95"
+                            >
+                                Fechar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <footer className="mt-10 md:mt-40 border-t border-white/[0.05] relative z-10 bg-black/40 backdrop-blur-3xl">
                 <div className="max-w-[1440px] mx-auto px-6 md:px-10 py-8 md:py-24 flex flex-col md:flex-row items-center justify-between gap-6 md:gap-12">
