@@ -7,7 +7,7 @@ import { getYouTubeId, getYouTubeThumbnail, getYouTubeDuration, loadYouTubeAPI, 
 import { Reorder } from 'framer-motion';
 
 // ── Image compression ──────────────────────────────────────────────────────
-const compressImage = (file: File, isVertical = false): Promise<string> => new Promise((resolve, reject) => {
+const compressImage = (file: File, isSquare = false): Promise<string> => new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = (event) => {
@@ -16,13 +16,35 @@ const compressImage = (file: File, isVertical = false): Promise<string> => new P
         img.onload = () => {
             const canvas = document.createElement('canvas');
             let w = img.width, h = img.height;
-            const maxW = isVertical ? 1536 : 1280;
-            const maxH = isVertical ? 2752 : 720;
-            if (w > maxW) { h = h * maxW / w; w = maxW; }
-            if (h > maxH) { w = w * maxH / h; h = maxH; }
-            canvas.width = w; canvas.height = h;
-            const ctx = canvas.getContext('2d');
-            ctx ? (ctx.drawImage(img, 0, 0, w, h), resolve(canvas.toDataURL('image/webp', 0.95))) : resolve(event.target?.result as string);
+            
+            if (isSquare) {
+                // Crop to square (1:1)
+                const size = Math.min(w, h);
+                const sx = (w - size) / 2;
+                const sy = (h - size) / 2;
+                
+                // target size: max 1080x1080
+                const targetSize = Math.min(size, 1080);
+                canvas.width = targetSize;
+                canvas.height = targetSize;
+                
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                    ctx.drawImage(img, sx, sy, size, size, 0, 0, targetSize, targetSize);
+                    resolve(canvas.toDataURL('image/webp', 0.95));
+                } else {
+                    resolve(event.target?.result as string);
+                }
+            } else {
+                // Standard widescreen 16:9 or auto
+                const maxW = 1280;
+                const maxH = 720;
+                if (w > maxW) { h = h * maxW / w; w = maxW; }
+                if (h > maxH) { w = w * maxH / h; h = maxH; }
+                canvas.width = w; canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                ctx ? (ctx.drawImage(img, 0, 0, w, h), resolve(canvas.toDataURL('image/webp', 0.95))) : resolve(event.target?.result as string);
+            }
         };
         img.onerror = reject;
     };
@@ -386,7 +408,7 @@ const Admin: React.FC = () => {
                                         {/* RIGHT */}
                                         <div className="space-y-4">
                                             <div className="space-y-1.5">
-                                                <label className="font-label text-[9px] uppercase text-white/40 flex justify-between"><span>Thumbnail (9:16)</span></label>
+                                                <label className="font-label text-[9px] uppercase text-white/40 flex justify-between"><span>Thumbnail (1:1)</span></label>
                                                 <div className="flex gap-2">
                                                     <input className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 focus:border-primary outline-none transition-all text-sm" value={cur.thumbnailUrl || ''} onChange={e => setCur({ ...cur, thumbnailUrl: e.target.value })} placeholder="URL ou faça upload" />
                                                     <label className="cursor-pointer px-4 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center hover:bg-white/10 transition-colors">
@@ -400,8 +422,8 @@ const Admin: React.FC = () => {
                                                     </label>
                                                 </div>
                                                 {cur.thumbnailUrl && (
-                                                    <div className="relative w-40 aspect-[9/16] rounded-2xl border border-white/10 overflow-hidden bg-black/40 group mt-2">
-                                                        <img src={cur.thumbnailUrl} className="w-full h-full object-cover opacity-60 mix-blend-luminosity grayscale" alt="" />
+                                                    <div className="relative w-40 aspect-square rounded-2xl border border-white/10 overflow-hidden bg-black/40 group mt-2">
+                                                        <img src={cur.thumbnailUrl} className="w-full h-full object-cover" alt="" />
                                                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
                                                         <button type="button" onClick={() => setCur({ ...cur, thumbnailUrl: '' })} className="absolute bottom-2 right-2 text-red-400 hover:text-red-300">
                                                             <span className="material-symbols-outlined text-base">delete</span>
@@ -446,9 +468,9 @@ const Admin: React.FC = () => {
                                             {/* RIGHT */}
                                             <div className="space-y-4">
                                                 <div className="space-y-1.5">
-                                                    <label className="font-label text-[9px] uppercase text-white/40 flex justify-between"><span>Imagem da Capa Personalizada (9:16)</span></label>
+                                                    <label className="font-label text-[9px] uppercase text-white/40 flex justify-between"><span>Imagem da Capa Personalizada (1:1)</span></label>
                                                     <div className="flex gap-2">
-                                                        <input className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-primary transition-all" value={cur.cardThumbnail || ''} onChange={e => setCur({ ...cur, cardThumbnail: e.target.value })} placeholder="URL da imagem vertical..." />
+                                                        <input className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-primary transition-all" value={cur.cardThumbnail || ''} onChange={e => setCur({ ...cur, cardThumbnail: e.target.value })} placeholder="URL da imagem quadrada..." />
                                                         <label className="cursor-pointer px-4 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center hover:bg-white/10 transition-colors">
                                                             <span className="material-symbols-outlined text-base">upload</span>
                                                             <input type="file" hidden accept="image/*" onChange={async (e) => {
@@ -463,7 +485,7 @@ const Admin: React.FC = () => {
                                                         </label>
                                                     </div>
                                                     {cur.cardThumbnail && (
-                                                        <div className="relative w-28 aspect-[9/16] rounded-2xl border border-white/10 overflow-hidden bg-black/40 group mt-2">
+                                                        <div className="relative w-28 aspect-square rounded-2xl border border-white/10 overflow-hidden bg-black/40 group mt-2">
                                                             <img src={cur.cardThumbnail} className="w-full h-full object-cover" alt="" />
                                                             <button type="button" onClick={() => setCur({ ...cur, cardThumbnail: '' })} className="absolute bottom-2 right-2 text-red-400 hover:text-red-300">
                                                                 <span className="material-symbols-outlined text-base">delete</span>
@@ -600,7 +622,7 @@ const Admin: React.FC = () => {
                                                             </div>
                                                             {curLesson.thumbnailUrl && (
                                                                 <div className="relative aspect-video rounded-xl border border-white/10 overflow-hidden bg-black/40 group mt-2">
-                                                                    <img src={curLesson.thumbnailUrl} className="w-full h-full object-cover opacity-60 mix-blend-luminosity grayscale" alt="" />
+                                                                    <img src={curLesson.thumbnailUrl} className="w-full h-full object-cover" alt="" />
                                                                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
                                                                     <button type="button" onClick={() => setCurLesson(p => ({ ...p, thumbnailUrl: '' }))} className="absolute bottom-2 right-2 text-red-400 hover:text-red-300">
                                                                         <span className="material-symbols-outlined text-base">delete</span>

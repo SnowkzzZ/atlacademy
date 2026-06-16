@@ -161,7 +161,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const [courses, setCourses] = useState<Course[]>(() => {
         const local = lsLoadContent();
-        const baseCourses = local.courses.length > 0 ? local.courses : defaultCourses;
+        const baseCourses = local.updatedAt > 0 ? local.courses : defaultCourses;
         const lsProg = lsLoadProgress();
         
         const mapped = baseCourses.map(c => {
@@ -187,14 +187,14 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
         return mapped.sort((a, b) => (a.position ?? 9999) - (b.position ?? 9999));
     });
-    const [lessons, setLessons] = useState<Lesson[]>(() => lsLoadContent().lessons);
+    const [lessons, setLessons] = useState<Lesson[]>(() => lsLoadContent().lessons || []);
     const [sectors, setSectors] = useState<Sector[]>(() => {
         const local = lsLoadContent();
-        return local.sectors.length > 0 ? local.sectors : defaultSectors;
+        return local.updatedAt > 0 ? (local.sectors || []) : defaultSectors;
     });
     const [articles, setArticles] = useState<Article[]>(() => {
         const local = lsLoadContent();
-        return local.articles.length > 0 ? local.articles : defaultArticles;
+        return local.updatedAt > 0 ? (local.articles || []) : defaultArticles;
     });
     const [isLoading, setIsLoading] = useState(true);
     const [isSyncing, setIsSyncing] = useState(false);
@@ -228,7 +228,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 const [coursesRes, lessonsRes, sectorsRes, articlesRes] = await fetchPromise;
 
                 // 1. Prioritize Supabase Courses
-                const sbCourses: Course[] = coursesRes.data?.map((c: any) => ({
+                const sbCourses: Course[] = coursesRes.data ? coursesRes.data.map((c: any) => ({
                     id: c.id,
                     title: c.title,
                     subtitle: c.subtitle || '', // Map subtitle
@@ -249,21 +249,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     cardIcon: c.cardIcon || c.card_icon || '',
                     cardThumbnail: c.cardThumbnail || c.card_thumbnail || '',
                     position: (c.position !== undefined && c.position !== null) ? c.position : 9999,
-                })) || [];
+                })) : [];
                 
-                // ── Se Supabase retornou 0 cursos, mantém o estado atual (não sobrescreve)
-                // Isso previne perda de dados por falha temporária de RLS ou conexão
-                const mergedCourses = sbCourses.length > 0
-                    ? [...sbCourses, ...(() => {
-                        const sbIds = new Set(sbCourses.map(c => c.id));
-                        return (local.courses || []).filter((c: any) => !sbIds.has(c.id));
-                    })()]
-                    : local.courses.length > 0
-                        ? local.courses
-                        : courses; // Mantém estado atual do React se tudo falhar
+                // If Supabase call returned successfully, trust it completely. Otherwise fallback to local or state.
+                const mergedCourses = coursesRes.data ? sbCourses : (local.courses.length > 0 ? local.courses : courses);
 
                 // 2. Prioritize Supabase Lessons
-                const sbLessons: Lesson[] = lessonsRes.data?.map((l: any) => ({
+                const sbLessons: Lesson[] = lessonsRes.data ? lessonsRes.data.map((l: any) => ({
                     id: l.id,
                     courseId: l.courseId || l.course_id || '',
                     title: l.title,
@@ -275,24 +267,24 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     module: l.module || '',
                     progress: 0,
                     watchedSeconds: 0,
-                })) || [];
+                })) : [];
 
-                // ── Se Supabase retornou 0 aulas mas temos local, mantém local
-                const mergedLessons = sbLessons.length > 0
-                    ? [...sbLessons, ...(() => {
-                        const sbIds = new Set(sbLessons.map(l => l.id));
-                        return (local.lessons || []).filter((l: any) => !sbIds.has(l.id));
-                    })()]
-                    : local.lessons.length > 0
-                        ? local.lessons
-                        : lessons; // Mantém estado atual do React
+                // If Supabase call returned successfully, trust it completely. Otherwise fallback to local or state.
+                const mergedLessons = lessonsRes.data ? sbLessons : (local.lessons.length > 0 ? local.lessons : lessons);
                 
-                setSectors(sectorsRes.data && sectorsRes.data.length > 0 ? sectorsRes.data : local.sectors.length > 0 ? local.sectors : defaultSectors);
-                setArticles(articlesRes.data && articlesRes.data.length > 0 ? articlesRes.data : local.articles.length > 0 ? local.articles : defaultArticles);
+                const mergedSectors = sectorsRes.data ? sectorsRes.data : (local.sectors.length > 0 ? local.sectors : defaultSectors);
+                const mergedArticles = articlesRes.data ? articlesRes.data : (local.articles.length > 0 ? local.articles : defaultArticles);
 
-                // ── Salva no localStorage os dados mesclados para evitar perda de dados locais
-                if (mergedCourses.length > 0) persistLocal({ courses: mergedCourses });
-                if (mergedLessons.length > 0) persistLocal({ lessons: mergedLessons });
+                setSectors(mergedSectors);
+                setArticles(mergedArticles);
+
+                // Write complete source-of-truth back to local cache
+                persistLocal({ 
+                    courses: mergedCourses, 
+                    lessons: mergedLessons,
+                    sectors: mergedSectors,
+                    articles: mergedArticles
+                });
 
                 // 4. Load & Merge Progress
                 const lsProgress = lsLoadProgress();
@@ -346,8 +338,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 }).sort((a, b) => (a.position ?? 9999) - (b.position ?? 9999));
 
                 // ── Só atualiza o estado se tiver dados reais do Supabase ou locais válidos
-                if (finalCourses.length > 0) setCourses(finalCourses);
-                if (finalLessons.length > 0) setLessons(finalLessons);
+                setCourses(finalCourses);
+                setLessons(finalLessons);
 
                 console.log(`[DataContext] Sync: ${finalCourses.length} cursos, ${finalLessons.length} aulas`);
                 setSyncStatus('synced');

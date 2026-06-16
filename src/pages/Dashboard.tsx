@@ -363,7 +363,7 @@ const Dashboard: React.FC = () => {
                                         <div className="flex-1 p-10 flex flex-col justify-between relative overflow-hidden">
                                             {course.thumbnailUrl ? (
                                                 <div className="absolute inset-0 z-0">
-                                                    <img src={course.thumbnailUrl} className="w-full h-full object-cover opacity-50 group-hover:opacity-70 transition-all duration-1000 mix-blend-overlay grayscale-[30%] group-hover:grayscale-0 group-hover:scale-110" alt="" />
+                                                    <img src={course.thumbnailUrl} className="w-full h-full object-cover opacity-50 group-hover:opacity-70 transition-all duration-1000 group-hover:scale-110" alt="" />
                                                     <div className="course-card-overlay"></div>
                                                 </div>
                                             ) : (

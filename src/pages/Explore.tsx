@@ -148,10 +148,10 @@ const Explore: React.FC = () => {
                                             {dispThumb ? (
                                                 <div className="absolute inset-0 z-0">
                                                     <img 
-                                                        src={dispThumb} 
-                                                        className="w-full h-full object-cover opacity-[0.25] group-hover:opacity-40 transition-all duration-1000 mix-blend-overlay grayscale group-hover:grayscale-0 group-hover:scale-105" 
-                                                        alt="" 
-                                                    />
+                                                         src={dispThumb} 
+                                                         className="w-full h-full object-cover opacity-[0.3] group-hover:opacity-50 transition-all duration-1000 group-hover:scale-105" 
+                                                         alt="" 
+                                                     />
                                                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent"></div>
                                                 </div>
                                             ) : (
