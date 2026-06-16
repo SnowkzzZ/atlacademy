@@ -71,7 +71,10 @@ const VideoLesson: React.FC = () => {
     // Record visit
     useEffect(() => {
         if (activeCourse?.id) updateCourse(activeCourse.id, { lastWatchedAt: Date.now() });
-    }, [activeCourse?.id]);
+        if (activeLesson?.id) {
+            localStorage.setItem('atl_last_watched_lesson_id', activeLesson.id);
+        }
+    }, [activeCourse?.id, activeLesson?.id]);
 
     // ── PLAYER LOGIC ───────────────────────────────────────────────────────
     const currentVideoUrl = activeLesson?.videoUrl ?? activeCourse?.videoUrl ?? '';
@@ -245,7 +248,7 @@ const VideoLesson: React.FC = () => {
     const instructorTitle = activeCourse.instructorTitle || 'Mestre ATL';
 
     return (
-        <div className="bg-[#030303] min-h-screen text-white font-body relative overflow-x-hidden">
+        <div className="bg-black min-h-screen text-white font-body relative overflow-x-hidden">
             <div className="fixed inset-0 z-0">
                 <div className="absolute top-1/2 left-1/4 w-[50%] h-[50%] rounded-full bg-primary/5 blur-3xl pointer-events-none"></div>
                 <div className="dot-grid absolute inset-0 opacity-[0.02]"></div>
@@ -308,10 +311,18 @@ const VideoLesson: React.FC = () => {
                                             <img 
                                                 src={activeLesson?.thumbnailUrl || activeCourse?.thumbnailUrl || ""} 
                                                 alt="Video Cover" 
-                                                className="w-full h-full object-cover transition-transform duration-1000 group-hover/cover:scale-105 opacity-60"
+                                                className="w-full h-full object-cover transition-transform duration-1000 group-hover/cover:scale-105 opacity-50"
                                             />
-                                            <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
+                                            {/* Overlay escuro suave */}
+                                            <div className="absolute inset-0 bg-black/30 backdrop-blur-[1px]" />
+                                            {/* Gradiente de baixo para cima */}
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent"></div>
+                                            {/* Gradiente lateral esquerdo — suaviza borda esquerda */}
+                                            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-transparent to-transparent"></div>
+                                            {/* Gradiente lateral direito — suaviza borda direita */}
+                                            <div className="absolute inset-0 bg-gradient-to-l from-black/70 via-transparent to-transparent"></div>
+                                            {/* Gradiente do topo — suaviza borda superior */}
+                                            <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-transparent"></div>
                                         </div>
 
                                         {/* Action Area */}

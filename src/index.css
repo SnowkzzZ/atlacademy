@@ -5,7 +5,7 @@
 @layer base {
   body {
     @apply bg-surface-container-lowest text-on-surface font-body selection:bg-primary selection:text-surface-container-lowest;
-    background-color: #050B14;
+    background-color: #000000;
   }
 }
 
@@ -167,24 +167,28 @@
    2. NAVBAR
    ========================================================== */
 .navbar-premium {
-  background: rgba(5, 11, 20, 0.9);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 
+    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 20px 40px rgba(0, 0, 0, 0.3);
 }
 
 .nav-item-active {
-  background-color: #00F0FF;
-  color: #050B14;
-  font-weight: bold;
-  border-radius: 8px;
+  background-color: #ffffff;
+  color: #000000 !important;
+  font-weight: 600;
+  border-radius: 9999px;
 }
 
 .nav-central-comando {
-  border: 1px solid #00F0FF;
+  border: 1px solid rgba(0, 240, 255, 0.4);
   color: #00F0FF;
-  border-radius: 8px;
-  transition: all 0.3s ease;
+  border-radius: 9999px;
+  background: rgba(0, 240, 255, 0.05);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .nav-icon {

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useData, type Course, type Lesson } from '../context/DataContext';
 import Navbar from '../components/Navbar';
 import { getYouTubeId, getYouTubeThumbnail, getYouTubeDuration, loadYouTubeAPI, fmtDuration } from '../lib/youtube';
+import { Reorder } from 'framer-motion';
 
 // ── Image compression ──────────────────────────────────────────────────────
 const compressImage = (file: File, isVertical = false): Promise<string> => new Promise((resolve, reject) => {
@@ -178,7 +179,7 @@ const VideoUrlInput: React.FC<{
 
 // ── Admin Panel ────────────────────────────────────────────────────────────
 const Admin: React.FC = () => {
-    const { courses, lessons, sectors, articles, addCourse, updateCourse, deleteCourse, addLesson, updateLesson, deleteLesson, addSector, updateSector, deleteSector, addArticle, updateArticle, deleteArticle, clearLocalCache, isSyncing, syncStatus } = useData();
+    const { courses, lessons, sectors, articles, addCourse, updateCourse, deleteCourse, addLesson, updateLesson, deleteLesson, addSector, updateSector, deleteSector, addArticle, updateArticle, deleteArticle, clearLocalCache, isSyncing, syncStatus, updateCoursesOrder } = useData();
     const navigate = useNavigate();
 
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -193,6 +194,16 @@ const Admin: React.FC = () => {
 
     const [isEditingCourse, setIsEditingCourse] = useState(false);
     const [cur, setCur] = useState<Partial<Course>>({});
+
+    // Module reordering
+    const [isReordering, setIsReordering] = useState(false);
+    const [reorderList, setReorderList] = useState<Course[]>([]);
+
+    useEffect(() => {
+        if (isReordering) {
+            setReorderList(courses);
+        }
+    }, [isReordering, courses]);
 
     const [newSectorName, setNewSectorName] = useState('');
     const [editingSectorId, setEditingSectorId] = useState<string | null>(null);
@@ -274,9 +285,9 @@ const Admin: React.FC = () => {
 
     // ── ADMIN PANEL ──
     return (
-        <div className="bg-[#030303] text-white/90 min-h-screen font-body relative">
+        <div className="bg-black text-white/90 min-h-screen font-body relative">
             <div className="fixed inset-0 z-0 pointer-events-none">
-                <div className="absolute inset-0 bg-[#030303]"></div>
+                <div className="absolute inset-0 bg-black"></div>
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/5 blur-3xl"></div>
                 <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-500/5 blur-3xl"></div>
                 <div className="dot-grid absolute inset-0 opacity-[0.03]"></div>
@@ -332,7 +343,12 @@ const Admin: React.FC = () => {
                     <section className="lg:col-span-2 space-y-6">
                         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                             <h2 className="font-headline text-xl font-bold uppercase tracking-tight">Módulos Inteligentes</h2>
-                            <button onClick={() => { setCur({ icon: 'play_lesson' }); setIsEditingCourse(true); }} className="w-full sm:w-auto premium-pill py-3 bg-primary/10 text-primary border-primary/20 hover:bg-primary hover:text-black transition-all">+ Novo Módulo</button>
+                            <div className="flex gap-2 w-full sm:w-auto">
+                                <button onClick={() => setIsReordering(true)} className="w-full sm:w-auto px-5 py-3 rounded-xl border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-all font-label text-[10px] tracking-[2px] uppercase flex items-center justify-center gap-2">
+                                    <span className="material-symbols-outlined text-[16px]">swap_vert</span> Reordenar Módulos
+                                </button>
+                                <button onClick={() => { setCur({ icon: 'play_lesson' }); setIsEditingCourse(true); }} className="w-full sm:w-auto premium-pill py-3 bg-primary/10 text-primary border-primary/20 hover:bg-primary hover:text-black transition-all">+ Novo Módulo</button>
+                            </div>
                         </div>
 
                         {isEditingCourse && (
@@ -809,6 +825,53 @@ const Admin: React.FC = () => {
                     </div>
                 </div>
             </footer>
+
+            {/* Modal de Reordenação */}
+            {isReordering && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setIsReordering(false)}></div>
+                    <div className="relative w-full max-w-lg bg-[#0d0d0d] border border-white/10 rounded-[2.5rem] p-6 md:p-8 space-y-6 shadow-2xl overflow-hidden">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none"></div>
+                        <div className="flex items-center justify-between border-b border-white/5 pb-4">
+                            <div>
+                                <h3 className="font-headline text-lg text-primary uppercase">Reordenar Módulos</h3>
+                                <p className="text-[9px] font-label uppercase text-white/30 tracking-widest mt-1">Arraste os itens para definir a ordem</p>
+                            </div>
+                            <button onClick={() => setIsReordering(false)} className="text-white/40 hover:text-white font-label text-[10px] uppercase tracking-widest">
+                                Fechar
+                            </button>
+                        </div>
+
+                        {/* Draggable List */}
+                        <Reorder.Group axis="y" values={reorderList} onReorder={setReorderList} className="space-y-3 max-h-[50vh] overflow-y-auto pr-2 custom-scrollbar-premium">
+                            {reorderList.map(item => (
+                                <Reorder.Item key={item.id} value={item} className="flex items-center gap-4 p-4 bg-white/[0.03] border border-white/5 hover:border-white/10 rounded-2xl cursor-grab active:cursor-grabbing select-none transition-colors group">
+                                    <span className="material-symbols-outlined text-white/20 group-hover:text-primary transition-colors">drag_indicator</span>
+                                    <div className="w-10 h-10 rounded-xl bg-white/[0.05] border border-white/10 flex items-center justify-center shrink-0 relative overflow-hidden">
+                                        {item.thumbnailUrl && <img src={item.thumbnailUrl} className="absolute inset-0 w-full h-full object-cover opacity-20" alt="" />}
+                                        <span className="material-symbols-outlined text-white/60 text-lg relative z-10">{item.icon}</span>
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <p className="font-headline text-sm font-bold text-white truncate">{item.title}</p>
+                                        <p className="font-label text-[8px] text-white/30 uppercase tracking-widest mt-0.5">{item.instructor}</p>
+                                    </div>
+                                </Reorder.Item>
+                            ))}
+                        </Reorder.Group>
+
+                        <button onClick={async () => {
+                            try {
+                                await updateCoursesOrder(reorderList);
+                                setIsReordering(false);
+                            } catch (err) {
+                                alert('Erro ao salvar nova ordem dos módulos.');
+                            }
+                        }} className="w-full bg-primary text-black font-bold uppercase rounded-xl py-3.5 text-xs tracking-[2px] hover:bg-white transition-all shadow-lg">
+                            Confirmar Nova Ordem
+                        </button>
+                    </div>
+                </div>
+            )}
             </div>
         </div>
     );

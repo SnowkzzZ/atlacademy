@@ -34,9 +34,9 @@ const Profile: React.FC = () => {
         : 0;
 
     return (
-        <div className="font-body text-white/90 min-h-screen relative bg-[#030303]">
+        <div className="font-body text-white/90 min-h-screen relative bg-black">
             <div className="fixed inset-0 z-0">
-                <div className="absolute inset-0 bg-[#030303]"></div>
+                <div className="absolute inset-0 bg-black"></div>
                 <div className="absolute top-1/4 right-1/4 w-[40%] h-[40%] rounded-full bg-primary/5 blur-3xl"></div>
                 <div className="absolute bottom-1/4 left-1/4 w-[40%] h-[40%] rounded-full bg-blue-500/5 blur-3xl"></div>
                 <div className="dot-grid absolute inset-0 opacity-[0.02]"></div>
@@ -53,7 +53,7 @@ const Profile: React.FC = () => {
                     {/* Avatar */}
                     <div className="w-36 h-36 md:w-44 md:h-44 rounded-[2rem] border border-white/10 overflow-hidden shrink-0 relative flex items-center justify-center bg-white/[0.02] backdrop-blur-3xl shadow-2xl">
                         <span className="material-symbols-outlined text-white/40 text-[80px] md:text-[90px] drop-shadow-xl">person</span>
-                        <div className="absolute top-3 right-3 w-4 h-4 md:w-5 md:h-5 bg-primary rounded-full border-4 border-[#030303] shadow-[0_0_15px_#00F5FF] z-20"></div>
+                        <div className="absolute top-3 right-3 w-4 h-4 md:w-5 md:h-5 bg-primary rounded-full border-4 border-black shadow-[0_0_15px_#00F5FF] z-20"></div>
                     </div>
 
                     <div className="space-y-6 flex-1 text-center md:text-left pt-2">
