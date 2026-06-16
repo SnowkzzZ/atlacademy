@@ -307,12 +307,14 @@ const VideoLesson: React.FC = () => {
                                 {!isPlayerStarted && currentVideoUrl && (
                                     <div className="absolute inset-0 z-20 overflow-hidden group/cover">
                                         {/* Background Image */}
-                                        <div className="absolute inset-0 bg-black">
-                                            <img 
-                                                src={activeLesson?.thumbnailUrl || activeCourse?.thumbnailUrl || ""} 
-                                                alt="Video Cover" 
-                                                className="w-full h-full object-cover transition-transform duration-1000 group-hover/cover:scale-105 opacity-50"
-                                            />
+                                         <div className="absolute inset-0 bg-black">
+                                             {activeLesson?.thumbnailUrl && (
+                                                 <img 
+                                                     src={activeLesson.thumbnailUrl} 
+                                                     alt="Video Cover" 
+                                                     className="w-full h-full object-cover transition-transform duration-1000 group-hover/cover:scale-105 opacity-50"
+                                                 />
+                                             )}
                                             {/* Overlay escuro suave */}
                                             <div className="absolute inset-0 bg-black/30 backdrop-blur-[1px]" />
                                             {/* Gradiente de baixo para cima */}
