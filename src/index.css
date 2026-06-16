@@ -137,20 +137,46 @@
 }
 
 /* Custom Scrollbar */
+/* Custom Scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
+  width: 6px;
+  height: 6px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: #000;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 9999px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #333;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #00F5FF;
+}
+
+/* Custom Scrollbar Premium */
+.custom-scrollbar-premium::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar-premium::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 9999px;
+}
+
+.custom-scrollbar-premium::-webkit-scrollbar-thumb {
+  background: rgba(0, 245, 255, 0.15);
+  border-radius: 9999px;
+  border: 1px solid rgba(0, 245, 255, 0.1);
+}
+
+.custom-scrollbar-premium::-webkit-scrollbar-thumb:hover {
+  background: #00F5FF;
+  box-shadow: 0 0 10px rgba(0, 245, 255, 0.4);
 }
 
 /* Hide scrollbar structure for slider */

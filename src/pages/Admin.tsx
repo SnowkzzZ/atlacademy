@@ -528,6 +528,12 @@ const Admin: React.FC = () => {
                                                             />
                                                         </div>
                                                         <div className="space-y-1.5">
+                                                            <IconPicker 
+                                                                value={curCard.cardIcon || ''} 
+                                                                onChange={icon => setCurCard(p => ({ ...p, cardIcon: icon }))} 
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-1.5">
                                                             <label className="font-label text-[9px] uppercase text-white/40">Imagem da Capa (Vertical 1536x2752)</label>
                                                             <div className="flex gap-2">
                                                                 <input 
@@ -598,6 +604,7 @@ const Admin: React.FC = () => {
                                                                     duration: curLesson.duration || '00h 00m',
                                                                     totalSeconds: curLesson.totalSeconds || 0,
                                                                     position: courseLessons.length,
+                                                                    module: curLesson.module || '',
                                                                 });
                                                             }
                                                             setCurLesson({});
@@ -614,6 +621,10 @@ const Admin: React.FC = () => {
                                                         <div className="space-y-1.5">
                                                             <label className="font-label text-[9px] uppercase text-white/40">Título da Aula *</label>
                                                             <input className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-primary text-sm" required value={curLesson.title || ''} onChange={e => setCurLesson(p => ({ ...p, title: e.target.value }))} placeholder="Ex: ATL ONMED - CLASS 1" />
+                                                        </div>
+                                                        <div className="space-y-1.5">
+                                                            <label className="font-label text-[9px] uppercase text-white/40">Módulo / Capítulo (Ex: Módulo 1: Fundamentos)</label>
+                                                            <input className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-primary text-sm" value={curLesson.module || ''} onChange={e => setCurLesson(p => ({ ...p, module: e.target.value }))} placeholder="Ex: Módulo 1: Fundamentos" />
                                                         </div>
                                                         <VideoUrlInput
                                                             value={curLesson.videoUrl || ''}
@@ -683,8 +694,13 @@ const Admin: React.FC = () => {
                                                             </div>
                                                             <div className="flex-1 min-w-0">
                                                                 <p className="text-sm font-bold text-white/80 truncate">{lesson.title}</p>
-                                                                <div className="flex items-center gap-2 mt-0.5">
+                                                                <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                                                                     <span className="text-[10px] text-white/30 font-label">{lesson.duration || '00h 00m'}</span>
+                                                                    {lesson.module && (
+                                                                        <span className="text-[8px] bg-primary/10 border border-primary/20 text-primary px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">
+                                                                            {lesson.module}
+                                                                        </span>
+                                                                    )}
                                                                     {getYouTubeId(lesson.videoUrl || '') && <span className="text-red-400/60 text-[9px] font-label">YT</span>}
                                                                 </div>
                                                             </div>

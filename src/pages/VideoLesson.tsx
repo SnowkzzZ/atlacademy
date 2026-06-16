@@ -463,7 +463,7 @@ const VideoLesson: React.FC = () => {
 
                     {/* Sidebar: New Unified Cronograma */}
                     <aside className="w-full lg:w-[450px] shrink-0">
-                        <div className="liquid-glass-card p-8 flex flex-col lg:h-[calc(100vh-140px)] sticky top-28 border-white/10 shadow-[0_40px_100px_rgba(0,0,0,0.5)]">
+                        <div className="liquid-glass-card p-8 flex flex-col lg:h-[calc(100vh-140px)] lg:sticky lg:top-28 border-white/10 shadow-[0_40px_100px_rgba(0,0,0,0.5)]">
                             <div className="flex items-center justify-between mb-10">
                                 <div>
                                     <h2 className="font-headline text-3xl font-bold tracking-tight uppercase leading-none">Cronograma</h2>
@@ -476,59 +476,86 @@ const VideoLesson: React.FC = () => {
                                 </div>
                             </div>
 
-                            <div className="space-y-4 overflow-y-auto pr-3 custom-scrollbar-premium flex-1">
+                            <div className="space-y-6 overflow-y-auto pr-3 custom-scrollbar-premium flex-1">
                                 {courseLessons.length > 0 ? (
-                                    courseLessons.map((lesson, idx) => {
-                                        const isActive = lesson.id === activeLesson?.id;
-                                        const lessonProgress = lesson.progress ?? 0;
-                                        return (
-                                            <button
-                                                key={lesson.id}
-                                                onClick={() => changeLesson(lesson.id)}
-                                                className={`w-full group text-left p-2 rounded-3xl border transition-all duration-500 flex items-center gap-5 ${isActive ? 'bg-primary/10 border-primary/40 shadow-[0_20px_50px_rgba(0, 245, 255,0.1)]' : 'bg-transparent border-transparent hover:bg-white/[0.04] hover:border-white/10'}`}
-                                            >
-                                                <div className="relative w-28 aspect-video rounded-2xl overflow-hidden shadow-2xl shrink-0">
-                                                    {lesson.thumbnailUrl ? (
-                                                        <img src={lesson.thumbnailUrl} className={`w-full h-full object-cover transition-all duration-1000 ${isActive ? 'scale-110 brightness-110' : 'opacity-40 brightness-75 group-hover:opacity-100 group-hover:scale-105'}`} alt="" />
-                                                    ) : (
-                                                        <div className="w-full h-full bg-[#0A1628] flex items-center justify-center">
-                                                            <span className="material-symbols-outlined text-white/5 text-2xl">motion_photos_on</span>
+                                    (() => {
+                                        // Group lessons by module/chapter
+                                        const groups: Record<string, Lesson[]> = {};
+                                        courseLessons.forEach(lesson => {
+                                            const modName = lesson.module?.trim() || '';
+                                            if (!groups[modName]) groups[modName] = [];
+                                            groups[modName].push(lesson);
+                                        });
+
+                                        return Object.entries(groups).map(([groupName, groupLessons]) => {
+                                            return (
+                                                <div key={groupName} className="space-y-3">
+                                                    {groupName && (
+                                                        <div className="sticky top-0 bg-[#0c0c0e]/95 backdrop-blur-xl py-2 z-10 border-b border-white/5 mb-4 mt-6 first:mt-0 pl-1">
+                                                            <p className="font-label text-[9px] text-primary tracking-[3px] uppercase font-bold flex items-center gap-1.5">
+                                                                <span className="material-symbols-outlined text-[12px]">folder_open</span>
+                                                                {groupName}
+                                                            </p>
                                                         </div>
                                                     )}
-                                                    
-                                                    {/* Overlays */}
-                                                    <div className={`absolute inset-0 flex items-center justify-center bg-black/40 transition-opacity duration-500 ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-                                                        <span className={`material-symbols-outlined transition-all duration-500 ${isActive ? 'text-primary scale-125' : 'text-white scale-100'}`}>
-                                                            {isActive ? 'graphic_eq' : 'play_arrow'}
-                                                        </span>
-                                                    </div>
+                                                    <div className="space-y-3">
+                                                        {groupLessons.map((lesson) => {
+                                                            const isActive = lesson.id === activeLesson?.id;
+                                                            const lessonProgress = lesson.progress ?? 0;
+                                                            const globalIdx = courseLessons.findIndex(l => l.id === lesson.id);
+                                                            return (
+                                                                <button
+                                                                    key={lesson.id}
+                                                                    onClick={() => changeLesson(lesson.id)}
+                                                                    className={`w-full group text-left p-2 rounded-3xl border transition-all duration-500 flex items-center gap-5 ${isActive ? 'bg-primary/10 border-primary/40 shadow-[0_20px_50px_rgba(0,245,255,0.1)]' : 'bg-transparent border-transparent hover:bg-white/[0.04] hover:border-white/10'}`}
+                                                                >
+                                                                    <div className="relative w-28 aspect-video rounded-2xl overflow-hidden shadow-2xl shrink-0">
+                                                                        {lesson.thumbnailUrl ? (
+                                                                            <img src={lesson.thumbnailUrl} className={`w-full h-full object-cover transition-all duration-1000 ${isActive ? 'scale-110 brightness-110' : 'opacity-40 brightness-75 group-hover:opacity-100 group-hover:scale-105'}`} alt="" />
+                                                                        ) : (
+                                                                            <div className="w-full h-full bg-[#0A1628] flex items-center justify-center">
+                                                                                <span className="material-symbols-outlined text-white/5 pointer-events-none text-2xl">motion_photos_on</span>
+                                                                            </div>
+                                                                        )}
+                                                                        
+                                                                        {/* Overlays */}
+                                                                        <div className={`absolute inset-0 flex items-center justify-center bg-black/40 transition-opacity duration-500 ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                                                                            <span className={`material-symbols-outlined transition-all duration-500 ${isActive ? 'text-primary scale-125' : 'text-white scale-100'}`}>
+                                                                                {isActive ? 'graphic_eq' : 'play_arrow'}
+                                                                            </span>
+                                                                        </div>
 
-                                                    {lessonProgress === 100 && (
-                                                        <div className="absolute top-2 right-2 bg-primary text-black rounded-full p-0.5 z-20 shadow-xl border border-white/20">
-                                                            <span className="material-symbols-outlined text-[10px] font-bold">check</span>
-                                                        </div>
-                                                    )}
+                                                                        {lessonProgress === 100 && (
+                                                                            <div className="absolute top-2 right-2 bg-primary text-black rounded-full p-0.5 z-20 shadow-xl border border-white/20">
+                                                                                <span className="material-symbols-outlined text-[10px] font-bold">check</span>
+                                                                            </div>
+                                                                        )}
 
-                                                    <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded text-[8px] font-bold tracking-widest text-white/70">
-                                                        {lesson.duration || '00:00'}
+                                                                        <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded text-[8px] font-bold tracking-widest text-white/70">
+                                                                            {lesson.duration || '00:00'}
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div className="flex-1 min-w-0 pr-4">
+                                                                        <span className="text-[8px] font-bold tracking-[4px] text-white/20 uppercase block mb-1">Sessão {globalIdx + 1}</span>
+                                                                        <p className={`text-[13px] font-bold truncate leading-tight tracking-tight ${isActive ? 'text-primary' : 'text-white/60 group-hover:text-white'}`}>{lesson.title}</p>
+                                                                        <div className="flex items-center gap-3 mt-2">
+                                                                            <div className="flex-1 h-[2px] bg-white/5 rounded-full overflow-hidden">
+                                                                                <div className={`h-full transition-all duration-1000 ${isActive ? 'bg-primary' : 'bg-white/20'}`} style={{ width: `${lessonProgress}%` }}></div>
+                                                                            </div>
+                                                                            {lessonProgress > 0 && (
+                                                                                <span className={`text-[9px] font-bold uppercase tracking-widest ${isActive ? 'text-primary' : 'text-white/30'}`}>{lessonProgress}%</span>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                </button>
+                                                            );
+                                                        })}
                                                     </div>
                                                 </div>
-
-                                                <div className="flex-1 min-w-0 pr-4">
-                                                    <span className="text-[8px] font-bold tracking-[4px] text-white/20 uppercase block mb-1">Sessão {idx + 1}</span>
-                                                    <p className={`text-[13px] font-bold truncate leading-tight tracking-tight ${isActive ? 'text-primary' : 'text-white/60 group-hover:text-white'}`}>{lesson.title}</p>
-                                                    <div className="flex items-center gap-3 mt-2">
-                                                        <div className="flex-1 h-[2px] bg-white/5 rounded-full overflow-hidden">
-                                                            <div className={`h-full transition-all duration-1000 ${isActive ? 'bg-primary' : 'bg-white/20'}`} style={{ width: `${lessonProgress}%` }}></div>
-                                                        </div>
-                                                        {lessonProgress > 0 && (
-                                                            <span className={`text-[9px] font-bold uppercase tracking-widest ${isActive ? 'text-primary' : 'text-white/30'}`}>{lessonProgress}%</span>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </button>
-                                        );
-                                    })
+                                            );
+                                        });
+                                    })()
                                 ) : (
                                     <div className="flex-1 flex flex-col items-center justify-center py-20 px-10 text-center animate-in fade-in duration-1000">
                                         <div className="w-24 h-24 rounded-[2rem] bg-white/[0.01] border border-white/5 flex items-center justify-center mb-8 shadow-inner ring-1 ring-white/[0.02]">
@@ -537,7 +564,7 @@ const VideoLesson: React.FC = () => {
                                         <div className="space-y-3">
                                             <p className="text-white font-headline text-lg uppercase tracking-[4px] font-bold text-shadow">Módulo Offline</p>
                                             <p className="text-white/20 font-label text-[10px] uppercase tracking-[3px] leading-relaxed max-w-[200px] mx-auto">
-                                                Nenhuma sessão adicional registrada na base de dados local para este setor de inteligência.
+                                                Nenhuma sessão registrada na base de dados local para este setor de inteligência.
                                             </p>
                                         </div>
                                     </div>

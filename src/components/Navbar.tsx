@@ -112,23 +112,34 @@ const Navbar: React.FC<{ isFixed?: boolean }> = ({ isFixed = true }) => {
                             className="md:hidden fixed inset-0 top-0 left-0 w-full h-[100dvh] bg-black/95 backdrop-blur-3xl z-40 flex flex-col items-center justify-center p-12"
                         >
                             <div className="flex flex-col items-center space-y-10 w-full">
-                                {['PAINEL', 'CURSOS', 'INTELIGÊNCIA'].map((item, i) => (
-                                    <motion.div
-                                        key={item}
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: 0.1 * i }}
-                                        className="w-full text-center"
-                                    >
-                                        <Link
-                                            onClick={() => setIsMenuOpen(false)}
-                                            className="text-4xl font-headline font-bold tracking-[0.2em] text-white/40 hover:text-primary transition-all duration-500 block py-2 uppercase"
-                                            to={item === 'PAINEL' ? '/' : item === 'INTELIGÊNCIA' ? '/intel' : '/explore'}
+                                {[
+                                    { name: 'PAINEL', path: '/' },
+                                    { name: 'CURSOS', path: '/explore' },
+                                    { name: 'INTELIGÊNCIA', path: '/intel' }
+                                ].map((link, i) => {
+                                    const active = isActive(link.path);
+                                    return (
+                                        <motion.div
+                                            key={link.name}
+                                            initial={{ opacity: 0, x: -20 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: 0.1 * i }}
+                                            className="w-full text-center"
                                         >
-                                            {item}
-                                        </Link>
-                                    </motion.div>
-                                ))}
+                                            <Link
+                                                onClick={() => setIsMenuOpen(false)}
+                                                className={`text-4xl font-headline font-bold tracking-[0.2em] transition-all duration-500 block py-2 uppercase ${
+                                                    active 
+                                                        ? 'text-primary drop-shadow-[0_0_15px_rgba(0,240,255,0.4)] font-black' 
+                                                        : 'text-white/40 hover:text-white'
+                                                }`}
+                                                to={link.path}
+                                            >
+                                                {link.name}
+                                            </Link>
+                                        </motion.div>
+                                    );
+                                })}
 
                                 {/* Mobile Master Admin Card */}
                                 {isAdmin && (

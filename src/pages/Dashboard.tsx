@@ -371,7 +371,7 @@ const Dashboard: React.FC = () => {
                                             )}
 
                                             <div className="course-icon-top w-20 h-20 flex items-center justify-center relative z-10 group-hover:scale-110 transition-all duration-700 shadow-2xl">
-                                                <span className="material-symbols-outlined text-white/50 group-hover:text-white text-4xl transition-colors">{course.icon}</span>
+                                                <span className="material-symbols-outlined text-white/50 group-hover:text-white text-4xl transition-colors">{course.cardIcon || course.icon}</span>
                                             </div>
 
                                             <div className="relative z-10 space-y-4">

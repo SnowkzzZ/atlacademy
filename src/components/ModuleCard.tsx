@@ -14,6 +14,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ course, index }) => {
     const dispTitle = course.cardTitle || course.title;
     const dispSubtitle = course.cardSubtitle || course.subtitle || "MODULO BASE";
     const dispThumb = course.cardThumbnail || course.thumbnailUrl;
+    const dispIcon = course.cardIcon || course.icon || "play_lesson";
 
     return (
         <motion.div
@@ -21,7 +22,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ course, index }) => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: index * 0.1 }}
-            className="shrink-0 w-[240px] md:w-[300px]"
+            className="shrink-0 w-[240px] md:w-[300px] snap-center md:snap-start"
         >
             <Link to={courseLink} className="module-card-vertical group block">
                 {/* Background Image Wrapper (Inner mask to prevent Safari hover bugs) */}
@@ -56,7 +57,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ course, index }) => {
                 <div className="module-card-overlay-bottom flex flex-col items-center text-center pb-10">
                     <p className="font-label text-[10px] text-white/90 tracking-[0.3em] font-bold uppercase mb-1 flex items-center justify-center gap-1.5">
                         {dispSubtitle}
-                        {course.icon && <span className="material-symbols-outlined text-[12px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>{course.icon}</span>}
+                        {dispIcon && <span className="material-symbols-outlined text-[12px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>{dispIcon}</span>}
                     </p>
                     <h3 className="font-headline text-[26px] md:text-[32px] leading-[1.1] font-black text-white uppercase drop-shadow-2xl w-full group-hover:scale-105 transition-transform duration-500">
                         {dispTitle}

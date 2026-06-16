@@ -41,6 +41,7 @@ export interface Lesson {
     watchedSeconds?: number;
     lastPosition?: number;
     lastWatchedAt?: number;
+    module?: string;
 }
 
 export interface Sector {
@@ -247,7 +248,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     cardSubtitle: c.cardSubtitle || c.card_subtitle || '',
                     cardIcon: c.cardIcon || c.card_icon || '',
                     cardThumbnail: c.cardThumbnail || c.card_thumbnail || '',
-                    position: c.position !== undefined ? c.position : 9999,
+                    position: (c.position !== undefined && c.position !== null) ? c.position : 9999,
                 })) || [];
                 
                 // ── Se Supabase retornou 0 cursos, mantém o estado atual (não sobrescreve)
@@ -271,6 +272,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     duration: l.duration,
                     totalSeconds: l.totalSeconds || l.total_seconds || 0,
                     position: l.position || 0,
+                    module: l.module || '',
                     progress: 0,
                     watchedSeconds: 0,
                 })) || [];
@@ -377,7 +379,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 const promises = updatedCourses.map(c => 
                     supabaseAdmin.from('courses').update({ position: c.position }).eq('id', c.id)
                 );
-                await Promise.all(promises);
+                const results = await Promise.all(promises);
+                results.forEach((res, i) => {
+                    if (res.error) {
+                        console.error(`[DataContext] Error updating course "${updatedCourses[i].title}" order on Supabase:`, res.error.message);
+                    }
+                });
             } catch (err) {
                 console.error('[DataContext] Error updating courses order on Supabase:', err);
             }
@@ -462,6 +469,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 "duration": lesson.duration,
                 "totalSeconds": lesson.totalSeconds || 0,
                 "position": lesson.position,
+                "module": lesson.module || '',
             }]).select().single();
             if (!error && data) {
                 setLessons(prev => {
@@ -491,6 +499,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (updated.duration !== undefined) sbUpdate["duration"] = updated.duration;
             if (updated.totalSeconds !== undefined) sbUpdate["totalSeconds"] = updated.totalSeconds;
             if (updated.position !== undefined) sbUpdate["position"] = updated.position;
+            if (updated.module !== undefined) sbUpdate["module"] = updated.module;
 
             const { error } = await supabaseAdmin.from('lessons').update(sbUpdate).eq('id', id);
             if (error) {
