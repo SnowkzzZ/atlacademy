@@ -131,7 +131,7 @@ const Explore: React.FC = () => {
                                     >
                                         <Link 
                                             to={courseLink} 
-                                            className="group flex flex-col p-6 md:p-8 relative overflow-hidden h-[340px] md:h-[380px] bg-white/[0.01] border border-white/[0.06] rounded-[2.5rem] transition-all duration-500 hover:border-white/[0.12] hover:bg-white/[0.03] shadow-lg"
+                                            className="group flex flex-col p-6 md:p-8 relative overflow-hidden aspect-square bg-white/[0.01] border border-white/[0.06] rounded-[2.5rem] transition-all duration-500 hover:border-white/[0.12] hover:bg-white/[0.03] shadow-lg"
                                         >
                                             {/* Card Background / Thumbnail */}
                                             {dispThumb ? (

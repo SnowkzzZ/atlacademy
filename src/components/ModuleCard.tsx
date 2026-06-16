@@ -13,7 +13,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ course, index }) => {
 
     const dispTitle = course.cardTitle || course.title;
     const dispSubtitle = course.cardSubtitle || course.subtitle || "MODULO BASE";
-    const dispThumb = course.cardThumbnail || course.thumbnailUrl;
+    const dispThumb = course.thumbnailUrl;
     const dispIcon = course.cardIcon || course.icon || "play_lesson";
 
     return (

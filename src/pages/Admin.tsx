@@ -492,16 +492,16 @@ const Admin: React.FC = () => {
                                             {/* RIGHT */}
                                             <div className="space-y-4">
                                                 <div className="space-y-1.5">
-                                                    <label className="font-label text-[9px] uppercase text-white/40 flex justify-between"><span>Imagem da Capa Personalizada (9:16)</span></label>
+                                                    <label className="font-label text-[9px] uppercase text-white/40 flex justify-between"><span>Imagem da Capa Personalizada (1:1)</span></label>
                                                     <div className="flex gap-2">
-                                                        <input className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-primary transition-all" value={cur.cardThumbnail || ''} onChange={e => setCur({ ...cur, cardThumbnail: e.target.value })} placeholder="URL da imagem vertical..." />
+                                                        <input className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-primary transition-all" value={cur.cardThumbnail || ''} onChange={e => setCur({ ...cur, cardThumbnail: e.target.value })} placeholder="URL da imagem quadrada..." />
                                                         <label className="cursor-pointer px-4 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center hover:bg-white/10 transition-colors">
                                                             <span className="material-symbols-outlined text-base">upload</span>
                                                             <input type="file" hidden accept="image/*" onChange={async (e) => {
                                                                 const file = e.target.files?.[0];
                                                                 if (file) {
                                                                     try { 
-                                                                        const compressed = await compressImage(file, 'vertical');
+                                                                        const compressed = await compressImage(file, 'square');
                                                                         setCur({ ...cur, cardThumbnail: compressed }); 
                                                                     } catch { alert('Erro ao processar imagem.'); }
                                                                 }
@@ -509,7 +509,7 @@ const Admin: React.FC = () => {
                                                         </label>
                                                     </div>
                                                     {cur.cardThumbnail && (
-                                                        <div className="relative w-28 aspect-[9/16] rounded-2xl border border-white/10 overflow-hidden bg-black/40 group mt-2">
+                                                        <div className="relative w-28 aspect-square rounded-2xl border border-white/10 overflow-hidden bg-black/40 group mt-2">
                                                             <img src={cur.cardThumbnail} className="w-full h-full object-cover" alt="" />
                                                             <button type="button" onClick={() => setCur({ ...cur, cardThumbnail: '' })} className="absolute bottom-2 right-2 text-red-400 hover:text-red-300">
                                                                 <span className="material-symbols-outlined text-base">delete</span>

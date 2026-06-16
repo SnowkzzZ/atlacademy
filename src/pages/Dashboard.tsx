@@ -351,7 +351,7 @@ const Dashboard: React.FC = () => {
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-12">
-                        {courses.filter(c => c.progress > 0 || (courses.length <= 3)).sort((a,b) => (b.lastWatchedAt || 0) - (a.lastWatchedAt || 0)).slice(0, 3).map((course, idx) => {
+                        {courses.map((course, idx) => {
                             const colors = ['bg-primary', 'bg-blue-500', 'bg-purple-500'];
                             const cName = colors[idx % 3];
                             
