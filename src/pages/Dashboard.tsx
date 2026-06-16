@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import ForumSection from '../components/ForumSection';
 import ModuleCard from '../components/ModuleCard';
 import AnimatedStatCard from '../components/AnimatedStatCard';
+import VideoCard from '../components/VideoCard';
 
 const fmtTime = (secs: number) => {
     const h = Math.floor(secs / 3600);
@@ -350,50 +351,29 @@ const Dashboard: React.FC = () => {
                         <Link className="premium-pill" to="/explore">Explorar Tudo</Link>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-12">
-                        {courses.map((course, idx) => {
-                            const colors = ['bg-primary', 'bg-blue-500', 'bg-purple-500'];
-                            const cName = colors[idx % 3];
-                            
-                            const courseLink = course.lastLessonId ? `/lesson/${course.lastLessonId}` : `/lesson/${course.id}`;
-
-                            return (
-                                <motion.div key={course.id} whileHover={{ y: -8 }} transition={{ duration: 0.5 }}>
-                                    <Link to={courseLink} className="course-card group flex flex-col aspect-[4/5] md:h-[520px] relative">
-                                        <div className="flex-1 p-10 flex flex-col justify-between relative overflow-hidden">
-                                            {course.thumbnailUrl ? (
-                                                <div className="absolute inset-0 z-0">
-                                                    <img src={course.thumbnailUrl} className="w-full h-full object-cover opacity-50 group-hover:opacity-70 transition-all duration-1000 group-hover:scale-110" alt="" />
-                                                    <div className="course-card-overlay"></div>
-                                                </div>
-                                            ) : (
-                                                <div className={`absolute top-0 right-0 w-72 h-72 ${cName}/10 rounded-full blur-3xl group-hover:${cName}/20 transition-colors duration-1000`}></div>
-                                            )}
-
-                                            <div className="course-icon-top w-20 h-20 flex items-center justify-center relative z-10 group-hover:scale-110 transition-all duration-700 shadow-2xl">
-                                                <span className="material-symbols-outlined text-white/50 group-hover:text-white text-4xl transition-colors">{course.cardIcon || course.icon}</span>
-                                            </div>
-
-                                            <div className="relative z-10 space-y-4">
-                                                <div className="flex gap-2">
-                                                    <span className="badge-modulo font-label tracking-[0.2em] uppercase">MODULO BASE</span>
-                                                </div>
-                                                <h3 className="font-headline text-3xl font-bold leading-[1.1] group-hover:text-white transition-colors">{course.title}</h3>
-                                                <p className="text-white/40 text-sm font-body">Com {course.instructor}</p>
-                                            </div>
-                                        </div>
-
-                                        <div className="progress-bar-bg absolute bottom-0 left-0 right-0 h-1 rounded-none bg-transparent">
-                                            <motion.div
-                                                initial={{ width: 0 }}
-                                                animate={{ width: course.progress + '%' }}
-                                                className="progress-bar-fill rounded-none"
-                                            ></motion.div>
-                                        </div>
-                                    </Link>
-                                </motion.div>
-                            );
-                        })}
+                    <div className="module-carousel-container relative">
+                        <div
+                            className="flex gap-4 md:gap-8 overflow-x-auto pb-12 px-4 md:px-6 no-scrollbar snap-x snap-mandatory"
+                            style={{
+                                WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 6%, black 88%, transparent 100%)',
+                                maskImage: 'linear-gradient(to right, transparent 0%, black 6%, black 88%, transparent 100%)'
+                            }}
+                        >
+                            {lessons.map((lesson, idx) => {
+                                const course = courses.find(c => c.id === lesson.courseId);
+                                const courseTitle = course?.title || 'Módulo';
+                                const instructor = course?.instructor || 'ATL Academy';
+                                return (
+                                    <VideoCard 
+                                        key={lesson.id} 
+                                        lesson={lesson} 
+                                        courseTitle={courseTitle} 
+                                        instructor={instructor} 
+                                        index={idx} 
+                                    />
+                                );
+                            })}
+                        </div>
                     </div>
                 </motion.section>
 
