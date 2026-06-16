@@ -400,7 +400,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 "thumbnailUrl": course.thumbnailUrl || '',
                 description: course.description || '',
                 tags: course.tags || [],
-                position: newCourse.position
+                position: newCourse.position,
+                "cardTitle": course.cardTitle || '',
+                "cardSubtitle": course.cardSubtitle || '',
+                "cardIcon": course.cardIcon || '',
+                "cardThumbnail": course.cardThumbnail || ''
             };
             const { data, error } = await supabaseAdmin.from('courses').insert([sbInsert]).select().single();
             if (!error && data) setCourses(prev => { const next = prev.map(c => c.id === tempId ? { ...data, progress: 0 } : c).sort((a, b) => (a.position ?? 9999) - (b.position ?? 9999)); persistLocal({ courses: next }); return next; });
@@ -424,6 +428,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (updated.lastWatchedAt !== undefined) sbUpdate["lastWatchedAt"] = updated.lastWatchedAt;
             if (updated.description !== undefined) sbUpdate.description = updated.description;
             if (updated.tags !== undefined) sbUpdate.tags = updated.tags;
+            if (updated.cardTitle !== undefined) sbUpdate["cardTitle"] = updated.cardTitle;
+            if (updated.cardSubtitle !== undefined) sbUpdate["cardSubtitle"] = updated.cardSubtitle;
+            if (updated.cardIcon !== undefined) sbUpdate["cardIcon"] = updated.cardIcon;
+            if (updated.cardThumbnail !== undefined) sbUpdate["cardThumbnail"] = updated.cardThumbnail;
+            if (updated.position !== undefined) sbUpdate.position = updated.position;
 
             if (Object.keys(sbUpdate).length > 0) {
                 const { error } = await supabaseAdmin.from('courses').update(sbUpdate).eq('id', id);
