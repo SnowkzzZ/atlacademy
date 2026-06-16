@@ -392,6 +392,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const sbInsert: any = {
                 id: tempId,
                 title: course.title,
+                subtitle: course.subtitle || '',
                 instructor: course.instructor,
                 "instructorTitle": course.instructorTitle || 'Especialista ATL',
                 duration: course.duration,
@@ -417,6 +418,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (isSupabaseConfigured) {
             const sbUpdate: any = {};
             if (updated.title !== undefined) sbUpdate.title = updated.title;
+            if (updated.subtitle !== undefined) sbUpdate.subtitle = updated.subtitle;
             if (updated.instructor !== undefined) sbUpdate.instructor = updated.instructor;
             if (updated.instructorTitle !== undefined) sbUpdate["instructorTitle"] = updated.instructorTitle;
             if (updated.duration !== undefined) sbUpdate.duration = updated.duration;
