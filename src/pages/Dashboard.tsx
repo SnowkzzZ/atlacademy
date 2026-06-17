@@ -113,6 +113,15 @@ const Dashboard: React.FC = () => {
         return a.position - b.position;
     });
 
+    // Must be before any early return (Rules of Hooks)
+    const lastWatchedLessonIdLS = localStorage.getItem('atl_last_watched_lesson_id');
+    const lastWatchedLessonForEffect = lastWatchedLessonIdLS ? lessons.find(l => l.id === lastWatchedLessonIdLS) : null;
+    React.useEffect(() => {
+        if (lastWatchedLessonForEffect && !localStorage.getItem('atl_last_watched_lesson_id')) {
+            localStorage.setItem('atl_last_watched_lesson_id', lastWatchedLessonForEffect.id);
+        }
+    }, [lastWatchedLessonForEffect]);
+
     if (isLoading) {
         return (
             <div className="min-h-screen bg-black flex items-center justify-center">
@@ -150,13 +159,6 @@ const Dashboard: React.FC = () => {
         ? (lastWatchedLesson.thumbnailUrl || lastWatchedCourse?.thumbnailUrl || lastWatchedCourse?.cardThumbnail || null)
         : (heroLesson?.thumbnailUrl || heroCourse?.thumbnailUrl || heroCourse?.cardThumbnail || null);
     
-    // Sync back to localStorage if resolved from DB
-    React.useEffect(() => {
-        if (lastWatchedLesson && !localStorage.getItem('atl_last_watched_lesson_id')) {
-            localStorage.setItem('atl_last_watched_lesson_id', lastWatchedLesson.id);
-        }
-    }, [lastWatchedLesson]);
-
     // Diagnostic
     if (heroCourse) console.log(`[Dashboard] Hero Course: ${heroCourse.title}`);
     if (heroLesson) console.log(`[Dashboard] Hero Lesson: ${heroLesson.title}`);
