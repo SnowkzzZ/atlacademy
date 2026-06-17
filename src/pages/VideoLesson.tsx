@@ -14,7 +14,7 @@ const fmtTime = (secs: number) => {
 const VideoLesson: React.FC = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { courses, lessons, updateCourse, updateProgress, isLoading: dataLoading } = useData();
+    const { courses, lessons, updateCourse, updateProgress, flushAllPendingProgress, isLoading: dataLoading } = useData();
 
     // ── DATA RESOLUTION ───────────────────────────────────────────────────
     // We determine if the URL ID is a Course or a specific Lesson
@@ -203,12 +203,23 @@ const VideoLesson: React.FC = () => {
         };
     }, []);
 
+    // Flush pending progress saves when tab is closed or page navigated away
+    useEffect(() => {
+        const handleUnload = () => { flushAllPendingProgress(); };
+        window.addEventListener('beforeunload', handleUnload);
+        return () => {
+            window.removeEventListener('beforeunload', handleUnload);
+            // Also flush when the VideoLesson component unmounts (navigation away)
+            flushAllPendingProgress();
+        };
+    }, [flushAllPendingProgress]);
+
     const handleTimeUpdate = () => {
         if (!videoRef.current) return;
         const { currentTime, duration } = videoRef.current;
         if (isNaN(duration) || duration === 0) return;
         const progress = Math.min(Math.round((currentTime / duration) * 100), 100);
-        updateProgress(currentItemId, currentTime, progress, duration);
+        updateProgress(currentItemId, currentTime, progress, currentTime);
     };
 
     const handleLoadedMetadata = () => {

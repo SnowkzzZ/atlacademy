@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
 import { logoBase64 } from '../logoBase64';
@@ -9,6 +9,7 @@ import ForumSection from '../components/ForumSection';
 import ModuleCard from '../components/ModuleCard';
 import AnimatedStatCard from '../components/AnimatedStatCard';
 import VideoCard from '../components/VideoCard';
+import NewsletterPlaceholder from '../components/NewsletterPlaceholder';
 
 const fmtTime = (secs: number) => {
     const h = Math.floor(secs / 3600);
@@ -17,11 +18,100 @@ const fmtTime = (secs: number) => {
     return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}` : `${m}:${String(s).padStart(2, '0')}`;
 };
 
+const useDragScroll = () => {
+    const ref = React.useRef<HTMLDivElement>(null);
+
+    React.useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+
+        let isDown = false;
+        let startX: number;
+        let scrollLeft: number;
+        let hasMoved = false;
+
+        const onMouseDown = (e: MouseEvent) => {
+            isDown = true;
+            startX = e.pageX - el.offsetLeft;
+            scrollLeft = el.scrollLeft;
+            hasMoved = false;
+            el.style.cursor = 'grabbing';
+            el.style.userSelect = 'none';
+        };
+
+        const onMouseLeave = () => {
+            isDown = false;
+            el.style.cursor = 'grab';
+        };
+
+        const onMouseUp = () => {
+            isDown = false;
+            el.style.cursor = 'grab';
+            el.style.removeProperty('user-select');
+            
+            if (hasMoved) {
+                const preventClick = (clickEvent: MouseEvent) => {
+                    clickEvent.preventDefault();
+                    clickEvent.stopPropagation();
+                    el.removeEventListener('click', preventClick, true);
+                };
+                el.addEventListener('click', preventClick, true);
+            }
+        };
+
+        const onMouseMove = (e: MouseEvent) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - el.offsetLeft;
+            const walk = (x - startX) * 1.5; // Scroll speed multiplier
+            if (Math.abs(walk) > 5) {
+                hasMoved = true;
+            }
+            el.scrollLeft = scrollLeft - walk;
+        };
+
+        el.style.cursor = 'grab';
+        el.addEventListener('mousedown', onMouseDown);
+        el.addEventListener('mouseleave', onMouseLeave);
+        el.addEventListener('mouseup', onMouseUp);
+        el.addEventListener('mousemove', onMouseMove);
+
+        return () => {
+            el.removeEventListener('mousedown', onMouseDown);
+            el.removeEventListener('mouseleave', onMouseLeave);
+            el.removeEventListener('mouseup', onMouseUp);
+            el.removeEventListener('mousemove', onMouseMove);
+        };
+    }, []);
+
+    return ref;
+};
+
+const scrollContainer = (ref: React.RefObject<HTMLDivElement | null>, direction: 'left' | 'right') => {
+    if (ref.current) {
+        const offset = direction === 'left' ? -ref.current.clientWidth * 0.75 : ref.current.clientWidth * 0.75;
+        ref.current.scrollBy({ left: offset, behavior: 'smooth' });
+    }
+};
+
 const Dashboard: React.FC = () => {
-    const { courses, lessons, sectors, articles, isLoading } = useData();
+    const { courses, lessons, sectors, newsletters, isLoading } = useData();
     const { isAdmin } = useAuth();
-    const navigate = useNavigate();
     const [selectedArticle, setSelectedArticle] = useState<any>(null);
+    const modulesRef = useDragScroll();
+    const transmissionsRef = useDragScroll();
+    const sectorsRef = useDragScroll();
+    const newslettersRef = useDragScroll();
+
+    // Sort lessons based on associated course's position, then lesson's position.
+    const sortedLessons = [...lessons].sort((a, b) => {
+        const courseA = courses.find(c => c.id === a.courseId);
+        const courseB = courses.find(c => c.id === b.courseId);
+        const coursePosA = courseA ? (courseA.position ?? 9999) : 9999;
+        const coursePosB = courseB ? (courseB.position ?? 9999) : 9999;
+        if (coursePosA !== coursePosB) return coursePosA - coursePosB;
+        return a.position - b.position;
+    });
 
     if (isLoading) {
         return (
@@ -71,15 +161,6 @@ const Dashboard: React.FC = () => {
     if (heroCourse) console.log(`[Dashboard] Hero Course: ${heroCourse.title}`);
     if (heroLesson) console.log(`[Dashboard] Hero Lesson: ${heroLesson.title}`);
     if (lastWatchedLesson) console.log(`[Dashboard] Last Watched Lesson: ${lastWatchedLesson.title}`);
-
-    const sortedArticles = [...articles].sort((a, b) => {
-        const courseA = courses.find(c => c.sectorId === a.sectorId);
-        const courseB = courses.find(c => c.sectorId === b.sectorId);
-        const posA = courseA ? (courseA.position ?? 9999) : 9999;
-        const posB = courseB ? (courseB.position ?? 9999) : 9999;
-        if (posA !== posB) return posA - posB;
-        return (b.createdAt || 0) - (a.createdAt || 0);
-    });
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -261,8 +342,27 @@ const Dashboard: React.FC = () => {
                         <Link className="premium-pill" to="/explore">Ver todos os cursos <span className="ml-1 text-[10px]">↗</span></Link>
                     </div>
 
-                    <div className="module-carousel-container relative">
+                    <div className="module-carousel-container relative group/carousel">
+                        {/* Left Arrow */}
+                        <button
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); scrollContainer(modulesRef, 'left'); }}
+                            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-black/60 hover:bg-[#00F0FF] border border-white/10 hover:border-[#00F0FF] text-white hover:text-black flex items-center justify-center backdrop-blur-md shadow-2xl opacity-0 group-hover/carousel:opacity-100 transition-all duration-300 pointer-events-auto active:scale-95 cursor-pointer"
+                            title="Scroll Left"
+                        >
+                            <span className="material-symbols-outlined text-2xl">chevron_left</span>
+                        </button>
+                        
+                        {/* Right Arrow */}
+                        <button
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); scrollContainer(modulesRef, 'right'); }}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-black/60 hover:bg-[#00F0FF] border border-white/10 hover:border-[#00F0FF] text-white hover:text-black flex items-center justify-center backdrop-blur-md shadow-2xl opacity-0 group-hover/carousel:opacity-100 transition-all duration-300 pointer-events-auto active:scale-95 cursor-pointer"
+                            title="Scroll Right"
+                        >
+                            <span className="material-symbols-outlined text-2xl">chevron_right</span>
+                        </button>
+
                         <div
+                            ref={modulesRef}
                             className="flex gap-4 md:gap-8 overflow-x-auto pb-12 px-4 md:px-6 no-scrollbar snap-x snap-mandatory"
                             style={{
                                 WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 6%, black 88%, transparent 100%)',
@@ -362,15 +462,34 @@ const Dashboard: React.FC = () => {
                         <Link className="premium-pill" to="/explore">Explorar Tudo</Link>
                     </div>
 
-                    <div className="module-carousel-container relative">
+                    <div className="module-carousel-container relative group/carousel">
+                        {/* Left Arrow */}
+                        <button
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); scrollContainer(transmissionsRef, 'left'); }}
+                            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-black/60 hover:bg-[#00F0FF] border border-white/10 hover:border-[#00F0FF] text-white hover:text-black flex items-center justify-center backdrop-blur-md shadow-2xl opacity-0 group-hover/carousel:opacity-100 transition-all duration-300 pointer-events-auto active:scale-95 cursor-pointer"
+                            title="Scroll Left"
+                        >
+                            <span className="material-symbols-outlined text-2xl">chevron_left</span>
+                        </button>
+                        
+                        {/* Right Arrow */}
+                        <button
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); scrollContainer(transmissionsRef, 'right'); }}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-black/60 hover:bg-[#00F0FF] border border-white/10 hover:border-[#00F0FF] text-white hover:text-black flex items-center justify-center backdrop-blur-md shadow-2xl opacity-0 group-hover/carousel:opacity-100 transition-all duration-300 pointer-events-auto active:scale-95 cursor-pointer"
+                            title="Scroll Right"
+                        >
+                            <span className="material-symbols-outlined text-2xl">chevron_right</span>
+                        </button>
+
                         <div
+                            ref={transmissionsRef}
                             className="flex gap-4 md:gap-8 overflow-x-auto pb-12 px-4 md:px-6 no-scrollbar snap-x snap-mandatory"
                             style={{
                                 WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 6%, black 88%, transparent 100%)',
                                 maskImage: 'linear-gradient(to right, transparent 0%, black 6%, black 88%, transparent 100%)'
                             }}
                         >
-                            {lessons.map((lesson, idx) => {
+                            {sortedLessons.map((lesson, idx) => {
                                 const course = courses.find(c => c.id === lesson.courseId);
                                 const courseTitle = course?.title || 'Módulo';
                                 const instructor = course?.instructor || 'ATL Academy';
@@ -388,26 +507,134 @@ const Dashboard: React.FC = () => {
                     </div>
                 </motion.section>
 
-                {/* Categories as Modern Soft Glass Pills */}
-                <motion.section variants={itemVariants} className="space-y-16">
-                    <div className="space-y-2">
-                        <span className="font-label text-primary text-[10px] tracking-[0.4em] uppercase">Especializações</span>
-                        <h2 className="font-headline text-2xl md:text-5xl font-bold tracking-tight">Setores de Inteligência</h2>
+                {/* Sectors — Liquid Glass Cards */}
+                <motion.section variants={itemVariants} className="space-y-8">
+                    <div className="flex items-center gap-3">
+                        <div className="w-0.5 h-5 rounded-full bg-gradient-to-b from-primary to-purple-500" />
+                        <div>
+                            <span className="font-label text-primary text-[10px] tracking-[0.4em] uppercase block">Especializações</span>
+                            <h2 className="font-headline text-2xl md:text-4xl font-bold tracking-tight text-white">Setores de Inteligência</h2>
+                        </div>
                     </div>
-                    <div className="grid grid-cols-2 md:flex md:flex-wrap gap-3 md:gap-6">
-                        {sectors.map((sector) => (
-                            <motion.div key={sector.id} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                <Link to="/explore" className="intelligence-pill px-4 py-3 md:px-8 md:py-5 w-full">
-                                    <span className="pulse-dot shrink-0"></span>
-                                    <span className="font-label text-[8px] md:text-sm tracking-[0.1em] uppercase leading-tight">{sector.name}</span>
-                                </Link>
-                            </motion.div>
-                        ))}
+
+                    {/* Carousel horizontal */}
+                    <div className="relative group/carousel" style={{ overflow: 'visible' }}>
+                        {/* Left Arrow */}
+                        <button
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); scrollContainer(sectorsRef, 'left'); }}
+                            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 z-20 w-12 h-12 rounded-full bg-black/60 hover:bg-[#00F0FF] border border-white/10 hover:border-[#00F0FF] text-white hover:text-black flex items-center justify-center backdrop-blur-md shadow-2xl opacity-0 group-hover/carousel:opacity-100 transition-all duration-300 active:scale-95 cursor-pointer"
+                        >
+                            <span className="material-symbols-outlined text-2xl">chevron_left</span>
+                        </button>
+                        {/* Right Arrow */}
+                        <button
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); scrollContainer(sectorsRef, 'right'); }}
+                            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 z-20 w-12 h-12 rounded-full bg-black/60 hover:bg-[#00F0FF] border border-white/10 hover:border-[#00F0FF] text-white hover:text-black flex items-center justify-center backdrop-blur-md shadow-2xl opacity-0 group-hover/carousel:opacity-100 transition-all duration-300 active:scale-95 cursor-pointer"
+                        >
+                            <span className="material-symbols-outlined text-2xl">chevron_right</span>
+                        </button>
+
+                    <div
+                        ref={sectorsRef}
+                        className="flex gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory"
+                        style={{
+                            paddingTop: 12,
+                            paddingBottom: 16,
+                            WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 4%, black 92%, transparent 100%)',
+                            maskImage: 'linear-gradient(to right, transparent 0%, black 4%, black 92%, transparent 100%)',
+                            cursor: 'grab',
+                            overflowY: 'visible',
+                        }}
+                    >
+                        {sectors.map((sector, i) => {
+                            const PALETTES_D = [
+                                { from:'#00F0FF', to:'#0099cc', glow:'0,240,255',   text:'#00F0FF' },
+                                { from:'#a78bfa', to:'#7c3aed', glow:'167,139,250', text:'#c4b5fd' },
+                                { from:'#34d399', to:'#059669', glow:'52,211,153',  text:'#6ee7b7' },
+                                { from:'#fb923c', to:'#ea580c', glow:'251,146,60',  text:'#fdba74' },
+                                { from:'#f472b6', to:'#db2777', glow:'244,114,182', text:'#f9a8d4' },
+                                { from:'#facc15', to:'#ca8a04', glow:'250,204,21',  text:'#fde68a' },
+                            ];
+                            const MLM_ICONS_D = ['diversity_3','person_search','badge','sell','hub','psychology','school','savings','event','verified'];
+                            const IA_ICONS_D  = ['manage_search','auto_awesome','smart_toy','auto_stories','analytics','build','code','trending_up','model_training','policy'];
+                            const icon = i < 10 ? (MLM_ICONS_D[i] ?? 'star') : (IA_ICONS_D[i-10] ?? 'star');
+                            const p = PALETTES_D[i % PALETTES_D.length];
+                            const badge = i < 10 ? 'MLM' : 'IA';
+                            return (
+                                <motion.div key={sector.id} className="shrink-0 snap-start" style={{ width: 220 }} whileHover={{ y:-4, scale:1.02 }} whileTap={{ scale:0.97 }}>
+                                    <Link
+                                        to={`/explore?sector=${sector.id}`}
+                                        style={{
+                                            display:'block',
+                                            background:'linear-gradient(135deg, rgba(255,255,255,0.055) 0%, rgba(255,255,255,0.015) 100%)',
+                                            backdropFilter:'blur(24px) saturate(180%)',
+                                            WebkitBackdropFilter:'blur(24px) saturate(180%)',
+                                            border:'1px solid rgba(255,255,255,0.07)',
+                                            borderRadius:22,
+                                            padding:'22px 20px 20px',
+                                            position:'relative',
+                                            overflow:'hidden',
+                                            boxShadow:'0 4px 20px rgba(0,0,0,0.25)',
+                                            transition:'border 0.3s, box-shadow 0.3s',
+                                            textDecoration:'none',
+                                            height: '100%',
+                                        }}
+                                        onMouseEnter={e => {
+                                            (e.currentTarget as HTMLElement).style.border = `1px solid rgba(${p.glow},0.4)`;
+                                            (e.currentTarget as HTMLElement).style.boxShadow = `0 10px 32px rgba(${p.glow},0.18)`;
+                                        }}
+                                        onMouseLeave={e => {
+                                            (e.currentTarget as HTMLElement).style.border = '1px solid rgba(255,255,255,0.07)';
+                                            (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 20px rgba(0,0,0,0.25)';
+                                        }}
+                                    >
+                                        {/* Glow orb */}
+                                        <div style={{
+                                            position:'absolute', top:-24, right:-24, width:90, height:90, borderRadius:'50%',
+                                            background:`radial-gradient(circle, rgba(${p.glow},0.14) 0%, transparent 70%)`,
+                                            pointerEvents:'none',
+                                        }} />
+                                        {/* Icon + badge */}
+                                        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
+                                            <div style={{
+                                                width:44, height:44, borderRadius:13, flexShrink:0,
+                                                background:`linear-gradient(135deg, ${p.from}, ${p.to})`,
+                                                display:'flex', alignItems:'center', justifyContent:'center',
+                                                boxShadow:`0 4px 14px rgba(${p.glow},0.45)`,
+                                            }}>
+                                                <span className="material-symbols-outlined" style={{ fontSize:22, color:'#fff', fontVariationSettings:"'FILL' 1, 'wght' 500" }}>
+                                                    {icon}
+                                                </span>
+                                            </div>
+                                            <span style={{
+                                                color:p.text, background:`rgba(${p.glow},0.08)`,
+                                                border:`1px solid rgba(${p.glow},0.2)`,
+                                                fontSize:8, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.12em',
+                                                borderRadius:20, padding:'3px 8px',
+                                            }}>{badge}</span>
+                                        </div>
+                                        {/* Name */}
+                                        <h3 style={{ color:'#fff', fontFamily:'var(--font-headline)', fontSize:13, fontWeight:700, letterSpacing:'-0.01em', lineHeight:1.35, marginBottom:8 }}>
+                                            {sector.name}
+                                        </h3>
+                                        {/* Description */}
+                                        {(sector as any).description && (
+                                            <p style={{ color:'rgba(255,255,255,0.38)', fontSize:10, lineHeight:1.55 }}>
+                                                {((sector as any).description as string).length > 80
+                                                    ? ((sector as any).description as string).slice(0,80)+'...'
+                                                    : (sector as any).description}
+                                            </p>
+                                        )}
+                                    </Link>
+                                </motion.div>
+                            );
+                        })}
                     </div>
+                    </div>{/* end carousel wrapper */}
                 </motion.section>
 
                 {/* Newsletters Section */}
-                <motion.section variants={itemVariants} className="space-y-16 pb-6">
+                <motion.section variants={itemVariants} className="space-y-8 pb-0">
                     <div className="flex justify-between items-end px-2">
                         <div className="space-y-2">
                             <span className="font-label text-primary text-[10px] tracking-[0.4em] uppercase">Atl Academy Intelligence</span>
@@ -416,54 +643,66 @@ const Dashboard: React.FC = () => {
                         <Link className="premium-pill" to="/explore?tab=newsletters">Ver tudo <span className="ml-1 text-[10px]">↗</span></Link>
                     </div>
 
-                    <div className="module-carousel-container relative">
+                    <div className="module-carousel-container relative group/carousel">
+                        {/* Left Arrow */}
+                        <button
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); scrollContainer(newslettersRef, 'left'); }}
+                            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-black/60 hover:bg-[#00F0FF] border border-white/10 hover:border-[#00F0FF] text-white hover:text-black flex items-center justify-center backdrop-blur-md shadow-2xl opacity-0 group-hover/carousel:opacity-100 transition-all duration-300 pointer-events-auto active:scale-95 cursor-pointer"
+                            title="Scroll Left"
+                        >
+                            <span className="material-symbols-outlined text-2xl">chevron_left</span>
+                        </button>
+                        
+                        {/* Right Arrow */}
+                        <button
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); scrollContainer(newslettersRef, 'right'); }}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-black/60 hover:bg-[#00F0FF] border border-white/10 hover:border-[#00F0FF] text-white hover:text-black flex items-center justify-center backdrop-blur-md shadow-2xl opacity-0 group-hover/carousel:opacity-100 transition-all duration-300 pointer-events-auto active:scale-95 cursor-pointer"
+                            title="Scroll Right"
+                        >
+                            <span className="material-symbols-outlined text-2xl">chevron_right</span>
+                        </button>
+
                         <div
-                            className="flex gap-4 md:gap-8 overflow-x-auto pb-12 px-4 md:px-6 no-scrollbar snap-x snap-mandatory"
+                            ref={newslettersRef}
+                            className="flex gap-4 md:gap-8 overflow-x-auto pb-4 px-4 md:px-6 no-scrollbar snap-x snap-mandatory"
                             style={{
                                 WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 6%, black 88%, transparent 100%)',
                                 maskImage: 'linear-gradient(to right, transparent 0%, black 6%, black 88%, transparent 100%)'
                             }}
                         >
-                            {/* Search Card */}
-                            <div 
-                                onClick={() => navigate('/explore?tab=newsletters&focus=search')}
-                                className="shrink-0 w-[240px] md:w-[300px] aspect-[4/5] rounded-[2rem] bg-white/[0.02] border border-white/[0.08] hover:bg-white/[0.04] hover:border-white/[0.15] hover:border-primary/40 transition-all duration-500 shadow-2xl flex flex-col items-center justify-center gap-4 cursor-pointer select-none"
-                            >
-                                <div className="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/[0.08] flex items-center justify-center">
-                                    <span className="material-symbols-outlined text-white/50 text-3xl font-light">search</span>
-                                </div>
-                                <span className="font-headline text-base font-bold text-white uppercase tracking-[0.2em]">Pesquisar</span>
-                            </div>
-
                             {/* Newsletter Cards */}
-                            {sortedArticles.map((article) => (
+                            {newsletters.map((article) => (
                                 <div
                                     key={article.id}
                                     onClick={() => setSelectedArticle(article)}
-                                    className="shrink-0 w-[240px] md:w-[300px] aspect-[4/5] rounded-[2rem] bg-white p-4 border border-white/10 hover:scale-[1.02] hover:shadow-primary/5 transition-all duration-500 shadow-2xl flex flex-col justify-between cursor-pointer select-none group text-black"
+                                    className="shrink-0 w-[320px] md:w-[400px] rounded-[2rem] overflow-hidden border border-white/10 hover:scale-[1.02] transition-all duration-500 cursor-pointer select-none group relative aspect-[3/2]"
                                 >
-                                    {/* Cover Photo */}
-                                    <div className="w-full aspect-[4/3] rounded-2xl overflow-hidden bg-neutral-100 border border-neutral-200 shrink-0">
+                                    {/* Image fills entire card */}
+                                    <div className="absolute inset-0">
                                         {article.thumbnailUrl ? (
-                                            <img 
-                                                src={article.thumbnailUrl} 
-                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
+                                            <img
+                                                src={article.thumbnailUrl}
+                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                                                 alt={article.title}
                                             />
                                         ) : (
-                                            <div className="w-full h-full flex items-center justify-center bg-neutral-200">
-                                                <span className="material-symbols-outlined text-neutral-400 text-3xl">mail</span>
-                                            </div>
+                                            <NewsletterPlaceholder />
                                         )}
                                     </div>
-                                    {/* Content */}
-                                    <div className="flex-1 flex flex-col justify-center py-2 text-center">
-                                        <span className="font-label text-[10px] text-neutral-400 uppercase tracking-[0.2em] font-bold mb-1">
-                                            {article.subtitle || 'Newsletter'}
+                                    {/* Text overlay at bottom */}
+                                    <div className="absolute inset-x-0 bottom-0 flex flex-col items-center justify-end text-center px-5 pb-5 pt-12"
+                                        style={{ background: 'linear-gradient(to top, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.6) 55%, transparent 100%)' }}>
+                                        <span className="font-label text-[9px] text-black/50 uppercase tracking-[0.2em] font-bold block mb-1">
+                                            {(article as any).category || 'Newsletter'}
                                         </span>
-                                        <h4 className="font-headline text-sm md:text-base font-extrabold text-neutral-900 leading-snug line-clamp-3 uppercase px-1">
+                                        <h4 className="font-headline text-sm font-extrabold text-black leading-snug line-clamp-2 uppercase">
                                             {article.title}
                                         </h4>
+                                        {(article as any).readTime && (
+                                            <span className="mt-1.5 font-label text-[8px] text-black/40 uppercase tracking-wider">
+                                                {(article as any).readTime} min leitura
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                             ))}

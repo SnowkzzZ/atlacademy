@@ -1,0 +1,240 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1536 1024" width="1536" height="1024">
+  <defs>
+    <!-- Background gradient -->
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f0ebff"/>
+      <stop offset="35%" stop-color="#e8e0ff"/>
+      <stop offset="65%" stop-color="#dce8ff"/>
+      <stop offset="100%" stop-color="#ffffff"/>
+    </linearGradient>
+    <!-- Center big icon gradient -->
+    <linearGradient id="centerGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffb3d9"/>
+      <stop offset="40%" stop-color="#d4aaff"/>
+      <stop offset="70%" stop-color="#a8c8ff"/>
+      <stop offset="100%" stop-color="#c8e8ff"/>
+    </linearGradient>
+    <!-- Orange icon gradient -->
+    <linearGradient id="orangeGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ff8c42"/>
+      <stop offset="100%" stop-color="#ff5500"/>
+    </linearGradient>
+    <!-- Blue icon gradient -->
+    <linearGradient id="blueGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#4a90e8"/>
+      <stop offset="100%" stop-color="#2060c8"/>
+    </linearGradient>
+    <!-- Glass icon gradient (sparkle) -->
+    <linearGradient id="glassGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f8f0ff" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#e8d8ff" stop-opacity="0.85"/>
+    </linearGradient>
+    <!-- Dark icon -->
+    <linearGradient id="darkGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3a3a4a"/>
+      <stop offset="100%" stop-color="#1a1a2a"/>
+    </linearGradient>
+    <!-- Teal icon -->
+    <linearGradient id="tealGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#20c8b8"/>
+      <stop offset="100%" stop-color="#0888a0"/>
+    </linearGradient>
+    <!-- Purple circle icon -->
+    <linearGradient id="purpleCircleGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#8888ff"/>
+      <stop offset="50%" stop-color="#cc44cc"/>
+      <stop offset="100%" stop-color="#ff6688"/>
+    </linearGradient>
+    <!-- Center glow -->
+    <radialGradient id="centerGlow" cx="50%" cy="42%" r="28%">
+      <stop offset="0%" stop-color="#d8b8ff" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#d8b8ff" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Light beam -->
+    <radialGradient id="beamGlow" cx="50%" cy="42%" r="45%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.6"/>
+      <stop offset="60%" stop-color="#e8d8ff" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#e8d8ff" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Glass filter -->
+    <filter id="glassShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="12" flood-color="rgba(120,80,200,0.15)"/>
+    </filter>
+    <!-- Center icon shadow -->
+    <filter id="centerShadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="12" stdDeviation="24" flood-color="rgba(160,100,255,0.25)"/>
+    </filter>
+    <!-- Blur filter for glow blobs -->
+    <filter id="bigBlur">
+      <feGaussianBlur stdDeviation="60"/>
+    </filter>
+    <filter id="medBlur">
+      <feGaussianBlur stdDeviation="35"/>
+    </filter>
+    <!-- Icon shadow small -->
+    <filter id="iconShadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="rgba(80,60,180,0.12)"/>
+    </filter>
+    <!-- Clip for rounded squares -->
+    <clipPath id="iconClip1"><rect rx="34" ry="34" width="160" height="160"/></clipPath>
+    <!-- Subtle wave lines -->
+    <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#c0a8ff" stop-opacity="0"/>
+      <stop offset="30%" stop-color="#c0a8ff" stop-opacity="0.3"/>
+      <stop offset="70%" stop-color="#a8c8ff" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#a8c8ff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1536" height="1024" fill="url(#bg)"/>
+
+  <!-- Soft ambient blobs -->
+  <ellipse cx="768" cy="380" rx="420" ry="320" fill="#d4b8ff" opacity="0.22" filter="url(#bigBlur)"/>
+  <ellipse cx="380" cy="500" rx="280" ry="220" fill="#b8c8ff" opacity="0.18" filter="url(#bigBlur)"/>
+  <ellipse cx="1160" cy="440" rx="300" ry="250" fill="#b8e0ff" opacity="0.18" filter="url(#bigBlur)"/>
+  <ellipse cx="768" cy="300" rx="200" ry="160" fill="#ffffff" opacity="0.5" filter="url(#medBlur)"/>
+
+  <!-- Light beam from center -->
+  <ellipse cx="768" cy="420" rx="500" ry="380" fill="url(#beamGlow)"/>
+
+  <!-- Subtle diagonal wave lines -->
+  <path d="M 100 600 Q 500 350 900 580 Q 1200 750 1500 500" stroke="url(#lineGrad)" stroke-width="1.5" fill="none" opacity="0.5"/>
+  <path d="M 50 700 Q 400 450 800 680 Q 1150 850 1480 620" stroke="url(#lineGrad)" stroke-width="1" fill="none" opacity="0.35"/>
+
+  <!-- ══════════════════════════════════════ -->
+  <!-- APP ICONS — floating glassmorphism    -->
+  <!-- ══════════════════════════════════════ -->
+
+  <!-- Orange burst icon (bottom-left area) -->
+  <g transform="translate(168, 430)" filter="url(#iconShadow)">
+    <rect width="160" height="160" rx="38" ry="38" fill="url(#orangeGrad)"/>
+    <!-- Sunburst/asterisk shape -->
+    <g transform="translate(80,80)" fill="white" opacity="0.95">
+      <rect x="-8" y="-56" width="16" height="112" rx="8"/>
+      <rect x="-8" y="-56" width="16" height="112" rx="8" transform="rotate(45)"/>
+      <rect x="-8" y="-56" width="16" height="112" rx="8" transform="rotate(90)"/>
+      <rect x="-8" y="-56" width="16" height="112" rx="8" transform="rotate(135)"/>
+    </g>
+  </g>
+
+  <!-- Blue whale/orca icon (upper-left) -->
+  <g transform="translate(240, 220)" filter="url(#iconShadow)">
+    <rect width="160" height="160" rx="38" ry="38" fill="url(#blueGrad)"/>
+    <!-- Whale silhouette simplified -->
+    <g transform="translate(80,80)" fill="white" opacity="0.92">
+      <!-- Body -->
+      <ellipse cx="0" cy="8" rx="46" ry="30" />
+      <!-- Head bump -->
+      <ellipse cx="-28" cy="-4" rx="22" ry="20"/>
+      <!-- Tail -->
+      <path d="M 38 12 L 58 -8 L 62 5 L 50 20 Z"/>
+      <!-- Fin -->
+      <path d="M -10 -18 Q 5 -45 22 -30 Q 12 -15 -10 -18 Z"/>
+      <!-- Eye -->
+      <circle cx="-32" cy="-4" r="5" fill="url(#blueGrad)"/>
+    </g>
+  </g>
+
+  <!-- Glass sparkle icon (middle-left) -->
+  <g transform="translate(306, 360)" filter="url(#iconShadow)">
+    <rect width="140" height="140" rx="32" ry="32" fill="url(#glassGrad)" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/>
+    <!-- Colorful 4-point star (like Gemini/AI sparkle) -->
+    <g transform="translate(70,70)">
+      <!-- 4-point gradient star -->
+      <defs>
+        <linearGradient id="starGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#ff6eb8"/>
+          <stop offset="33%" stop-color="#a855f7"/>
+          <stop offset="66%" stop-color="#3b82f6"/>
+          <stop offset="100%" stop-color="#22d3ee"/>
+        </linearGradient>
+      </defs>
+      <path d="M 0 -42 Q 8 -8 42 0 Q 8 8 0 42 Q -8 8 -42 0 Q -8 -8 0 -42 Z" fill="url(#starGrad)"/>
+      <path d="M 0 -22 Q 4 -4 22 0 Q 4 4 0 22 Q -4 4 -22 0 Q -4 -4 0 -22 Z" fill="url(#starGrad)" opacity="0.6"/>
+    </g>
+  </g>
+
+  <!-- ══════════════════════ -->
+  <!-- CENTER BIG ICON       -->
+  <!-- ══════════════════════ -->
+  <g transform="translate(568, 130)" filter="url(#centerShadow)">
+    <rect width="400" height="400" rx="88" ry="88" fill="url(#centerGrad)"/>
+    <!-- Flower/blob shape (Obsidian-like) — white petals -->
+    <g transform="translate(200,195)" fill="white" opacity="0.94">
+      <!-- 6 petals arranged around center -->
+      <ellipse cx="0"   cy="-72" rx="30" ry="48" transform="rotate(0)"/>
+      <ellipse cx="0"   cy="-72" rx="30" ry="48" transform="rotate(60)"/>
+      <ellipse cx="0"   cy="-72" rx="30" ry="48" transform="rotate(120)"/>
+      <ellipse cx="0"   cy="-72" rx="30" ry="48" transform="rotate(180)"/>
+      <ellipse cx="0"   cy="-72" rx="30" ry="48" transform="rotate(240)"/>
+      <ellipse cx="0"   cy="-72" rx="30" ry="48" transform="rotate(300)"/>
+      <!-- Center circle -->
+      <circle cx="0" cy="0" r="30"/>
+    </g>
+  </g>
+
+  <!-- Dark compass/navigation icon (upper-right) -->
+  <g transform="translate(1124, 188)" filter="url(#iconShadow)">
+    <rect width="160" height="160" rx="38" ry="38" fill="url(#darkGrad)"/>
+    <!-- Compass pointer -->
+    <g transform="translate(80,80)">
+      <!-- Outer ring -->
+      <circle cx="0" cy="0" r="46" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="3"/>
+      <!-- N pointer (white) -->
+      <path d="M 0 -40 L 12 8 L 0 0 L -12 8 Z" fill="white" opacity="0.95"/>
+      <!-- S pointer (grey) -->
+      <path d="M 0 40 L -10 -6 L 0 0 L 10 -6 Z" fill="rgba(255,255,255,0.35)"/>
+      <!-- Center dot -->
+      <circle cx="0" cy="0" r="5" fill="white" opacity="0.9"/>
+    </g>
+  </g>
+
+  <!-- Purple/pink circle icon (right) -->
+  <g transform="translate(1008, 338)" filter="url(#iconShadow)">
+    <rect width="140" height="140" rx="70" ry="70" fill="white" opacity="0.12" stroke="rgba(180,160,255,0.2)" stroke-width="1"/>
+    <g transform="translate(70,70)">
+      <!-- Colorful ring -->
+      <circle cx="0" cy="0" r="48" fill="none" stroke="url(#purpleCircleGrad)" stroke-width="18"/>
+      <!-- White center -->
+      <circle cx="0" cy="0" r="28" fill="white" opacity="0.95"/>
+    </g>
+  </g>
+
+  <!-- Teal grid/perplexity icon (far right) -->
+  <g transform="translate(1222, 298)" filter="url(#iconShadow)">
+    <rect width="160" height="160" rx="38" ry="38" fill="url(#tealGrad)"/>
+    <!-- Geometric grid pattern -->
+    <g transform="translate(80,80)" fill="none" stroke="white" stroke-width="5" stroke-linecap="round" opacity="0.92">
+      <!-- Vertical lines -->
+      <line x1="0" y1="-46" x2="0" y2="46"/>
+      <!-- Horizontal lines -->
+      <line x1="-46" y1="0" x2="46" y2="0"/>
+      <!-- Diagonal connections -->
+      <line x1="-46" y1="-46" x2="0" y2="0"/>
+      <line x1="46" y1="-46" x2="0" y2="0"/>
+      <line x1="-46" y1="46" x2="0" y2="0"/>
+      <line x1="46" y1="46" x2="0" y2="0"/>
+      <!-- Corner dots -->
+      <circle cx="-46" cy="-46" r="5" fill="white" stroke="none"/>
+      <circle cx="46" cy="-46" r="5" fill="white" stroke="none"/>
+      <circle cx="-46" cy="46" r="5" fill="white" stroke="none"/>
+      <circle cx="46" cy="46" r="5" fill="white" stroke="none"/>
+      <circle cx="0" cy="0" r="6" fill="white" stroke="none"/>
+    </g>
+  </g>
+
+  <!-- ══════════════════════════════════ -->
+  <!-- NEWSLETTER TEXT — serif style     -->
+  <!-- ══════════════════════════════════ -->
+  <text
+    x="768"
+    y="660"
+    text-anchor="middle"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="112"
+    font-weight="400"
+    fill="#111111"
+    letter-spacing="-2"
+  >Newsletter</text>
+</svg>

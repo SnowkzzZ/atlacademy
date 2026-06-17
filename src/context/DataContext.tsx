@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { supabase, supabaseAdmin, isSupabaseConfigured } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 
@@ -48,6 +48,7 @@ export interface Lesson {
 export interface Sector {
     id: string;
     name: string;
+    description?: string;
 }
 
 export interface Article {
@@ -61,11 +62,27 @@ export interface Article {
     thumbnailUrl?: string;
 }
 
+
+export interface Newsletter {
+    id: string;
+    title: string;
+    summary: string;
+    content: string;
+    category: string;
+    tag?: string;
+    readTime?: number;
+    featured?: boolean;
+    thumbnailUrl?: string;
+    publishedAt: number;
+    createdAt: number;
+}
+
 interface DataContextType {
     courses: Course[];
     lessons: Lesson[];
     sectors: Sector[];
     articles: Article[];
+    newsletters: Newsletter[];
     isLoading: boolean;
     addCourse: (course: Omit<Course, 'id'>) => void;
     updateCourse: (id: string, updatedCourse: Partial<Course>) => void;
@@ -79,7 +96,11 @@ interface DataContextType {
     addArticle: (article: Omit<Article, 'id' | 'createdAt'>) => void;
     updateArticle: (id: string, updated: Partial<Article>) => void;
     deleteArticle: (id: string) => void;
-    updateProgress: (itemId: string, watchedSeconds: number, newProgress: number, totalSeconds?: number, lastPosition?: number) => void;
+    addNewsletter: (n: Omit<Newsletter, "id" | "createdAt" | "publishedAt">) => void;
+    updateNewsletter: (id: string, updated: Partial<Newsletter>) => void;
+    deleteNewsletter: (id: string) => void;
+    updateProgress: (itemId: string, watchedSeconds: number, newProgress: number, lastPosition?: number) => void;
+    flushAllPendingProgress: () => void;
     clearLocalCache: () => void;
     isSyncing: boolean;
     syncStatus: 'synced' | 'syncing' | 'error' | 'local-mode';
@@ -162,6 +183,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const userId = user?.id ?? null;
     const isBypassUser = userId === 'admin-master';
 
+    // Debounce map: tracks last Supabase save time per lesson (ms)
+    const lastDbSaveRef = useRef<Map<string, number>>(new Map());
+    // Pending save queue: holds the latest payload to save for each lesson
+    const pendingSaveRef = useRef<Map<string, { watchedSeconds: number; progress: number; lastPosition: number; lastWatchedAt: number }>>(new Map());
+    // Debounce timers
+    const saveTimerRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+
     const [courses, setCourses] = useState<Course[]>(() => {
         const local = lsLoadContent();
         const baseCourses = local.updatedAt > 0 ? local.courses : defaultCourses;
@@ -195,6 +223,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const local = lsLoadContent();
         return local.updatedAt > 0 ? (local.sectors || []) : defaultSectors;
     });
+    const [newsletters, setNewsletters] = useState<Newsletter[]>([]);
     const [articles, setArticles] = useState<Article[]>(() => {
         const local = lsLoadContent();
         return local.updatedAt > 0 ? (local.articles || []) : defaultArticles;
@@ -226,9 +255,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     supabase.from('lessons').select('*').order('position', { ascending: true }),
                     supabase.from('sectors').select('*'),
                     supabase.from('articles').select('*'),
+                    supabase.from('newsletters').select('*').order('publishedAt', { ascending: false }),
                 ]);
 
-                const [coursesRes, lessonsRes, sectorsRes, articlesRes] = await fetchPromise;
+                const [coursesRes, lessonsRes, sectorsRes, articlesRes, newslettersRes] = await fetchPromise;
 
                 // 1. Prioritize Supabase Courses
                 const sbCourses: Course[] = coursesRes.data ? coursesRes.data.map((c: any) => ({
@@ -278,9 +308,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 
                 const mergedSectors = sectorsRes.data ? sectorsRes.data : (local.sectors.length > 0 ? local.sectors : defaultSectors);
                 const mergedArticles = articlesRes.data ? articlesRes.data : (local.articles.length > 0 ? local.articles : defaultArticles);
+                const mergedNewsletters = newslettersRes.data ?? [];
 
                 setSectors(mergedSectors);
                 setArticles(mergedArticles);
+                setNewsletters(mergedNewsletters);
 
                 // Write complete source-of-truth back to local cache
                 persistLocal({ 
@@ -547,87 +579,151 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (isSupabaseConfigured) await supabase.from('articles').delete().eq('id', id);
     };
 
-    const updateProgress = async (itemId: string, watchedSeconds: number, newProgress: number, lastPosition?: number) => {
+    const addNewsletter = async (n: Omit<Newsletter, 'id' | 'createdAt' | 'publishedAt'>) => {
+        const now = Date.now();
+        const temp = { ...n, id: `nl-${now}`, publishedAt: now, createdAt: now } as Newsletter;
+        setNewsletters(prev => [temp, ...prev]);
+        if (isSupabaseConfigured) {
+            const { data } = await supabase.from('newsletters').insert({ ...n, publishedAt: now, createdAt: now }).select().single();
+            if (data) setNewsletters(prev => prev.map(x => x.id === temp.id ? data : x));
+        }
+    };
+    const updateNewsletter = async (id: string, updated: Partial<Newsletter>) => {
+        setNewsletters(prev => prev.map(x => x.id === id ? { ...x, ...updated } : x));
+        if (isSupabaseConfigured) await supabase.from('newsletters').update(updated).eq('id', id);
+    };
+    const deleteNewsletter = async (id: string) => {
+        setNewsletters(prev => prev.filter(x => x.id !== id));
+        if (isSupabaseConfigured) await supabase.from('newsletters').delete().eq('id', id);
+    };
+
+    // ── Internal: flush a single lesson's progress to Supabase ──────────────
+    const flushProgressToDb = async (itemId: string) => {
+        const payload = pendingSaveRef.current.get(itemId);
+        if (!payload || !userId || !isSupabaseConfigured) return;
+        pendingSaveRef.current.delete(itemId);
+        lastDbSaveRef.current.set(itemId, Date.now());
+
+        try {
+            // Fetch existing row first to apply MAX merge (multi-device safety)
+            const { data: existing } = await supabase
+                .from('user_progress')
+                .select('watched_seconds, progress')
+                .eq('user_id', userId)
+                .eq('course_id', itemId)
+                .maybeSingle();
+
+            const mergedWatched = Math.max(payload.watchedSeconds, existing?.watched_seconds ?? 0);
+            const mergedProgress = Math.max(payload.progress, existing?.progress ?? 0);
+
+            const { error } = await supabase.from('user_progress').upsert({
+                user_id: userId,
+                course_id: itemId,
+                watched_seconds: mergedWatched,
+                last_position: payload.lastPosition,
+                progress: mergedProgress,
+                last_watched_at: payload.lastWatchedAt,
+            }, { onConflict: 'user_id,course_id' });
+
+            if (error) {
+                console.error('[Progress] DB save failed:', error.message);
+            }
+        } catch (err) {
+            console.error('[Progress] Network error, will retry next poll:', err);
+            // Re-queue on failure so the next poll retries
+            if (!pendingSaveRef.current.has(itemId)) {
+                pendingSaveRef.current.set(itemId, payload);
+            }
+        }
+    };
+
+    const updateProgress = (itemId: string, watchedSeconds: number, newProgress: number, lastPosition?: number) => {
         const lastWatchedAt = Date.now();
-        const entry: ProgressEntry = { watched_seconds: watchedSeconds, last_position: lastPosition ?? watchedSeconds, progress: newProgress, last_watched_at: lastWatchedAt };
+        const resolvedPosition = lastPosition ?? watchedSeconds;
+        const entry: ProgressEntry = { watched_seconds: watchedSeconds, last_position: resolvedPosition, progress: newProgress, last_watched_at: lastWatchedAt };
+
+        // 1. Always persist to localStorage immediately (no data loss on close)
         lsSaveProgress(itemId, entry);
         localStorage.setItem('atl_last_watched_lesson_id', itemId);
 
+        // 2. Update in-memory state immediately
         let parentCourseId: string | undefined;
-
         setLessons(prev => {
             const nextLessons = prev.map(l => {
                 if (l.id === itemId) {
                     parentCourseId = l.courseId;
-                    return { ...l, progress: newProgress, watchedSeconds, lastPosition: lastPosition ?? watchedSeconds, lastWatchedAt };
+                    return { ...l, progress: newProgress, watchedSeconds, lastPosition: resolvedPosition, lastWatchedAt };
                 }
                 return l;
             });
 
-            // If we have a parent course, update its aggregate progress
             if (parentCourseId) {
                 const cId = parentCourseId;
                 setCourses(prevCourses => prevCourses.map(c => {
-                    if (c.id === cId) {
-                        const courseLessons = nextLessons.filter(l => l.courseId === cId);
-                        const totalLessonProgress = courseLessons.reduce((acc, curr) => acc + (curr.progress || 0), 0);
-                        const avgProgressRaw = courseLessons.length > 0 ? (totalLessonProgress / courseLessons.length) : 0;
-                        const avgProgress = avgProgressRaw > 0 ? Math.max(1, Math.ceil(avgProgressRaw)) : 0;
-                        
-                        const courseWatchedTotal = courseLessons.reduce((acc, curr) => acc + (curr.watchedSeconds || 0), 0);
-
-                        return {
-                            ...c,
-                            progress: avgProgress,
-                            watchedSeconds: courseWatchedTotal,
-                            lastWatchedAt,
-                            lastLessonId: itemId
-                        };
-                    }
-                    return c;
+                    if (c.id !== cId) return c;
+                    const courseLessons = nextLessons.filter(l => l.courseId === cId);
+                    // Weighted average: weight by lesson duration if available, else equal weight
+                    const totalDuration = courseLessons.reduce((a, l) => a + (l.totalSeconds || 1), 0);
+                    const weightedProgress = courseLessons.reduce((a, l) => {
+                        const w = (l.totalSeconds || 1) / totalDuration;
+                        return a + (l.progress || 0) * w;
+                    }, 0);
+                    const avgProgress = weightedProgress > 0 ? Math.max(1, Math.ceil(weightedProgress)) : 0;
+                    return { ...c, progress: avgProgress, lastLessonId: itemId };
                 }));
             }
 
             return nextLessons;
         });
 
+        // 3. Debounce Supabase write (10s)
         if (userId && isSupabaseConfigured) {
-            console.log(`[DataContext] Saving progress online for ${itemId}: ${newProgress}%`);
-            const { error } = await supabase.from('user_progress').upsert({
-                user_id: userId,
-                course_id: itemId,
-                watched_seconds: watchedSeconds,
-                last_position: lastPosition ?? watchedSeconds,
+            pendingSaveRef.current.set(itemId, {
+                watchedSeconds,
                 progress: newProgress,
-                last_watched_at: lastWatchedAt
-            }, { onConflict: 'user_id,course_id' });
-            if (error) {
-                console.error('[DataContext] Error saving online progress:', error.message, error);
-            } else {
-                console.log(`[DataContext] Progress saved online: ${itemId} → ${newProgress}%`);
-            }
+                lastPosition: resolvedPosition,
+                lastWatchedAt,
+            });
+            const existingTimer = saveTimerRef.current.get(itemId);
+            if (existingTimer) clearTimeout(existingTimer);
+            const timer = setTimeout(() => {
+                flushProgressToDb(itemId);
+                saveTimerRef.current.delete(itemId);
+            }, 10_000);
+            saveTimerRef.current.set(itemId, timer);
         }
     };
 
-    const clearLocalCache = () => { localStorage.removeItem(LS_CONTENT_KEY); window.location.reload(); };
+    // ── Flush ALL pending progress immediately (call on unmount / beforeunload) ─
+    const flushAllPendingProgress = () => {
+        // Cancel all pending timers
+        saveTimerRef.current.forEach((timer) => clearTimeout(timer));
+        saveTimerRef.current.clear();
+        // Flush all queued saves immediately
+        const pending = [...pendingSaveRef.current.keys()];
+        pending.forEach(itemId => flushProgressToDb(itemId));
+    };
 
-    if (isLoading) {
-        return (
-            <div className="min-h-screen bg-[#030303] flex items-center justify-center">
-                <div className="w-16 h-16 rounded-full border-t-2 border-primary border-r-2 animate-spin"></div>
-            </div>
-        );
-    }
+    const clearLocalCache = () => {
+        localStorage.removeItem(LS_PROGRESS_KEY);
+        localStorage.removeItem(LS_CONTENT_KEY);
+        setCourses(defaultCourses);
+        setLessons([]);
+        setSectors(defaultSectors);
+        setArticles(defaultArticles);
+    };
 
     return (
         <DataContext.Provider value={{
-            courses, lessons, sectors, articles, isLoading,
+            courses, lessons, sectors, articles, newsletters,
+            isLoading, isSyncing, syncStatus,
             addCourse, updateCourse, deleteCourse,
             addLesson, updateLesson, deleteLesson,
             addSector, updateSector, deleteSector,
             addArticle, updateArticle, deleteArticle,
-            updateProgress, clearLocalCache, isSyncing, syncStatus,
-            updateCoursesOrder
+            addNewsletter, updateNewsletter, deleteNewsletter,
+            updateProgress, flushAllPendingProgress,
+            clearLocalCache, updateCoursesOrder,
         }}>
             {children}
         </DataContext.Provider>
@@ -635,7 +731,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 };
 
 export const useData = () => {
-    const context = useContext(DataContext);
-    if (context === undefined) throw new Error('useData must be used within a DataProvider');
-    return context;
+    const ctx = useContext(DataContext);
+    if (!ctx) throw new Error('useData must be used within DataProvider');
+    return ctx;
 };

@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { useData } from '../context/DataContext';
 import { motion } from 'framer-motion';
+import NewsletterPlaceholder from '../components/NewsletterPlaceholder';
 
 const Explore: React.FC = () => {
     const { courses, sectors, articles } = useData();
@@ -10,8 +11,10 @@ const Explore: React.FC = () => {
     const tabParam = searchParams.get('tab');
     const focusSearch = searchParams.get('focus') === 'search';
 
+    const sectorParam = searchParams.get('sector');
+
     const [searchTerm, setSearchTerm] = useState('');
-    const [activeSector, setActiveSector] = useState('ALL');
+    const [activeSector, setActiveSector] = useState(sectorParam ?? 'ALL');
     const [activeTab, setActiveTab] = useState<'courses' | 'newsletters'>(
         tabParam === 'newsletters' ? 'newsletters' : 'courses'
     );
@@ -25,6 +28,8 @@ const Explore: React.FC = () => {
         } else if (tab === 'courses') {
             setActiveTab('courses');
         }
+        const sec = searchParams.get('sector');
+        if (sec) setActiveSector(sec);
     }, [searchParams]);
 
     useEffect(() => {
@@ -35,11 +40,15 @@ const Explore: React.FC = () => {
         }
     }, [focusSearch, activeTab]);
 
+    // Sectors that actually have courses / articles
+    const sectorsWithCourses = sectors.filter(s => courses.some(c => c.sectorId === s.id));
+    const sectorsWithArticles = sectors.filter(s => articles.some(a => a.sectorId === s.id));
+
     // Filter courses by search term and exact sector/modality ID
     const filteredCourses = courses.filter(course => {
         const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
             course.instructor.toLowerCase().includes(searchTerm.toLowerCase());
-        
+
         if (activeSector === 'ALL') return matchesSearch;
         return matchesSearch && course.sectorId === activeSector;
     });
@@ -49,7 +58,7 @@ const Explore: React.FC = () => {
         const matchesSearch = article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
             (article.subtitle || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
             article.content.toLowerCase().includes(searchTerm.toLowerCase());
-        
+
         if (activeSector === 'ALL') return matchesSearch;
         return matchesSearch && article.sectorId === activeSector;
     });
@@ -134,7 +143,7 @@ const Explore: React.FC = () => {
                                 >
                                     TODOS OS SETORES
                                 </button>
-                                {sectors.map(sector => (
+                                {sectorsWithCourses.map(sector => (
                                     <button
                                         key={sector.id}
                                         onClick={() => setActiveSector(sector.id)}
@@ -233,7 +242,7 @@ const Explore: React.FC = () => {
                                 >
                                     TODOS OS SETORES
                                 </button>
-                                {sectors.map(sector => (
+                                {sectorsWithArticles.map(sector => (
                                     <button
                                         key={sector.id}
                                         onClick={() => setActiveSector(sector.id)}
@@ -250,40 +259,38 @@ const Explore: React.FC = () => {
                         </div>
 
                         {/* Newsletter Grid */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
                             {filteredArticles.map((article) => (
-                                <motion.div 
+                                <motion.div
                                     key={article.id}
-                                    whileHover={{ y: -6 }}
+                                    whileHover={{ y: -6, scale: 1.01 }}
                                     transition={{ duration: 0.4 }}
+                                    onClick={() => setSelectedArticle(article)}
+                                    className="group relative rounded-[2rem] overflow-hidden border border-white/10 cursor-pointer select-none aspect-[3/2]"
                                 >
+                                    {/* Full-bleed image */}
+                                    <div className="absolute inset-0">
+                                        {article.thumbnailUrl ? (
+                                            <img
+                                                src={article.thumbnailUrl}
+                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                                                alt={article.title}
+                                            />
+                                        ) : (
+                                            <NewsletterPlaceholder />
+                                        )}
+                                    </div>
+                                    {/* Gradient text overlay */}
                                     <div
-                                        onClick={() => setSelectedArticle(article)}
-                                        className="group flex flex-col p-4 pb-6 relative overflow-hidden aspect-[4/5] bg-white border border-white/10 rounded-[2.5rem] transition-all duration-500 shadow-2xl cursor-pointer select-none text-black"
+                                        className="absolute inset-x-0 bottom-0 flex flex-col items-center justify-end text-center px-5 pb-5 pt-12"
+                                        style={{ background: 'linear-gradient(to top, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.6) 55%, transparent 100%)' }}
                                     >
-                                        {/* Cover Photo */}
-                                        <div className="w-full aspect-[4/3] rounded-2xl overflow-hidden bg-neutral-100 border border-neutral-200 shrink-0">
-                                            {article.thumbnailUrl ? (
-                                                <img 
-                                                    src={article.thumbnailUrl} 
-                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
-                                                    alt={article.title}
-                                                />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center bg-neutral-200">
-                                                    <span className="material-symbols-outlined text-neutral-400 text-3xl">mail</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                        {/* Content */}
-                                        <div className="flex-1 flex flex-col justify-center py-2 text-center">
-                                            <span className="font-label text-[10px] text-neutral-400 uppercase tracking-[0.2em] font-bold mb-1">
-                                                {article.subtitle || 'Newsletter'}
-                                            </span>
-                                            <h4 className="font-headline text-sm md:text-base font-extrabold text-neutral-900 leading-snug line-clamp-3 uppercase px-1">
-                                                {article.title}
-                                            </h4>
-                                        </div>
+                                        <span className="font-label text-[9px] text-black/50 uppercase tracking-[0.2em] font-bold block mb-1">
+                                            {article.subtitle || 'Newsletter'}
+                                        </span>
+                                        <h4 className="font-headline text-sm font-extrabold text-black leading-snug line-clamp-2 uppercase">
+                                            {article.title}
+                                        </h4>
                                     </div>
                                 </motion.div>
                             ))}

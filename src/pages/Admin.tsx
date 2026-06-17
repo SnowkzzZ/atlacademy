@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { useData, type Course, type Lesson } from '../context/DataContext';
+import { useData, type Course, type Lesson, type Newsletter } from '../context/DataContext';
 import Navbar from '../components/Navbar';
 import { getYouTubeId, getYouTubeThumbnail, getYouTubeDuration, loadYouTubeAPI, fmtDuration } from '../lib/youtube';
 import { Reorder } from 'framer-motion';
@@ -210,7 +210,7 @@ const VideoUrlInput: React.FC<{
 
 // ── Admin Panel ────────────────────────────────────────────────────────────
 const Admin: React.FC = () => {
-    const { courses, lessons, sectors, articles, addCourse, updateCourse, deleteCourse, addLesson, updateLesson, deleteLesson, addSector, updateSector, deleteSector, addArticle, updateArticle, deleteArticle, clearLocalCache, isSyncing, syncStatus, updateCoursesOrder } = useData();
+    const { courses, lessons, sectors, articles, newsletters, addCourse, updateCourse, deleteCourse, addLesson, updateLesson, deleteLesson, addSector, updateSector, deleteSector, addArticle, updateArticle, deleteArticle, addNewsletter, updateNewsletter, deleteNewsletter, clearLocalCache, isSyncing, syncStatus, updateCoursesOrder } = useData();
     const navigate = useNavigate();
 
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -241,6 +241,10 @@ const Admin: React.FC = () => {
     const [editingSectorName, setEditingSectorName] = useState('');
 
     const [isEditingArticle, setIsEditingArticle] = useState(false);
+    const [isEditingNewsletter, setIsEditingNewsletter] = useState(false);
+    const [coursePage, setCoursePage] = useState(0);
+    const [sectorPage, setSectorPage] = useState(0);
+    const [curNewsletter, setCurNewsletter] = useState<Partial<Newsletter>>({ category: 'IA', tag: '', title: '', summary: '', content: '', readTime: 5, featured: false, thumbnailUrl: '' });
     const [curArticle, setCurArticle] = useState<{ id?: string; sectorId: string; title: string; content: string; author: string; subtitle?: string; thumbnailUrl?: string }>({ sectorId: '', title: '', content: '', author: 'ATL Academy', subtitle: '', thumbnailUrl: '' });
 
     // Lesson management (Cronograma)
@@ -527,8 +531,14 @@ const Admin: React.FC = () => {
                         )}
 
                         {/* Course List */}
+                        {(() => {
+                            const C_PAGE = 5;
+                            const cTotal = Math.ceil(courses.length / C_PAGE);
+                            const pagedCourses = courses.slice(coursePage * C_PAGE, (coursePage + 1) * C_PAGE);
+                            return (
+                            <>
                         <div className="space-y-4">
-                            {courses.map(course => {
+                            {pagedCourses.map(course => {
                                 const courseLessons = getCourseLesson(course.id);
                                 const isManagingLessons = editingLessonsCourseId === course.id;
                                 return (
@@ -716,6 +726,40 @@ const Admin: React.FC = () => {
                                 );
                             })}
                         </div>
+                        {cTotal > 1 && (
+                            <div className="flex items-center justify-between pt-2">
+                                <button
+                                    onClick={() => setCoursePage(p => Math.max(0, p - 1))}
+                                    disabled={coursePage === 0}
+                                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white/30 hover:text-white hover:border-white/20 disabled:opacity-20 disabled:cursor-not-allowed transition-all font-label text-[9px] uppercase tracking-widest"
+                                >
+                                    <span className="material-symbols-outlined text-[14px]">chevron_left</span> Anterior
+                                </button>
+                                <div className="flex items-center gap-1.5">
+                                    {Array.from({ length: cTotal }).map((_, i) => (
+                                        <button
+                                            key={i}
+                                            onClick={() => setCoursePage(i)}
+                                            className={`w-6 h-6 rounded-lg font-label text-[9px] font-bold transition-all ${
+                                                i === coursePage
+                                                    ? 'bg-primary text-black'
+                                                    : 'bg-white/5 text-white/30 hover:bg-white/10 hover:text-white'
+                                            }`}
+                                        >{i + 1}</button>
+                                    ))}
+                                </div>
+                                <button
+                                    onClick={() => setCoursePage(p => Math.min(cTotal - 1, p + 1))}
+                                    disabled={coursePage === cTotal - 1}
+                                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white/30 hover:text-white hover:border-white/20 disabled:opacity-20 disabled:cursor-not-allowed transition-all font-label text-[9px] uppercase tracking-widest"
+                                >
+                                    Próximo <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+                                </button>
+                            </div>
+                        )}
+                            </>
+                            );
+                        })()}
                     </section>
 
 
@@ -729,29 +773,235 @@ const Admin: React.FC = () => {
                                 <button type="submit" className="bg-white text-black px-4 rounded-xl hover:bg-primary transition-all shrink-0"><span className="material-symbols-outlined">add</span></button>
                             </div>
                         </form>
-                        <div className="liquid-glass-soft p-4 space-y-2 border-white/5">
-                            {sectors.map(sector => (
-                                <div key={sector.id} className="flex items-center justify-between p-2.5 rounded-xl hover:bg-white/[0.05] transition-all group gap-2">
-                                    {editingSectorId === sector.id ? (
-                                        <input autoFocus value={editingSectorName} onChange={e => setEditingSectorName(e.target.value)}
-                                            onKeyDown={e => { if (e.key === 'Enter') { updateSector(sector.id, editingSectorName); setEditingSectorId(null); } if (e.key === 'Escape') setEditingSectorId(null); }}
-                                            onBlur={() => { updateSector(sector.id, editingSectorName); setEditingSectorId(null); }}
-                                            className="flex-1 bg-black/50 border border-primary/40 rounded-lg px-3 py-1.5 text-sm outline-none text-white" />
-                                    ) : (
-                                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-primary/40 group-hover:bg-primary shrink-0" />
-                                            <span className="text-sm text-white/80 truncate">{sector.name}</span>
+                        {(() => {
+                            const PAGE_SIZE = 5;
+                            const totalPages = Math.ceil(sectors.length / PAGE_SIZE);
+                            const paginated = sectors.slice(sectorPage * PAGE_SIZE, (sectorPage + 1) * PAGE_SIZE);
+                            return (
+                                <div className="liquid-glass-soft border-white/5 overflow-hidden">
+                                    <div className="p-4 space-y-1">
+                                        {paginated.map((sector, idx) => (
+                                            <div key={sector.id} className="flex items-center justify-between p-2.5 rounded-xl hover:bg-white/[0.05] transition-all group gap-2">
+                                                {editingSectorId === sector.id ? (
+                                                    <input autoFocus value={editingSectorName} onChange={e => setEditingSectorName(e.target.value)}
+                                                        onKeyDown={e => { if (e.key === 'Enter') { updateSector(sector.id, editingSectorName); setEditingSectorId(null); } if (e.key === 'Escape') setEditingSectorId(null); }}
+                                                        onBlur={() => { updateSector(sector.id, editingSectorName); setEditingSectorId(null); }}
+                                                        className="flex-1 bg-black/50 border border-primary/40 rounded-lg px-3 py-1.5 text-sm outline-none text-white" />
+                                                ) : (
+                                                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                                                        <span className="font-label text-[9px] text-white/20 w-4 text-right shrink-0">{sectorPage * PAGE_SIZE + idx + 1}</span>
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-primary/40 group-hover:bg-primary shrink-0" />
+                                                        <span className="text-sm text-white/80 truncate">{sector.name}</span>
+                                                    </div>
+                                                )}
+                                                <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button onClick={() => { setEditingSectorId(sector.id); setEditingSectorName(sector.name); }} className="text-white/30 hover:text-white p-1"><span className="material-symbols-outlined text-[16px]">edit</span></button>
+                                                    <button onClick={() => deleteSector(sector.id)} className="text-white/20 hover:text-red-400 p-1"><span className="material-symbols-outlined text-[16px]">close</span></button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    {totalPages > 1 && (
+                                        <div className="flex items-center justify-between border-t border-white/[0.06] px-4 py-2.5">
+                                            <button
+                                                onClick={() => setSectorPage(p => Math.max(0, p - 1))}
+                                                disabled={sectorPage === 0}
+                                                className="flex items-center gap-1 text-white/30 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-colors font-label text-[9px] uppercase tracking-widest"
+                                            >
+                                                <span className="material-symbols-outlined text-[14px]">chevron_left</span>
+                                                Ant.
+                                            </button>
+                                            <span className="font-label text-[9px] text-white/20 tracking-widest">
+                                                {sectorPage + 1} / {totalPages}
+                                            </span>
+                                            <button
+                                                onClick={() => setSectorPage(p => Math.min(totalPages - 1, p + 1))}
+                                                disabled={sectorPage === totalPages - 1}
+                                                className="flex items-center gap-1 text-white/30 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-colors font-label text-[9px] uppercase tracking-widest"
+                                            >
+                                                Próx.
+                                                <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+                                            </button>
                                         </div>
                                     )}
-                                    <div className="flex gap-1 shrink-0">
-                                        <button onClick={() => { setEditingSectorId(sector.id); setEditingSectorName(sector.name); }} className="text-white/20 hover:text-white p-1"><span className="material-symbols-outlined text-[16px]">edit</span></button>
-                                        <button onClick={() => deleteSector(sector.id)} className="text-white/20 hover:text-red-400 p-1"><span className="material-symbols-outlined text-[16px]">close</span></button>
+                                </div>
+                            );
+                        })()}
+                    </aside>
+                </div>
+
+                {/* ── Newsletter Manager ──────────────────────────────────────────────── */}
+                <section className="space-y-6 border-t border-white/10 pt-10">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div>
+                            <h2 className="font-headline text-xl font-bold uppercase tracking-tight">Newsletters</h2>
+                            <p className="font-label text-[10px] text-white/30 tracking-widest uppercase mt-1">Publicações da ATL Academy Intelligence</p>
+                        </div>
+                        <button
+                            onClick={() => { setCurNewsletter({ category: 'IA', tag: '', title: '', summary: '', content: '', readTime: 5, featured: false, thumbnailUrl: '' }); setIsEditingNewsletter(true); }}
+                            className="w-full sm:w-auto premium-pill py-3 bg-primary/10 text-primary border-primary/20 hover:bg-primary hover:text-black transition-all"
+                        >+ Nova Newsletter</button>
+                    </div>
+
+                    {isEditingNewsletter && (
+                        <div className="liquid-glass-soft p-6 md:p-8 space-y-5 border-primary/20">
+                            <div className="flex items-center justify-between">
+                                <h3 className="font-headline text-lg text-primary uppercase">{curNewsletter.id ? 'Editar' : 'Nova'} Newsletter</h3>
+                                <button onClick={() => setIsEditingNewsletter(false)} className="text-white/40 hover:text-white font-label text-[10px] uppercase tracking-widest">Cancelar</button>
+                            </div>
+                            <form onSubmit={e => {
+                                e.preventDefault();
+                                if (!curNewsletter.title || !curNewsletter.summary || !curNewsletter.content) return;
+                                if (curNewsletter.id) {
+                                    updateNewsletter(curNewsletter.id, curNewsletter);
+                                } else {
+                                    addNewsletter({
+                                        title: curNewsletter.title!,
+                                        summary: curNewsletter.summary!,
+                                        content: curNewsletter.content!,
+                                        category: curNewsletter.category || 'IA',
+                                        tag: curNewsletter.tag || '',
+                                        readTime: curNewsletter.readTime || 5,
+                                        featured: curNewsletter.featured || false,
+                                        thumbnailUrl: curNewsletter.thumbnailUrl || '',
+                                    });
+                                }
+                                setIsEditingNewsletter(false);
+                                setCurNewsletter({ category: 'IA', tag: '', title: '', summary: '', content: '', readTime: 5, featured: false, thumbnailUrl: '' });
+                            }} className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="font-label text-[10px] text-white/40 uppercase tracking-widest">Categoria *</label>
+                                        <select value={curNewsletter.category || 'IA'} onChange={e => setCurNewsletter(p => ({ ...p, category: e.target.value }))} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 outline-none focus:border-primary text-sm text-white">
+                                            <option>IA</option>
+                                            <option>MLM</option>
+                                            <option>Negócios</option>
+                                            <option>Tecnologia</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="font-label text-[10px] text-white/40 uppercase tracking-widest">Tag (ex: Destaque)</label>
+                                        <input value={curNewsletter.tag || ''} onChange={e => setCurNewsletter(p => ({ ...p, tag: e.target.value }))} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 outline-none focus:border-primary text-sm transition-all" placeholder="Ex: Destaque, Novo, Tendência" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="font-label text-[10px] text-white/40 uppercase tracking-widest">Tempo de Leitura (min)</label>
+                                        <input type="number" min={1} max={60} value={curNewsletter.readTime || 5} onChange={e => setCurNewsletter(p => ({ ...p, readTime: Number(e.target.value) }))} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 outline-none focus:border-primary text-sm transition-all" />
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-3 p-4 bg-primary/5 border border-primary/15 rounded-xl">
+                                    <input type="checkbox" id="nl-featured" checked={!!curNewsletter.featured} onChange={e => setCurNewsletter(p => ({ ...p, featured: e.target.checked }))} className="w-4 h-4 accent-primary" />
+                                    <label htmlFor="nl-featured" className="font-label text-[10px] uppercase tracking-widest text-white/60 cursor-pointer">
+                                        Destacar como newsletter principal (featured)
+                                    </label>
+                                </div>
+
+
+                                <div className="space-y-2">
+                                    <label className="font-label text-[10px] text-white/40 uppercase tracking-widest flex justify-between">
+                                        <span>Foto do Card <span className="text-white/20 normal-case tracking-normal">(1536 × 1024px recomendado)</span></span>
+                                        {curNewsletter.thumbnailUrl && (
+                                            <button type="button" onClick={() => setCurNewsletter(p => ({ ...p, thumbnailUrl: '' }))} className="text-red-400/70 hover:text-red-400 font-label text-[9px] uppercase tracking-widest">Remover</button>
+                                        )}
+                                    </label>
+                                    <div className="flex gap-2">
+                                        <input
+                                            value={curNewsletter.thumbnailUrl || ''}
+                                            onChange={e => setCurNewsletter(p => ({ ...p, thumbnailUrl: e.target.value }))}
+                                            className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 outline-none focus:border-primary text-sm transition-all"
+                                            placeholder="Cole a URL da imagem ou faça upload..."
+                                        />
+                                        <label className="cursor-pointer px-4 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center hover:bg-white/10 transition-colors shrink-0 gap-1.5 text-white/50 hover:text-white font-label text-[9px] uppercase tracking-wider">
+                                            <span className="material-symbols-outlined text-base">upload</span>
+                                            Upload
+                                            <input type="file" className="hidden" accept="image/*" onChange={async e => {
+                                                const file = e.target.files?.[0];
+                                                if (!file) return;
+                                                try {
+                                                    const compressed = await compressImage(file, 'landscape');
+                                                    setCurNewsletter(p => ({ ...p, thumbnailUrl: compressed }));
+                                                } catch { alert('Erro ao processar imagem.'); }
+                                            }} />
+                                        </label>
+                                    </div>
+                                    {curNewsletter.thumbnailUrl && (
+                                        <div className="relative w-full aspect-[3/2] rounded-2xl border border-white/10 overflow-hidden bg-black/40 mt-2 max-w-sm">
+                                            <img src={curNewsletter.thumbnailUrl} className="w-full h-full object-cover" alt="Preview" />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+                                            <span className="absolute bottom-2 left-3 font-label text-[8px] text-white/40 uppercase tracking-widest">Preview 1536×1024</span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="font-label text-[10px] text-white/40 uppercase tracking-widest">Título *</label>
+                                    <input value={curNewsletter.title || ''} onChange={e => setCurNewsletter(p => ({ ...p, title: e.target.value }))} required className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 outline-none focus:border-primary text-sm" placeholder="Título da newsletter..." />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="font-label text-[10px] text-white/40 uppercase tracking-widest">Resumo * <span className="text-white/20 normal-case tracking-normal">(aparece no card)</span></label>
+                                    <textarea value={curNewsletter.summary || ''} onChange={e => setCurNewsletter(p => ({ ...p, summary: e.target.value }))} required rows={2} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 outline-none focus:border-primary text-sm resize-none" placeholder="Breve descrição que aparece no card..." />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="font-label text-[10px] text-white/40 uppercase tracking-widest">Conteúdo Completo * <span className="text-white/20 normal-case tracking-normal">(suporta Markdown: ## Título, **negrito**, - lista)</span></label>
+                                    <textarea value={curNewsletter.content || ''} onChange={e => setCurNewsletter(p => ({ ...p, content: e.target.value }))} required rows={12} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 outline-none focus:border-primary text-sm resize-y font-mono" placeholder="## Introdução&#10;&#10;Escreva o conteúdo completo aqui..." />
+                                </div>
+
+                                <button type="submit" className="px-8 py-3.5 bg-primary text-black font-label font-bold text-[10px] uppercase tracking-[2px] rounded-xl hover:bg-white transition-all">
+                                    {curNewsletter.id ? 'Salvar Alterações' : 'Publicar Newsletter'}
+                                </button>
+                            </form>
+                        </div>
+                    )}
+
+                    {newsletters.length === 0 ? (
+                        <div className="liquid-glass-soft p-10 text-center border-white/5">
+                            <span className="material-symbols-outlined text-white/10 text-5xl block mb-3">mail</span>
+                            <p className="text-white/20 font-label text-[10px] tracking-widest uppercase">Nenhuma newsletter publicada ainda</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                            {newsletters.map(nl => (
+                                <div key={nl.id} className="liquid-glass-soft p-5 flex flex-col gap-3 border-white/5 hover:border-white/10 transition-all">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[9px] tracking-widest uppercase font-label text-primary/70">{nl.category}</span>
+                                        <div className="flex items-center gap-2">
+                                            {nl.featured && (
+                                                <span className="text-[8px] tracking-widest uppercase font-label text-amber-400/70 border border-amber-400/20 bg-amber-400/5 px-2 py-0.5 rounded-full">Featured</span>
+                                            )}
+                                            {nl.tag && (
+                                                <span className="text-[8px] tracking-widest uppercase font-label text-white/30 border border-white/10 px-2 py-0.5 rounded-full">{nl.tag}</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    {nl.thumbnailUrl && (
+                                        <div className="relative w-full aspect-[3/2] rounded-xl overflow-hidden bg-black/40 -mx-1 mb-1">
+                                            <img src={nl.thumbnailUrl} className="w-full h-full object-cover opacity-80" alt="" />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                                        </div>
+                                    )}
+                                    <h4 className="font-headline text-base font-bold text-white leading-tight">{nl.title}</h4>
+                                    <p className="text-white/30 text-xs leading-relaxed flex-1 line-clamp-2">{nl.summary}</p>
+                                    <div className="flex items-center justify-between pt-3 border-t border-white/[0.05]">
+                                        <span className="text-white/20 font-label text-[9px] tracking-widest flex items-center gap-1">
+                                            <span className="material-symbols-outlined text-[12px]">schedule</span>
+                                            {nl.readTime} min
+                                        </span>
+                                        <div className="flex gap-2">
+                                            <button onClick={() => { setCurNewsletter({ ...nl }); setIsEditingNewsletter(true); }} className="text-white/30 hover:text-white p-1">
+                                                <span className="material-symbols-outlined text-[16px]">edit</span>
+                                            </button>
+                                            <button onClick={() => { if (confirm('Excluir newsletter?')) deleteNewsletter(nl.id); }} className="text-white/20 hover:text-red-400 p-1">
+                                                <span className="material-symbols-outlined text-[16px]">delete</span>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
                         </div>
-                    </aside>
-                </div>
+                    )}
+                </section>
 
                 {/* Intelligence Hub */}
                 <section className="space-y-6 border-t border-white/10 pt-10">
@@ -877,6 +1127,7 @@ const Admin: React.FC = () => {
                         </div>
                     )}
                 </section>
+
             </main>
             <footer className="mt-20 py-10 border-t border-white/[0.05] relative z-10 px-6">
                 <div className="max-w-[1440px] mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
