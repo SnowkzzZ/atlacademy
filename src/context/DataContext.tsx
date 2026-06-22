@@ -77,6 +77,27 @@ export interface Newsletter {
     createdAt: number;
 }
 
+export interface MaterialCategory {
+    id: string;
+    name: string;
+    slug: string;
+    icon?: string;
+    position?: number;
+}
+
+export interface SupportMaterial {
+    id: string;
+    categoryId: string;
+    title: string;
+    description?: string;
+    type: 'post' | 'video';
+    fileUrl: string;
+    thumbnailUrl?: string;
+    fileName?: string;
+    position?: number;
+    createdAt: number;
+}
+
 interface DataContextType {
     courses: Course[];
     lessons: Lesson[];
@@ -105,6 +126,14 @@ interface DataContextType {
     isSyncing: boolean;
     syncStatus: 'synced' | 'syncing' | 'error' | 'local-mode';
     updateCoursesOrder: (orderedCourses: Course[]) => Promise<void>;
+    materialCategories: MaterialCategory[];
+    supportMaterials: SupportMaterial[];
+    addMaterial: (m: Omit<SupportMaterial, 'id' | 'createdAt'>) => void;
+    updateMaterial: (id: string, updated: Partial<SupportMaterial>) => void;
+    deleteMaterial: (id: string) => void;
+    addMaterialCategory: (name: string, icon?: string) => void;
+    deleteMaterialCategory: (id: string) => void;
+    uploadMaterialFile: (file: File, folder: string) => Promise<{ url: string; fileName: string }>;
 }
 
 const defaultCourses: Course[] = [
@@ -224,6 +253,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return local.updatedAt > 0 ? (local.sectors || []) : defaultSectors;
     });
     const [newsletters, setNewsletters] = useState<Newsletter[]>([]);
+    const [materialCategories, setMaterialCategories] = useState<MaterialCategory[]>([]);
+    const [supportMaterials, setSupportMaterials] = useState<SupportMaterial[]>([]);
     const [articles, setArticles] = useState<Article[]>(() => {
         const local = lsLoadContent();
         return local.updatedAt > 0 ? (local.articles || []) : defaultArticles;
@@ -256,9 +287,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     supabase.from('sectors').select('*'),
                     supabase.from('articles').select('*'),
                     supabase.from('newsletters').select('*').order('publishedAt', { ascending: false }),
+                    supabase.from('material_categories').select('*').order('position', { ascending: true }),
+                    supabase.from('support_materials').select('*').order('position', { ascending: true }),
                 ]);
 
-                const [coursesRes, lessonsRes, sectorsRes, articlesRes, newslettersRes] = await fetchPromise;
+                const [coursesRes, lessonsRes, sectorsRes, articlesRes, newslettersRes, materialCatsRes, materialsRes] = await fetchPromise;
 
                 // 1. Prioritize Supabase Courses
                 const sbCourses: Course[] = coursesRes.data ? coursesRes.data.map((c: any) => ({
@@ -313,6 +346,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setSectors(mergedSectors);
                 setArticles(mergedArticles);
                 setNewsletters(mergedNewsletters);
+                if (materialCatsRes.data) setMaterialCategories(materialCatsRes.data as MaterialCategory[]);
+                if (materialsRes.data) setSupportMaterials(materialsRes.data as SupportMaterial[]);
 
                 // Write complete source-of-truth back to local cache
                 persistLocal({ 
@@ -597,6 +632,77 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (isSupabaseConfigured) await supabase.from('newsletters').delete().eq('id', id);
     };
 
+    // ── Materiais de Apoio ──────────────────────────────────────────────────
+    const uploadMaterialFile = async (file: File, folder: string): Promise<{ url: string; fileName: string }> => {
+        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const path = `${folder || 'geral'}/${Date.now()}_${safeName}`;
+        const { error } = await supabaseAdmin.storage.from('materiais-apoio').upload(path, file, { upsert: true, cacheControl: '3600' });
+        if (error) throw error;
+        const { data } = supabaseAdmin.storage.from('materiais-apoio').getPublicUrl(path);
+        return { url: data.publicUrl, fileName: file.name };
+    };
+
+    const addMaterial = async (m: Omit<SupportMaterial, 'id' | 'createdAt'>) => {
+        const tempId = crypto.randomUUID();
+        const createdAt = Date.now();
+        const optimistic = { ...m, id: tempId, createdAt } as SupportMaterial;
+        setSupportMaterials(prev => [...prev, optimistic].sort((a, b) => (a.position ?? 9999) - (b.position ?? 9999)));
+        if (isSupabaseConfigured) {
+            const { data, error } = await supabaseAdmin.from('support_materials').insert([{
+                "categoryId": m.categoryId,
+                title: m.title,
+                description: m.description || '',
+                type: m.type || 'post',
+                "fileUrl": m.fileUrl,
+                "thumbnailUrl": m.thumbnailUrl || '',
+                "fileName": m.fileName || '',
+                position: m.position ?? 0,
+                "createdAt": createdAt,
+            }]).select().single();
+            if (!error && data) setSupportMaterials(prev => prev.map(x => x.id === tempId ? (data as SupportMaterial) : x));
+            else if (error) console.error('[DataContext] addMaterial error:', error.message);
+        }
+    };
+
+    const updateMaterial = async (id: string, updated: Partial<SupportMaterial>) => {
+        setSupportMaterials(prev => prev.map(x => x.id === id ? { ...x, ...updated } : x));
+        if (isSupabaseConfigured) {
+            const sb: any = {};
+            if (updated.categoryId !== undefined) sb["categoryId"] = updated.categoryId;
+            if (updated.title !== undefined) sb.title = updated.title;
+            if (updated.description !== undefined) sb.description = updated.description;
+            if (updated.type !== undefined) sb.type = updated.type;
+            if (updated.fileUrl !== undefined) sb["fileUrl"] = updated.fileUrl;
+            if (updated.thumbnailUrl !== undefined) sb["thumbnailUrl"] = updated.thumbnailUrl;
+            if (updated.fileName !== undefined) sb["fileName"] = updated.fileName;
+            if (updated.position !== undefined) sb.position = updated.position;
+            const { error } = await supabaseAdmin.from('support_materials').update(sb).eq('id', id);
+            if (error) console.error('[DataContext] updateMaterial error:', error.message);
+        }
+    };
+
+    const deleteMaterial = async (id: string) => {
+        setSupportMaterials(prev => prev.filter(x => x.id !== id));
+        if (isSupabaseConfigured) await supabaseAdmin.from('support_materials').delete().eq('id', id);
+    };
+
+    const addMaterialCategory = async (name: string, icon?: string) => {
+        const slug = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        const tempId = crypto.randomUUID();
+        const optimistic = { id: tempId, name, slug, icon: icon || 'folder', position: materialCategories.length } as MaterialCategory;
+        setMaterialCategories(prev => [...prev, optimistic]);
+        if (isSupabaseConfigured) {
+            const { data, error } = await supabaseAdmin.from('material_categories').insert([{ name, slug, icon: icon || 'folder', position: materialCategories.length }]).select().single();
+            if (!error && data) setMaterialCategories(prev => prev.map(c => c.id === tempId ? (data as MaterialCategory) : c));
+            else if (error) console.error('[DataContext] addMaterialCategory error:', error.message);
+        }
+    };
+
+    const deleteMaterialCategory = async (id: string) => {
+        setMaterialCategories(prev => prev.filter(c => c.id !== id));
+        if (isSupabaseConfigured) await supabaseAdmin.from('material_categories').delete().eq('id', id);
+    };
+
     // ── Internal: flush a single lesson's progress to Supabase ──────────────
     const flushProgressToDb = async (itemId: string) => {
         const payload = pendingSaveRef.current.get(itemId);
@@ -722,6 +828,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             addSector, updateSector, deleteSector,
             addArticle, updateArticle, deleteArticle,
             addNewsletter, updateNewsletter, deleteNewsletter,
+            materialCategories, supportMaterials, addMaterial, updateMaterial, deleteMaterial, addMaterialCategory, deleteMaterialCategory, uploadMaterialFile,
             updateProgress, flushAllPendingProgress,
             clearLocalCache, updateCoursesOrder,
         }}>
