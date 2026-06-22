@@ -1209,23 +1209,38 @@ const Admin: React.FC = () => {
 
                                 {/* Arquivo */}
                                 <div className="space-y-2">
-                                    <label className="font-label text-[10px] text-white/40 uppercase tracking-widest">Arquivo para download * {curMaterial.type === 'video' ? '(vídeo)' : '(imagem)'}</label>
+                                    <label className="font-label text-[10px] text-white/40 uppercase tracking-widest">Arquivo(s) para download * {curMaterial.type === 'video' ? '(vídeo)' : '(imagem)'} — pode selecionar vários</label>
                                     <div className="flex items-center gap-3">
                                         <label className="cursor-pointer px-5 py-3 bg-white/5 border border-white/10 rounded-xl flex items-center gap-2 hover:bg-white/10 transition-colors text-sm">
                                             <span className="material-symbols-outlined text-base">{uploadingMaterial ? 'progress_activity' : 'upload'}</span>
-                                            {uploadingMaterial ? 'Enviando...' : 'Enviar arquivo'}
-                                            <input type="file" className="hidden" accept={curMaterial.type === 'video' ? 'video/*' : 'image/*'} disabled={uploadingMaterial} onChange={async e => {
-                                                const file = e.target.files?.[0];
-                                                if (!file) return;
+                                            {uploadingMaterial ? 'Enviando...' : 'Enviar arquivo(s)'}
+                                            <input type="file" multiple className="hidden" accept={curMaterial.type === 'video' ? 'video/*' : 'image/*'} disabled={uploadingMaterial} onChange={async e => {
+                                                const files = e.target.files;
+                                                if (!files || files.length === 0) return;
+                                                if (!curMaterial.categoryId) { alert('Selecione a categoria antes de enviar.'); e.target.value = ''; return; }
                                                 const cat = materialCategories.find(c => c.id === curMaterial.categoryId);
                                                 setUploadingMaterial(true);
                                                 try {
-                                                    const { url, fileName } = await uploadMaterialFile(file, cat?.slug || 'geral');
-                                                    setCurMaterial(p => ({ ...p, fileUrl: url, fileName }));
+                                                    if (files.length === 1) {
+                                                        const { url, fileName } = await uploadMaterialFile(files[0], cat?.slug || 'geral');
+                                                        setCurMaterial(p => ({ ...p, fileUrl: url, fileName }));
+                                                    } else {
+                                                        const baseTitle = curMaterial.title?.trim();
+                                                        let pos = supportMaterials.length;
+                                                        for (const file of Array.from(files)) {
+                                                            const { url, fileName } = await uploadMaterialFile(file, cat?.slug || 'geral');
+                                                            const nameTitle = fileName.replace(/\.[^.]+$/, '');
+                                                            await addMaterial({ categoryId: curMaterial.categoryId, title: baseTitle ? `${baseTitle} - ${nameTitle}` : nameTitle, description: curMaterial.description, type: curMaterial.type, fileUrl: url, thumbnailUrl: '', fileName, position: pos++ });
+                                                        }
+                                                        alert(`${files.length} materiais enviados com sucesso!`);
+                                                        setIsEditingMaterial(false);
+                                                        setCurMaterial(emptyMaterial);
+                                                    }
                                                 } catch (err: any) {
                                                     alert('Erro ao enviar arquivo: ' + (err?.message || 'tente novamente'));
                                                 } finally {
                                                     setUploadingMaterial(false);
+                                                    e.target.value = '';
                                                 }
                                             }} />
                                         </label>
