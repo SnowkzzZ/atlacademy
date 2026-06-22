@@ -5,6 +5,7 @@ import Explore from './pages/Explore';
 import Profile from './pages/Profile';
 import Admin from './pages/Admin';
 import Intelligence from './pages/Intelligence';
+import MateriaisApoio from './pages/MateriaisApoio';
 import { DataProvider } from './context/DataContext';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -24,6 +25,7 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/painel" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
             <Route path="/intel" element={<Intelligence />} />
+            <Route path="/materiais" element={<MateriaisApoio />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Router>
