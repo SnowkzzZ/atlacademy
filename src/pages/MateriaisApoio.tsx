@@ -116,13 +116,17 @@ const MateriaisApoio: React.FC = () => {
 
 const MaterialCard: React.FC<{ material: SupportMaterial; index: number; categoryName?: string }> = ({ material, index, categoryName }) => {
     const isVideo = material.type === 'video';
-    const [downloading, setDownloading] = useState(false);
+    const files = (material.files && material.files.length > 0)
+        ? material.files
+        : (material.fileUrl ? [{ url: material.fileUrl, name: material.fileName || material.title }] : []);
+    const [downloadingIdx, setDownloadingIdx] = useState<number | null>(null);
 
-    const handleDownload = async () => {
-        if (!material.fileUrl) return;
-        setDownloading(true);
-        await downloadFile(material.fileUrl, material.fileName || material.title);
-        setDownloading(false);
+    const handleDownload = async (idx: number) => {
+        const f = files[idx];
+        if (!f) return;
+        setDownloadingIdx(idx);
+        await downloadFile(f.url, f.name || material.title);
+        setDownloadingIdx(null);
     };
 
     return (
@@ -146,6 +150,11 @@ const MaterialCard: React.FC<{ material: SupportMaterial; index: number; categor
                     <span className="material-symbols-outlined text-[12px]">{isVideo ? 'play_circle' : 'photo'}</span>
                     {isVideo ? 'Vídeo' : 'Post'}
                 </div>
+                {files.length > 1 && (
+                    <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full font-label text-[9px] font-bold tracking-wider uppercase bg-black/50 text-white border border-white/20 backdrop-blur-md flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[12px]">folder_zip</span>{files.length} arquivos
+                    </div>
+                )}
             </div>
 
             {/* Info */}
@@ -154,14 +163,31 @@ const MaterialCard: React.FC<{ material: SupportMaterial; index: number; categor
                 <h3 className="font-headline text-base font-bold text-white leading-tight line-clamp-2">{material.title}</h3>
                 {material.description && <p className="text-white/35 text-xs leading-relaxed mt-2 line-clamp-2 flex-1">{material.description}</p>}
 
-                <button
-                    onClick={handleDownload}
-                    disabled={downloading}
-                    className="mt-4 w-full bg-white/[0.04] hover:bg-primary hover:text-black border border-white/10 hover:border-primary text-white font-label text-[10px] font-bold tracking-[2px] uppercase py-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50"
-                >
-                    <span className="material-symbols-outlined text-[16px]">{downloading ? 'progress_activity' : 'download'}</span>
-                    {downloading ? 'Baixando...' : 'Baixar'}
-                </button>
+                {files.length <= 1 ? (
+                    <button
+                        onClick={() => handleDownload(0)}
+                        disabled={downloadingIdx !== null || files.length === 0}
+                        className="mt-4 w-full bg-white/[0.04] hover:bg-primary hover:text-black border border-white/10 hover:border-primary text-white font-label text-[10px] font-bold tracking-[2px] uppercase py-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                        <span className="material-symbols-outlined text-[16px]">{downloadingIdx !== null ? 'progress_activity' : 'download'}</span>
+                        {downloadingIdx !== null ? 'Baixando...' : 'Baixar'}
+                    </button>
+                ) : (
+                    <div className="mt-4 space-y-2">
+                        {files.map((f, idx) => (
+                            <button
+                                key={idx}
+                                onClick={() => handleDownload(idx)}
+                                disabled={downloadingIdx !== null}
+                                title={f.name}
+                                className="w-full bg-white/[0.04] hover:bg-primary hover:text-black border border-white/10 hover:border-primary text-white font-label text-[10px] font-bold tracking-wider uppercase py-2.5 px-3 rounded-xl transition-all duration-300 flex items-center gap-2 disabled:opacity-50"
+                            >
+                                <span className="material-symbols-outlined text-[15px] shrink-0">{downloadingIdx === idx ? 'progress_activity' : 'download'}</span>
+                                <span className="truncate">{downloadingIdx === idx ? 'Baixando...' : (f.name || `Arquivo ${idx + 1}`)}</span>
+                            </button>
+                        ))}
+                    </div>
+                )}
             </div>
         </motion.div>
     );
