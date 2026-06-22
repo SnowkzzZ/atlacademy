@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { useData, type Course, type Lesson, type Newsletter } from '../context/DataContext';
+import { useData, type Course, type Lesson, type Newsletter, type SupportMaterial } from '../context/DataContext';
 import Navbar from '../components/Navbar';
 import { getYouTubeId, getYouTubeThumbnail, getYouTubeDuration, loadYouTubeAPI, fmtDuration } from '../lib/youtube';
 import { Reorder } from 'framer-motion';
@@ -210,7 +210,7 @@ const VideoUrlInput: React.FC<{
 
 // ── Admin Panel ────────────────────────────────────────────────────────────
 const Admin: React.FC = () => {
-    const { courses, lessons, sectors, articles, newsletters, addCourse, updateCourse, deleteCourse, addLesson, updateLesson, deleteLesson, addSector, updateSector, deleteSector, addArticle, updateArticle, deleteArticle, addNewsletter, updateNewsletter, deleteNewsletter, clearLocalCache, isSyncing, syncStatus, updateCoursesOrder } = useData();
+    const { courses, lessons, sectors, articles, newsletters, addCourse, updateCourse, deleteCourse, addLesson, updateLesson, deleteLesson, addSector, updateSector, deleteSector, addArticle, updateArticle, deleteArticle, addNewsletter, updateNewsletter, deleteNewsletter, materialCategories, supportMaterials, addMaterial, updateMaterial, deleteMaterial, addMaterialCategory, deleteMaterialCategory, uploadMaterialFile, clearLocalCache, isSyncing, syncStatus, updateCoursesOrder } = useData();
     const navigate = useNavigate();
 
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -246,6 +246,14 @@ const Admin: React.FC = () => {
     const [sectorPage, setSectorPage] = useState(0);
     const [curNewsletter, setCurNewsletter] = useState<Partial<Newsletter>>({ category: 'IA', tag: '', title: '', summary: '', content: '', readTime: 5, featured: false, thumbnailUrl: '' });
     const [curArticle, setCurArticle] = useState<{ id?: string; sectorId: string; title: string; content: string; author: string; subtitle?: string; thumbnailUrl?: string }>({ sectorId: '', title: '', content: '', author: 'ATL Academy', subtitle: '', thumbnailUrl: '' });
+
+    // ── Materiais de Apoio (Central de Divulgação) ──
+    const emptyMaterial = { categoryId: '', title: '', description: '', type: 'post' as 'post' | 'video', fileUrl: '', thumbnailUrl: '', fileName: '' };
+    const [isEditingMaterial, setIsEditingMaterial] = useState(false);
+    const [curMaterial, setCurMaterial] = useState<{ id?: string } & typeof emptyMaterial>(emptyMaterial);
+    const [uploadingMaterial, setUploadingMaterial] = useState(false);
+    const [newMatCatName, setNewMatCatName] = useState('');
+    const [matFilterCat, setMatFilterCat] = useState<string>('all');
 
     // Lesson management (Cronograma)
     const [editingLessonsCourseId, setEditingLessonsCourseId] = useState<string | null>(null);
@@ -1125,6 +1133,185 @@ const Admin: React.FC = () => {
                                 );
                             })}
                         </div>
+                    )}
+                </section>
+
+                {/* ── Materiais de Apoio ──────────────────────────────────────────────── */}
+                <section className="space-y-6 border-t border-white/10 pt-10">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div>
+                            <h2 className="font-headline text-xl font-bold uppercase tracking-tight">Materiais de Apoio</h2>
+                            <p className="font-label text-[10px] text-white/30 tracking-widest uppercase mt-1">Posts e vídeos para divulgação — por produto</p>
+                        </div>
+                        <button onClick={() => { setCurMaterial({ ...emptyMaterial, categoryId: materialCategories[0]?.id || '' }); setIsEditingMaterial(true); }} className="w-full sm:w-auto premium-pill py-3 bg-primary/10 text-primary border-primary/20 hover:bg-primary hover:text-black transition-all">+ Novo Material</button>
+                    </div>
+
+                    {/* Gerenciar categorias (submenus) */}
+                    <div className="liquid-glass-soft p-5 border-white/5 space-y-3">
+                        <p className="font-label text-[10px] text-white/40 uppercase tracking-widest">Categorias (Submenus)</p>
+                        <div className="flex flex-wrap gap-2">
+                            {materialCategories.map(cat => (
+                                <span key={cat.id} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/10 text-white/70 font-label text-[10px] uppercase tracking-wider">
+                                    {cat.icon && <span className="material-symbols-outlined text-[14px]">{cat.icon}</span>}
+                                    {cat.name}
+                                    <button onClick={() => { if (confirm(`Excluir a categoria "${cat.name}" e seus materiais?`)) deleteMaterialCategory(cat.id); }} className="text-white/20 hover:text-red-400 ml-1"><span className="material-symbols-outlined text-[14px]">close</span></button>
+                                </span>
+                            ))}
+                        </div>
+                        <div className="flex gap-2 max-w-md">
+                            <input value={newMatCatName} onChange={e => setNewMatCatName(e.target.value)} placeholder="Nova categoria..." className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-2.5 outline-none focus:border-primary text-sm" />
+                            <button onClick={() => { if (newMatCatName.trim()) { addMaterialCategory(newMatCatName.trim()); setNewMatCatName(''); } }} className="bg-white/10 hover:bg-primary hover:text-black text-white px-4 rounded-xl transition-all shrink-0"><span className="material-symbols-outlined">add</span></button>
+                        </div>
+                    </div>
+
+                    {/* Formulário */}
+                    {isEditingMaterial && (
+                        <div className="liquid-glass-soft p-6 md:p-8 space-y-5 border-primary/20">
+                            <div className="flex items-center justify-between">
+                                <h3 className="font-headline text-lg text-primary uppercase">{curMaterial.id ? 'Editar' : 'Novo'} Material</h3>
+                                <button onClick={() => { setIsEditingMaterial(false); setCurMaterial(emptyMaterial); }} className="text-white/40 hover:text-white font-label text-[10px] uppercase tracking-widest">Cancelar</button>
+                            </div>
+                            <form onSubmit={e => {
+                                e.preventDefault();
+                                if (!curMaterial.categoryId || !curMaterial.title || !curMaterial.fileUrl) { alert('Preencha categoria, título e envie o arquivo.'); return; }
+                                if (curMaterial.id) {
+                                    updateMaterial(curMaterial.id, { categoryId: curMaterial.categoryId, title: curMaterial.title, description: curMaterial.description, type: curMaterial.type, fileUrl: curMaterial.fileUrl, thumbnailUrl: curMaterial.thumbnailUrl, fileName: curMaterial.fileName });
+                                } else {
+                                    addMaterial({ categoryId: curMaterial.categoryId, title: curMaterial.title, description: curMaterial.description, type: curMaterial.type, fileUrl: curMaterial.fileUrl, thumbnailUrl: curMaterial.thumbnailUrl, fileName: curMaterial.fileName, position: supportMaterials.length });
+                                }
+                                setIsEditingMaterial(false); setCurMaterial(emptyMaterial);
+                            }} className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="font-label text-[10px] text-white/40 uppercase tracking-widest">Categoria *</label>
+                                        <select value={curMaterial.categoryId} onChange={e => setCurMaterial(p => ({ ...p, categoryId: e.target.value }))} required className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 outline-none focus:border-primary text-sm text-white">
+                                            <option value="" disabled>Selecionar categoria...</option>
+                                            {materialCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="font-label text-[10px] text-white/40 uppercase tracking-widest">Tipo *</label>
+                                        <select value={curMaterial.type} onChange={e => setCurMaterial(p => ({ ...p, type: e.target.value as 'post' | 'video' }))} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 outline-none focus:border-primary text-sm text-white">
+                                            <option value="post">Post (imagem)</option>
+                                            <option value="video">Vídeo</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="font-label text-[10px] text-white/40 uppercase tracking-widest">Título *</label>
+                                    <input value={curMaterial.title} onChange={e => setCurMaterial(p => ({ ...p, title: e.target.value }))} required className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 outline-none focus:border-primary text-sm" placeholder="Ex: Story ATL Energy - Promo Junho" />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="font-label text-[10px] text-white/40 uppercase tracking-widest">Descrição</label>
+                                    <textarea value={curMaterial.description} onChange={e => setCurMaterial(p => ({ ...p, description: e.target.value }))} rows={2} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 outline-none focus:border-primary text-sm resize-y" placeholder="Instruções de uso (opcional)" />
+                                </div>
+
+                                {/* Arquivo */}
+                                <div className="space-y-2">
+                                    <label className="font-label text-[10px] text-white/40 uppercase tracking-widest">Arquivo para download * {curMaterial.type === 'video' ? '(vídeo)' : '(imagem)'}</label>
+                                    <div className="flex items-center gap-3">
+                                        <label className="cursor-pointer px-5 py-3 bg-white/5 border border-white/10 rounded-xl flex items-center gap-2 hover:bg-white/10 transition-colors text-sm">
+                                            <span className="material-symbols-outlined text-base">{uploadingMaterial ? 'progress_activity' : 'upload'}</span>
+                                            {uploadingMaterial ? 'Enviando...' : 'Enviar arquivo'}
+                                            <input type="file" className="hidden" accept={curMaterial.type === 'video' ? 'video/*' : 'image/*'} disabled={uploadingMaterial} onChange={async e => {
+                                                const file = e.target.files?.[0];
+                                                if (!file) return;
+                                                const cat = materialCategories.find(c => c.id === curMaterial.categoryId);
+                                                setUploadingMaterial(true);
+                                                try {
+                                                    const { url, fileName } = await uploadMaterialFile(file, cat?.slug || 'geral');
+                                                    setCurMaterial(p => ({ ...p, fileUrl: url, fileName }));
+                                                } catch (err: any) {
+                                                    alert('Erro ao enviar arquivo: ' + (err?.message || 'tente novamente'));
+                                                } finally {
+                                                    setUploadingMaterial(false);
+                                                }
+                                            }} />
+                                        </label>
+                                        {curMaterial.fileName && <span className="text-white/50 text-xs flex items-center gap-1 truncate"><span className="material-symbols-outlined text-[14px] text-primary">check_circle</span>{curMaterial.fileName}</span>}
+                                    </div>
+                                </div>
+
+                                {/* Capa */}
+                                <div className="space-y-2">
+                                    <label className="font-label text-[10px] text-white/40 uppercase tracking-widest">Capa / Miniatura (opcional)</label>
+                                    <div className="flex gap-2">
+                                        <input value={curMaterial.thumbnailUrl} onChange={e => setCurMaterial(p => ({ ...p, thumbnailUrl: e.target.value }))} className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 outline-none focus:border-primary text-sm" placeholder="URL ou faça upload" />
+                                        <label className="cursor-pointer px-4 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center hover:bg-white/10 transition-colors">
+                                            <span className="material-symbols-outlined text-base">upload</span>
+                                            <input type="file" className="hidden" accept="image/*" onChange={async e => {
+                                                const file = e.target.files?.[0];
+                                                if (!file) return;
+                                                try { const compressed = await compressImage(file, 'landscape'); setCurMaterial(p => ({ ...p, thumbnailUrl: compressed })); } catch { alert('Erro ao processar imagem.'); }
+                                            }} />
+                                        </label>
+                                    </div>
+                                    {curMaterial.thumbnailUrl && (
+                                        <div className="relative w-40 aspect-video rounded-xl border border-white/10 overflow-hidden bg-black/40 mt-2">
+                                            <img src={curMaterial.thumbnailUrl} className="w-full h-full object-cover" alt="" />
+                                            <button type="button" onClick={() => setCurMaterial(p => ({ ...p, thumbnailUrl: '' }))} className="absolute bottom-2 right-2 text-red-400 hover:text-red-300"><span className="material-symbols-outlined text-base">delete</span></button>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <button type="submit" disabled={uploadingMaterial} className="px-8 py-3.5 bg-primary text-black font-label font-bold text-[10px] uppercase tracking-[2px] rounded-xl hover:bg-white transition-all disabled:opacity-50">Salvar Material</button>
+                            </form>
+                        </div>
+                    )}
+
+                    {/* Filtro + Lista */}
+                    {materialCategories.length === 0 ? (
+                        <div className="liquid-glass-soft p-10 text-center border-white/5">
+                            <span className="material-symbols-outlined text-white/10 text-5xl block mb-3">category</span>
+                            <p className="text-white/20 font-label text-[10px] tracking-widest uppercase">Crie uma categoria acima para começar</p>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="flex flex-wrap gap-2">
+                                <button onClick={() => setMatFilterCat('all')} className={`px-4 py-2 rounded-full font-label text-[9px] tracking-widest uppercase border transition-all ${matFilterCat === 'all' ? 'bg-primary text-black border-primary' : 'text-white/40 border-white/10 hover:text-white'}`}>Todos</button>
+                                {materialCategories.map(c => (
+                                    <button key={c.id} onClick={() => setMatFilterCat(c.id)} className={`px-4 py-2 rounded-full font-label text-[9px] tracking-widest uppercase border transition-all ${matFilterCat === c.id ? 'bg-primary text-black border-primary' : 'text-white/40 border-white/10 hover:text-white'}`}>{c.name}</button>
+                                ))}
+                            </div>
+
+                            {(() => {
+                                const list = (matFilterCat === 'all' ? supportMaterials : supportMaterials.filter(m => m.categoryId === matFilterCat)).slice().sort((a, b) => (a.position ?? 9999) - (b.position ?? 9999) || b.createdAt - a.createdAt);
+                                if (list.length === 0) return (
+                                    <div className="liquid-glass-soft p-10 text-center border-white/5">
+                                        <span className="material-symbols-outlined text-white/10 text-5xl block mb-3">folder_open</span>
+                                        <p className="text-white/20 font-label text-[10px] tracking-widest uppercase">Nenhum material nesta categoria</p>
+                                    </div>
+                                );
+                                return (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                                        {list.map((m: SupportMaterial) => {
+                                            const cat = materialCategories.find(c => c.id === m.categoryId);
+                                            return (
+                                                <div key={m.id} className="liquid-glass-soft overflow-hidden flex flex-col border-white/5 hover:border-white/10 transition-all rounded-2xl">
+                                                    <div className="relative aspect-video bg-black/40 overflow-hidden">
+                                                        {m.thumbnailUrl ? <img src={m.thumbnailUrl} className="w-full h-full object-cover" alt="" /> : <div className="w-full h-full flex items-center justify-center"><span className="material-symbols-outlined text-white/10 text-5xl">{m.type === 'video' ? 'movie' : 'image'}</span></div>}
+                                                        <span className={`absolute top-2 left-2 px-2.5 py-1 rounded-full font-label text-[8px] font-bold tracking-widest uppercase ${m.type === 'video' ? 'bg-purple-500/20 text-purple-200 border border-purple-400/30' : 'bg-primary/20 text-primary border border-primary/30'}`}>{m.type === 'video' ? 'Vídeo' : 'Post'}</span>
+                                                    </div>
+                                                    <div className="p-4 flex flex-col gap-2 flex-1">
+                                                        {cat && <span className="text-[9px] tracking-widest uppercase font-label text-primary/70">{cat.name}</span>}
+                                                        <h4 className="font-headline text-sm font-bold text-white leading-tight line-clamp-2">{m.title}</h4>
+                                                        {m.description && <p className="text-white/30 text-xs line-clamp-2 flex-1">{m.description}</p>}
+                                                        <div className="flex items-center justify-between pt-3 border-t border-white/[0.05]">
+                                                            <a href={m.fileUrl} target="_blank" rel="noreferrer" className="text-white/30 hover:text-primary p-1" title="Abrir arquivo"><span className="material-symbols-outlined text-[16px]">open_in_new</span></a>
+                                                            <div className="flex gap-2">
+                                                                <button onClick={() => { setCurMaterial({ id: m.id, categoryId: m.categoryId, title: m.title, description: m.description || '', type: m.type, fileUrl: m.fileUrl, thumbnailUrl: m.thumbnailUrl || '', fileName: m.fileName || '' }); setIsEditingMaterial(true); }} className="text-white/30 hover:text-white p-1"><span className="material-symbols-outlined text-[16px]">edit</span></button>
+                                                                <button onClick={() => { if (confirm('Excluir este material?')) deleteMaterial(m.id); }} className="text-white/20 hover:text-red-400 p-1"><span className="material-symbols-outlined text-[16px]">delete</span></button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                );
+                            })()}
+                        </>
                     )}
                 </section>
 
