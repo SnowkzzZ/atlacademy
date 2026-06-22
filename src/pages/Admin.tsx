@@ -248,7 +248,7 @@ const Admin: React.FC = () => {
     const [curArticle, setCurArticle] = useState<{ id?: string; sectorId: string; title: string; content: string; author: string; subtitle?: string; thumbnailUrl?: string }>({ sectorId: '', title: '', content: '', author: 'ATL Academy', subtitle: '', thumbnailUrl: '' });
 
     // ── Materiais de Apoio (Central de Divulgação) ──
-    const emptyMaterial = { categoryId: '', title: '', description: '', type: 'post' as 'post' | 'video', fileUrl: '', thumbnailUrl: '', fileName: '' };
+    const emptyMaterial = { categoryId: '', title: '', description: '', type: 'post' as 'post' | 'video', fileUrl: '', thumbnailUrl: '', fileName: '', files: [] as { url: string; name: string }[] };
     const [isEditingMaterial, setIsEditingMaterial] = useState(false);
     const [curMaterial, setCurMaterial] = useState<{ id?: string } & typeof emptyMaterial>(emptyMaterial);
     const [uploadingMaterial, setUploadingMaterial] = useState(false);
@@ -1173,11 +1173,13 @@ const Admin: React.FC = () => {
                             </div>
                             <form onSubmit={e => {
                                 e.preventDefault();
-                                if (!curMaterial.categoryId || !curMaterial.title || !curMaterial.fileUrl) { alert('Preencha categoria, título e envie o arquivo.'); return; }
+                                const mfiles = curMaterial.files || [];
+                                if (!curMaterial.categoryId || !curMaterial.title || mfiles.length === 0) { alert('Preencha categoria, título e anexe ao menos um arquivo.'); return; }
+                                const primary = mfiles[0];
                                 if (curMaterial.id) {
-                                    updateMaterial(curMaterial.id, { categoryId: curMaterial.categoryId, title: curMaterial.title, description: curMaterial.description, type: curMaterial.type, fileUrl: curMaterial.fileUrl, thumbnailUrl: curMaterial.thumbnailUrl, fileName: curMaterial.fileName });
+                                    updateMaterial(curMaterial.id, { categoryId: curMaterial.categoryId, title: curMaterial.title, description: curMaterial.description, type: curMaterial.type, files: mfiles, fileUrl: primary.url, thumbnailUrl: curMaterial.thumbnailUrl, fileName: primary.name });
                                 } else {
-                                    addMaterial({ categoryId: curMaterial.categoryId, title: curMaterial.title, description: curMaterial.description, type: curMaterial.type, fileUrl: curMaterial.fileUrl, thumbnailUrl: curMaterial.thumbnailUrl, fileName: curMaterial.fileName, position: supportMaterials.length });
+                                    addMaterial({ categoryId: curMaterial.categoryId, title: curMaterial.title, description: curMaterial.description, type: curMaterial.type, files: mfiles, fileUrl: primary.url, thumbnailUrl: curMaterial.thumbnailUrl, fileName: primary.name, position: supportMaterials.length });
                                 }
                                 setIsEditingMaterial(false); setCurMaterial(emptyMaterial);
                             }} className="space-y-4">
@@ -1209,7 +1211,7 @@ const Admin: React.FC = () => {
 
                                 {/* Arquivo */}
                                 <div className="space-y-2">
-                                    <label className="font-label text-[10px] text-white/40 uppercase tracking-widest">Arquivo(s) para download * {curMaterial.type === 'video' ? '(vídeo)' : '(imagem)'} — pode selecionar vários</label>
+                                    <label className="font-label text-[10px] text-white/40 uppercase tracking-widest">Arquivo(s) para download * {curMaterial.type === 'video' ? '(vídeo)' : '(imagem)'} — pode anexar vários no mesmo material</label>
                                     <div className="flex items-center gap-3">
                                         <label className="cursor-pointer px-5 py-3 bg-white/5 border border-white/10 rounded-xl flex items-center gap-2 hover:bg-white/10 transition-colors text-sm">
                                             <span className="material-symbols-outlined text-base">{uploadingMaterial ? 'progress_activity' : 'upload'}</span>
@@ -1221,21 +1223,15 @@ const Admin: React.FC = () => {
                                                 const cat = materialCategories.find(c => c.id === curMaterial.categoryId);
                                                 setUploadingMaterial(true);
                                                 try {
-                                                    if (files.length === 1) {
-                                                        const { url, fileName } = await uploadMaterialFile(files[0], cat?.slug || 'geral');
-                                                        setCurMaterial(p => ({ ...p, fileUrl: url, fileName }));
-                                                    } else {
-                                                        const baseTitle = curMaterial.title?.trim();
-                                                        let pos = supportMaterials.length;
-                                                        for (const file of Array.from(files)) {
-                                                            const { url, fileName } = await uploadMaterialFile(file, cat?.slug || 'geral');
-                                                            const nameTitle = fileName.replace(/\.[^.]+$/, '');
-                                                            await addMaterial({ categoryId: curMaterial.categoryId, title: baseTitle ? `${baseTitle} - ${nameTitle}` : nameTitle, description: curMaterial.description, type: curMaterial.type, fileUrl: url, thumbnailUrl: '', fileName, position: pos++ });
-                                                        }
-                                                        alert(`${files.length} materiais enviados com sucesso!`);
-                                                        setIsEditingMaterial(false);
-                                                        setCurMaterial(emptyMaterial);
+                                                    const uploaded: { url: string; name: string }[] = [];
+                                                    for (const file of Array.from(files)) {
+                                                        const { url, fileName } = await uploadMaterialFile(file, cat?.slug || 'geral');
+                                                        uploaded.push({ url, name: fileName });
                                                     }
+                                                    setCurMaterial(p => {
+                                                        const merged = [...(p.files || []), ...uploaded];
+                                                        return { ...p, files: merged, fileUrl: p.fileUrl || merged[0]?.url || '', fileName: p.fileName || merged[0]?.name || '' };
+                                                    });
                                                 } catch (err: any) {
                                                     alert('Erro ao enviar arquivo: ' + (err?.message || 'tente novamente'));
                                                 } finally {
@@ -1244,8 +1240,18 @@ const Admin: React.FC = () => {
                                                 }
                                             }} />
                                         </label>
-                                        {curMaterial.fileName && <span className="text-white/50 text-xs flex items-center gap-1 truncate"><span className="material-symbols-outlined text-[14px] text-primary">check_circle</span>{curMaterial.fileName}</span>}
+                                        {curMaterial.files && curMaterial.files.length > 0 && <span className="text-white/50 text-xs flex items-center gap-1"><span className="material-symbols-outlined text-[14px] text-primary">check_circle</span>{curMaterial.files.length} arquivo(s) anexado(s)</span>}
                                     </div>
+                                    {curMaterial.files && curMaterial.files.length > 0 && (
+                                        <div className="space-y-2">
+                                            {curMaterial.files.map((f, idx) => (
+                                                <div key={idx} className="flex items-center justify-between bg-black/40 border border-white/10 rounded-xl px-3 py-2">
+                                                    <span className="text-white/60 text-xs flex items-center gap-2 truncate"><span className="material-symbols-outlined text-[14px] text-primary">draft</span>{f.name}</span>
+                                                    <button type="button" onClick={() => setCurMaterial(p => { const nf = (p.files || []).filter((_, i) => i !== idx); return { ...p, files: nf, fileUrl: nf[0]?.url || '', fileName: nf[0]?.name || '' }; })} className="text-white/30 hover:text-red-400 shrink-0"><span className="material-symbols-outlined text-[16px]">close</span></button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Capa */}
@@ -1315,7 +1321,7 @@ const Admin: React.FC = () => {
                                                         <div className="flex items-center justify-between pt-3 border-t border-white/[0.05]">
                                                             <a href={m.fileUrl} target="_blank" rel="noreferrer" className="text-white/30 hover:text-primary p-1" title="Abrir arquivo"><span className="material-symbols-outlined text-[16px]">open_in_new</span></a>
                                                             <div className="flex gap-2">
-                                                                <button onClick={() => { setCurMaterial({ id: m.id, categoryId: m.categoryId, title: m.title, description: m.description || '', type: m.type, fileUrl: m.fileUrl, thumbnailUrl: m.thumbnailUrl || '', fileName: m.fileName || '' }); setIsEditingMaterial(true); }} className="text-white/30 hover:text-white p-1"><span className="material-symbols-outlined text-[16px]">edit</span></button>
+                                                                <button onClick={() => { setCurMaterial({ id: m.id, categoryId: m.categoryId, title: m.title, description: m.description || '', type: m.type, fileUrl: m.fileUrl, thumbnailUrl: m.thumbnailUrl || '', fileName: m.fileName || '', files: (m.files && m.files.length ? m.files : (m.fileUrl ? [{ url: m.fileUrl, name: m.fileName || m.title }] : [])) }); setIsEditingMaterial(true); }} className="text-white/30 hover:text-white p-1"><span className="material-symbols-outlined text-[16px]">edit</span></button>
                                                                 <button onClick={() => { if (confirm('Excluir este material?')) deleteMaterial(m.id); }} className="text-white/20 hover:text-red-400 p-1"><span className="material-symbols-outlined text-[16px]">delete</span></button>
                                                             </div>
                                                         </div>
