@@ -94,6 +94,7 @@ export interface SupportMaterial {
     fileUrl: string;
     thumbnailUrl?: string;
     fileName?: string;
+    files?: { url: string; name: string }[];
     position?: number;
     createdAt: number;
 }
@@ -656,6 +657,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 "fileUrl": m.fileUrl,
                 "thumbnailUrl": m.thumbnailUrl || '',
                 "fileName": m.fileName || '',
+                files: m.files || [],
                 position: m.position ?? 0,
                 "createdAt": createdAt,
             }]).select().single();
@@ -675,6 +677,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (updated.fileUrl !== undefined) sb["fileUrl"] = updated.fileUrl;
             if (updated.thumbnailUrl !== undefined) sb["thumbnailUrl"] = updated.thumbnailUrl;
             if (updated.fileName !== undefined) sb["fileName"] = updated.fileName;
+            if (updated.files !== undefined) sb.files = updated.files;
             if (updated.position !== undefined) sb.position = updated.position;
             const { error } = await supabaseAdmin.from('support_materials').update(sb).eq('id', id);
             if (error) console.error('[DataContext] updateMaterial error:', error.message);
