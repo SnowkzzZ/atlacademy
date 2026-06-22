@@ -254,6 +254,7 @@ const Admin: React.FC = () => {
     const [uploadingMaterial, setUploadingMaterial] = useState(false);
     const [newMatCatName, setNewMatCatName] = useState('');
     const [matFilterCat, setMatFilterCat] = useState<string>('all');
+    const [videoLinkInput, setVideoLinkInput] = useState('');
 
     // Lesson management (Cronograma)
     const [editingLessonsCourseId, setEditingLessonsCourseId] = useState<string | null>(null);
@@ -1241,6 +1242,10 @@ const Admin: React.FC = () => {
                                             }} />
                                         </label>
                                         {curMaterial.files && curMaterial.files.length > 0 && <span className="text-white/50 text-xs flex items-center gap-1"><span className="material-symbols-outlined text-[14px] text-primary">check_circle</span>{curMaterial.files.length} arquivo(s) anexado(s)</span>}
+                                    </div>
+                                    <div className="flex gap-2 mt-2">
+                                        <input value={videoLinkInput} onChange={e => setVideoLinkInput(e.target.value)} placeholder="ou cole um link de vídeo (YouTube, Vimeo, Drive...)" className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-2.5 outline-none focus:border-primary text-sm" />
+                                        <button type="button" onClick={() => { const url = videoLinkInput.trim(); if (!url) return; setCurMaterial(p => { const merged = [...(p.files || []), { url, name: 'Vídeo (link)' }]; return { ...p, files: merged, fileUrl: p.fileUrl || url, fileName: p.fileName || 'Vídeo (link)' }; }); setVideoLinkInput(''); }} className="bg-white/10 hover:bg-primary hover:text-black text-white px-4 rounded-xl transition-all shrink-0 text-[10px] font-label uppercase tracking-wider">Adicionar link</button>
                                     </div>
                                     {curMaterial.files && curMaterial.files.length > 0 && (
                                         <div className="space-y-2">
