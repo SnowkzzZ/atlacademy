@@ -50,6 +50,7 @@ const VideoLesson: React.FC = () => {
         .sort((a, b) => a.position - b.position);
 
     const [showResume, setShowResume] = useState(false);
+    const [showEndScreen, setShowEndScreen] = useState(false);
 
     // ── EFFECTS ────────────────────────────────────────────────────────────
 
@@ -163,6 +164,7 @@ const VideoLesson: React.FC = () => {
                                     .sort((a, b) => a.position - b.position);
                                 const idx = cls.findIndex(l => l.id === activeLesson?.id);
                                 if (idx !== -1 && idx < cls.length - 1) changeLesson(cls[idx + 1].id);
+                                else setShowEndScreen(true);
                             }
                         }
                     }
@@ -183,6 +185,7 @@ const VideoLesson: React.FC = () => {
     useEffect(() => {
         isMountedRef.current = true;
         setIsPlayerStarted(false);
+        setShowEndScreen(false);
         lastAccumulatedRef.current = currentWatchedSeconds;
         lastPlayerTimeRef.current  = currentWatchedSeconds;
         if (ytPlayerRef.current?.pauseVideo) {
@@ -300,6 +303,7 @@ const VideoLesson: React.FC = () => {
                                             controls
                                             onTimeUpdate={handleTimeUpdate}
                                             onLoadedMetadata={handleLoadedMetadata}
+                                            onEnded={() => { const idx = courseLessons.findIndex(l => l.id === activeLesson?.id); if (idx !== -1 && idx < courseLessons.length - 1) changeLesson(courseLessons[idx + 1].id); else setShowEndScreen(true); }}
                                         />
                                     )
                                 ) : (
@@ -310,6 +314,23 @@ const VideoLesson: React.FC = () => {
                                         <div className="text-center space-y-2">
                                             <p className="text-white/30 font-headline text-sm tracking-[6px] uppercase font-bold text-shadow">Sinal de Vídeo Indisponível</p>
                                             <p className="text-white/10 font-label text-[8px] uppercase tracking-[2px]">Aguardando conexão com o servidor de mídia</p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* End of lesson overlay */}
+                                {showEndScreen && (
+                                    <div className="absolute inset-0 z-30 bg-black/90 backdrop-blur-sm flex flex-col items-center justify-center gap-6 px-6">
+                                        <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center">
+                                            <span className="material-symbols-outlined text-primary text-3xl">check_circle</span>
+                                        </div>
+                                        <div className="text-center space-y-1">
+                                            <p className="font-headline text-lg md:text-xl font-bold uppercase tracking-tight text-white">Aula concluída</p>
+                                            <p className="font-label text-[9px] uppercase tracking-[3px] text-white/40">Você chegou ao fim desta aula</p>
+                                        </div>
+                                        <div className="flex flex-wrap items-center justify-center gap-3">
+                                            <button type="button" onClick={() => { setShowEndScreen(false); if (ytPlayerRef.current?.seekTo) { try { ytPlayerRef.current.seekTo(0); ytPlayerRef.current.playVideo(); } catch {} } else if (videoRef.current) { try { videoRef.current.currentTime = 0; videoRef.current.play(); } catch {} } else { setIsPlayerStarted(false); } }} className="px-6 py-3 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-white font-label text-[10px] font-bold uppercase tracking-[2px] transition-all flex items-center gap-2"><span className="material-symbols-outlined text-[16px]">replay</span>Rever aula</button>
+                                            <button type="button" onClick={() => navigate('/')} className="px-6 py-3 rounded-xl bg-primary text-black font-label text-[10px] font-bold uppercase tracking-[2px] hover:bg-white transition-all flex items-center gap-2"><span className="material-symbols-outlined text-[16px]">home</span>Voltar ao início</button>
                                         </div>
                                     </div>
                                 )}
