@@ -184,8 +184,11 @@ const VideoLesson: React.FC = () => {
         setShowEndScreen(false);
         lastAccumulatedRef.current = currentWatchedSeconds;
         lastPlayerTimeRef.current  = currentWatchedSeconds;
-        if (ytPlayerRef.current?.pauseVideo) {
-            ytPlayerRef.current.pauseVideo();
+        // Destrói o player antigo ao trocar de aula, para que o próximo vídeo
+        // sempre crie um player novo (evita tela preta ao avançar).
+        if (ytPlayerRef.current) {
+            try { ytPlayerRef.current.destroy(); } catch {}
+            ytPlayerRef.current = null;
         }
         return () => { isMountedRef.current = false; };
     }, [currentItemId]);
