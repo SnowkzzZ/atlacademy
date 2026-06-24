@@ -159,12 +159,8 @@ const VideoLesson: React.FC = () => {
                         onStateChange: (e: any) => {
                             // Avança para próxima lição ao terminar (state 0 = ended)
                             if (e.data === 0) {
-                                const cls = lessons
-                                    .filter(l => l.courseId === activeCourse?.id)
-                                    .sort((a, b) => a.position - b.position);
-                                const idx = cls.findIndex(l => l.id === activeLesson?.id);
-                                if (idx !== -1 && idx < cls.length - 1) changeLesson(cls[idx + 1].id);
-                                else setShowEndScreen(true);
+                                // Vídeo terminou: mostra a tela de conclusão (com opções de sair/próxima)
+                                setShowEndScreen(true);
                             }
                         }
                     }
@@ -260,6 +256,8 @@ const VideoLesson: React.FC = () => {
     const displayTitle = activeLesson?.title ?? activeCourse.title;
     const displayProgress = activeLesson?.progress ?? activeCourse.progress ?? 0;
     const instructorTitle = activeCourse.instructorTitle || 'Mestre ATL';
+    const _curIdx = courseLessons.findIndex(l => l.id === activeLesson?.id);
+    const nextLesson = (_curIdx !== -1 && _curIdx < courseLessons.length - 1) ? courseLessons[_curIdx + 1] : undefined;
 
     return (
         <div className="bg-black min-h-screen text-white font-body relative overflow-x-hidden">
@@ -303,7 +301,7 @@ const VideoLesson: React.FC = () => {
                                             controls
                                             onTimeUpdate={handleTimeUpdate}
                                             onLoadedMetadata={handleLoadedMetadata}
-                                            onEnded={() => { const idx = courseLessons.findIndex(l => l.id === activeLesson?.id); if (idx !== -1 && idx < courseLessons.length - 1) changeLesson(courseLessons[idx + 1].id); else setShowEndScreen(true); }}
+                                            onEnded={() => setShowEndScreen(true)}
                                         />
                                     )
                                 ) : (
@@ -329,8 +327,9 @@ const VideoLesson: React.FC = () => {
                                             <p className="font-label text-[9px] uppercase tracking-[3px] text-white/40">Você chegou ao fim desta aula</p>
                                         </div>
                                         <div className="flex flex-wrap items-center justify-center gap-3">
+                                            {nextLesson && <button type="button" onClick={() => changeLesson(nextLesson.id)} className="px-6 py-3 rounded-xl bg-primary text-black font-label text-[10px] font-bold uppercase tracking-[2px] hover:bg-white transition-all flex items-center gap-2"><span className="material-symbols-outlined text-[16px]">skip_next</span>Próxima aula</button>}
                                             <button type="button" onClick={() => { setShowEndScreen(false); if (ytPlayerRef.current?.seekTo) { try { ytPlayerRef.current.seekTo(0); ytPlayerRef.current.playVideo(); } catch {} } else if (videoRef.current) { try { videoRef.current.currentTime = 0; videoRef.current.play(); } catch {} } else { setIsPlayerStarted(false); } }} className="px-6 py-3 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-white font-label text-[10px] font-bold uppercase tracking-[2px] transition-all flex items-center gap-2"><span className="material-symbols-outlined text-[16px]">replay</span>Rever aula</button>
-                                            <button type="button" onClick={() => navigate('/')} className="px-6 py-3 rounded-xl bg-primary text-black font-label text-[10px] font-bold uppercase tracking-[2px] hover:bg-white transition-all flex items-center gap-2"><span className="material-symbols-outlined text-[16px]">home</span>Voltar ao início</button>
+                                            <button type="button" onClick={() => navigate('/')} className="px-6 py-3 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-white font-label text-[10px] font-bold uppercase tracking-[2px] transition-all flex items-center gap-2"><span className="material-symbols-outlined text-[16px]">home</span>Início</button>
                                         </div>
                                     </div>
                                 )}
