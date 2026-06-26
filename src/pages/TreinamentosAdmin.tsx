@@ -11,6 +11,7 @@ interface LiveTraining {
     scheduledAt: number;
     liveUrl: string | null;
     artUrl: string | null;
+    presenterVideoUrl: string | null;
     status: string | null;
     recordingUrl: string | null;
     position: number | null;
@@ -26,11 +27,12 @@ interface FormState {
     recordingUrl: string;
     status: string;
     artUrl: string;
+    presenterVideoUrl: string;
 }
 
 const EMPTY: FormState = {
     title: '', type: 'Treinamento', presenter: '', scheduledAt: '',
-    description: '', liveUrl: '', recordingUrl: '', status: 'upcoming', artUrl: '',
+    description: '', liveUrl: '', recordingUrl: '', status: 'upcoming', artUrl: '', presenterVideoUrl: '',
 };
 
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -56,6 +58,7 @@ const TreinamentosAdmin: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const [uploadingVideo, setUploadingVideo] = useState(false);
     const [msg, setMsg] = useState<string | null>(null);
 
     const load = async () => {
@@ -82,6 +85,7 @@ const TreinamentosAdmin: React.FC = () => {
             recordingUrl: e.recordingUrl || '',
             status: e.status || 'upcoming',
             artUrl: e.artUrl || '',
+            presenterVideoUrl: e.presenterVideoUrl || '',
         });
         window.scrollTo({ top: window.scrollY, behavior: 'smooth' });
     };
@@ -103,6 +107,24 @@ const TreinamentosAdmin: React.FC = () => {
         }
     };
 
+    const handleVideoUpload = async (file: File) => {
+        if (file.size > 80 * 1024 * 1024) { setMsg('Vídeo muito grande (máx. 80MB). Use um clipe mais curto.'); return; }
+        setUploadingVideo(true);
+        setMsg(null);
+        try {
+            const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+            const path = `recados/${Date.now()}-${safe}`;
+            const { error } = await supabaseAdmin.storage.from('materiais-apoio').upload(path, file, { upsert: true, cacheControl: '3600' });
+            if (error) throw error;
+            const { data } = supabaseAdmin.storage.from('materiais-apoio').getPublicUrl(path);
+            set('presenterVideoUrl', data.publicUrl);
+        } catch (err) {
+            setMsg('Erro ao subir o vídeo: ' + (err instanceof Error ? err.message : 'desconhecido'));
+        } finally {
+            setUploadingVideo(false);
+        }
+    };
+
     const save = async () => {
         if (!form.title.trim() || !form.presenter.trim() || !form.scheduledAt) {
             setMsg('Preencha título, palestrante e data/hora.');
@@ -120,6 +142,7 @@ const TreinamentosAdmin: React.FC = () => {
             recordingUrl: form.recordingUrl.trim(),
             status: form.status,
             artUrl: form.artUrl.trim(),
+            presenterVideoUrl: form.presenterVideoUrl.trim(),
         };
         try {
             if (editingId) {
@@ -243,11 +266,37 @@ const TreinamentosAdmin: React.FC = () => {
                         </div>
                     </div>
 
+                    {/* Recado do palestrante (vídeo) */}
+                    <div>
+                        <label className={labelClass}>Recado do palestrante (vídeo, opcional)</label>
+                        <div className="flex items-center gap-3">
+                            <div className="relative w-24 h-16 rounded-xl overflow-hidden bg-black/40 border border-white/10 shrink-0 flex items-center justify-center">
+                                {form.presenterVideoUrl ? (
+                                    <video src={form.presenterVideoUrl} className="w-full h-full object-cover" muted playsInline />
+                                ) : (
+                                    <span className="material-symbols-outlined text-white/15 text-2xl">smart_display</span>
+                                )}
+                            </div>
+                            <label className="flex-1 cursor-pointer bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-primary/30 text-white/70 font-label text-[10px] font-bold tracking-[1px] uppercase py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2">
+                                <span className="material-symbols-outlined text-[16px] text-primary">{uploadingVideo ? 'progress_activity' : 'upload'}</span>
+                                {uploadingVideo ? 'Subindo...' : (form.presenterVideoUrl ? 'Trocar vídeo' : 'Subir vídeo')}
+                                <input type="file" accept="video/*" className="hidden" disabled={uploadingVideo}
+                                    onChange={e => { const f = e.target.files?.[0]; if (f) handleVideoUpload(f); e.target.value = ''; }} />
+                            </label>
+                            {form.presenterVideoUrl && (
+                                <button onClick={() => set('presenterVideoUrl', '')} className="text-white/30 hover:text-red-400 transition-colors" title="Remover">
+                                    <span className="material-symbols-outlined text-[18px]">delete</span>
+                                </button>
+                            )}
+                        </div>
+                        <p className="text-white/25 text-[10px] mt-1.5">Clipe curto (15-40s). Recomendado até ~60MB para não pesar.</p>
+                    </div>
+
                     {msg && <p className="text-[11px] text-primary/80 font-label tracking-wide">{msg}</p>}
 
                     <button
                         onClick={save}
-                        disabled={saving || uploading}
+                        disabled={saving || uploading || uploadingVideo}
                         className="w-full bg-primary text-black hover:bg-white font-label text-[10px] font-bold tracking-[2px] uppercase py-3.5 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(0,240,255,0.2)] disabled:opacity-50"
                     >
                         <span className="material-symbols-outlined text-[16px]">{saving ? 'progress_activity' : (editingId ? 'save' : 'add_circle')}</span>
