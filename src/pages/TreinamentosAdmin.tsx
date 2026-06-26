@@ -348,3 +348,4 @@ const TreinamentosAdmin: React.FC = () => {
 };
 
 export default TreinamentosAdmin;
+
