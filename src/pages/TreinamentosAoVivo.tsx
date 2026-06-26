@@ -27,11 +27,10 @@ export const typeStyle = (type: string) => type === 'Evento'
     : { badge: 'bg-emerald-500/15 text-emerald-300 border-emerald-400/30', dot: 'bg-emerald-400', text: 'text-emerald-300', grad: 'from-emerald-500/30 via-green-500/10 to-transparent' };
 
 // ── Status dinâmico ──────────────────────────────────────────────────────────
-export const getStatus = (e: LiveTraining) => {
-    const now = Date.now();
+export const getStatus = (e: LiveTraining, now: number = Date.now()) => {
     const start = e.scheduledAt;
-    const end = start + 2 * 3_600_000; // janela de 2h
-    if (e.status === 'live' || (now >= start && now <= end)) return { label: 'Ao Vivo', cls: 'bg-red-500/20 text-red-300 border-red-400/40', pulse: true };
+    const end = start + 3_600_000; // ao vivo por 1h, depois encerrado
+    if (now >= start && now <= end) return { label: 'Ao Vivo', cls: 'bg-red-500/20 text-red-300 border-red-400/40', pulse: true };
     const isToday = new Date(start).toDateString() === new Date(now).toDateString();
     if (now < start && isToday) return { label: 'Hoje', cls: 'bg-amber-500/20 text-amber-200 border-amber-400/40', pulse: false };
     if (now < start) return { label: 'Próximo', cls: 'bg-primary/20 text-primary border-primary/40', pulse: false };
@@ -141,6 +140,8 @@ const TreinamentosAoVivo: React.FC = () => {
     const [selected, setSelected] = useState<LiveTraining | null>(null);
     const [cursor, setCursor] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); });
     const didInitCursor = useRef(false);
+    const [now, setNow] = useState(Date.now());
+    useEffect(() => { const id = setInterval(() => setNow(Date.now()), 30_000); return () => clearInterval(id); }, []);
 
     useEffect(() => {
         let active = true;
@@ -170,9 +171,8 @@ const TreinamentosAoVivo: React.FC = () => {
     );
 
     const nextEvent = useMemo(() => {
-        const now = Date.now();
         return [...filtered].filter(e => e.scheduledAt >= now).sort((a, b) => a.scheduledAt - b.scheduledAt)[0] ?? null;
-    }, [filtered]);
+    }, [filtered, now]);
 
     const calendarDays = useMemo(() => {
         const year = cursor.getFullYear(); const month = cursor.getMonth();
@@ -275,29 +275,31 @@ const TreinamentosAoVivo: React.FC = () => {
                         <AnimatePresence mode="wait">
                             {nextEvent && (
                                 <motion.div key={nextEvent.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                                    className="liquid-glass-soft rounded-3xl overflow-hidden border-white/5 mb-12 relative">
+                                    className="liquid-glass-soft rounded-2xl overflow-hidden border-white/5 mb-8 relative">
                                     <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-blue-500/10 pointer-events-none" />
-                                    <div className="relative grid md:grid-cols-2 gap-8 p-8 md:p-10">
+                                    <div className="relative grid md:grid-cols-[1.5fr_1fr] gap-5 p-5 md:p-6 items-center">
                                         <div className="flex flex-col justify-center">
-                                            <div className="flex items-center gap-2 mb-3">
-                                                <span className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_10px_#00F0FF]" />
-                                                <span className="font-label text-[10px] tracking-[3px] uppercase text-primary">Próximo ao vivo</span>
-                                                <span className={`px-2.5 py-0.5 rounded-full font-label text-[9px] font-bold tracking-wider uppercase border ${typeStyle(nextEvent.type).badge}`}>{nextEvent.type}</span>
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shadow-[0_0_10px_#00F0FF]" />
+                                                <span className="font-label text-[9px] tracking-[3px] uppercase text-primary">Próximo ao vivo</span>
+                                                <span className={`px-2 py-0.5 rounded-full font-label text-[8px] font-bold tracking-wider uppercase border ${typeStyle(nextEvent.type).badge}`}>{nextEvent.type}</span>
                                             </div>
-                                            <h2 className="font-headline text-2xl md:text-4xl font-bold text-white leading-tight">{nextEvent.title}</h2>
-                                            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-4 text-white/50 text-sm">
-                                                <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-[16px] text-primary/70">person</span>{nextEvent.presenter}</span>
-                                                <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-[16px] text-primary/70">calendar_month</span>{formatFullDate(nextEvent.scheduledAt)}</span>
-                                                <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-[16px] text-primary/70">schedule</span>{formatTime(nextEvent.scheduledAt)}</span>
+                                            <h2 className="font-headline text-lg md:text-2xl font-bold text-white leading-tight line-clamp-2">{nextEvent.title}</h2>
+                                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-white/50 text-xs">
+                                                <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-[14px] text-primary/70">person</span>{nextEvent.presenter}</span>
+                                                <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-[14px] text-primary/70">calendar_month</span>{formatFullDate(nextEvent.scheduledAt)}</span>
+                                                <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-[14px] text-primary/70">schedule</span>{formatTime(nextEvent.scheduledAt)}</span>
                                             </div>
-                                            <div className="mt-6"><EventCountdown target={nextEvent.scheduledAt} /></div>
-                                            <button onClick={() => setSelected(nextEvent)} className="mt-7 self-start bg-primary text-black hover:bg-white font-label text-[10px] font-bold tracking-[2px] uppercase px-7 py-3.5 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-[0_0_25px_rgba(0,240,255,0.25)]">
-                                                <span className="material-symbols-outlined text-[16px]">visibility</span>Ver detalhes
-                                            </button>
+                                            <div className="mt-4 flex flex-wrap items-center gap-4">
+                                                <EventCountdown target={nextEvent.scheduledAt} size="sm" />
+                                                <button onClick={() => setSelected(nextEvent)} className="self-end bg-primary text-black hover:bg-white font-label text-[10px] font-bold tracking-[2px] uppercase px-5 py-2.5 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-[0_0_20px_rgba(0,240,255,0.2)]">
+                                                    <span className="material-symbols-outlined text-[15px]">visibility</span>Detalhes
+                                                </button>
+                                            </div>
                                         </div>
-                                        <div className={`relative aspect-video md:aspect-auto rounded-2xl overflow-hidden border border-white/10 min-h-[200px] bg-gradient-to-br ${typeStyle(nextEvent.type).grad}`}>
+                                        <div className={`hidden md:block relative rounded-xl overflow-hidden border border-white/10 h-[150px] bg-gradient-to-br ${typeStyle(nextEvent.type).grad}`}>
                                             {nextEvent.artUrl ? <img src={nextEvent.artUrl} alt={nextEvent.title} className="w-full h-full object-cover" />
-                                                : <div className="w-full h-full flex flex-col items-center justify-center gap-3"><span className="material-symbols-outlined text-white/30 text-7xl">live_tv</span><span className="font-label text-[10px] tracking-widest uppercase text-white/30">ATL Academy</span></div>}
+                                                : <div className="w-full h-full flex flex-col items-center justify-center gap-2"><span className="material-symbols-outlined text-white/30 text-5xl">live_tv</span><span className="font-label text-[9px] tracking-widest uppercase text-white/30">ATL Academy</span></div>}
                                         </div>
                                     </div>
                                 </motion.div>
@@ -357,7 +359,7 @@ const TreinamentosAoVivo: React.FC = () => {
                                 ) : (
                                     <div className="space-y-3 max-h-[560px] overflow-y-auto custom-scrollbar-premium pr-1">
                                         {[...filtered].sort((a, b) => a.scheduledAt - b.scheduledAt).map((e, i) => {
-                                            const st = getStatus(e); const ts = typeStyle(e.type);
+                                            const st = getStatus(e, now); const ts = typeStyle(e.type);
                                             return (
                                                 <motion.button key={e.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4, delay: Math.min(i * 0.05, 0.4) }} onClick={() => setSelected(e)}
                                                     className={`w-full text-left liquid-glass-soft rounded-2xl border-white/5 hover:border-primary/20 transition-all duration-300 p-4 flex items-center gap-4 group ${st.label === 'Finalizado' ? 'opacity-60' : ''}`}>
@@ -393,7 +395,7 @@ const TreinamentosAoVivo: React.FC = () => {
                         <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }} onClick={ev => ev.stopPropagation()}
                             className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto custom-scrollbar-premium rounded-3xl border border-white/10" style={{ background: 'rgba(5,8,15,0.97)', backdropFilter: 'blur(40px)' }}>
                             {(() => {
-                                const st = getStatus(selected); const ts = typeStyle(selected.type); const future = selected.scheduledAt > Date.now();
+                                const st = getStatus(selected, now); const ts = typeStyle(selected.type); const future = selected.scheduledAt > now;
                                 return (
                                     <>
                                         <div className={`relative aspect-video overflow-hidden bg-gradient-to-br ${ts.grad}`}>
@@ -433,7 +435,6 @@ const TreinamentosAoVivo: React.FC = () => {
                                                 <span className="font-label text-[9px] tracking-[3px] uppercase text-white/30 flex items-center gap-1.5 mb-3"><span className="material-symbols-outlined text-[14px] text-primary/60">event_available</span>Adicionar ao meu calendário</span>
                                                 <div className="flex flex-wrap gap-2">
                                                     <a href={googleCalUrl(selected)} target="_blank" rel="noopener noreferrer" className="bg-white/[0.04] hover:bg-white/[0.1] border border-white/10 hover:border-primary/30 text-white font-label text-[10px] font-bold tracking-[1px] uppercase py-2.5 px-4 rounded-xl transition-all duration-300 flex items-center gap-2"><span className="material-symbols-outlined text-[15px] text-primary">calendar_add_on</span>Google Agenda</a>
-                                                    <button onClick={() => downloadICS(selected)} className="bg-white/[0.04] hover:bg-white/[0.1] border border-white/10 hover:border-primary/30 text-white font-label text-[10px] font-bold tracking-[1px] uppercase py-2.5 px-4 rounded-xl transition-all duration-300 flex items-center gap-2"><span className="material-symbols-outlined text-[15px] text-primary">download</span>Apple / Outlook</button>
                                                 </div>
                                             </div>
 
