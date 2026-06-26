@@ -15,6 +15,7 @@ export interface LiveTraining {
     artUrl: string | null;
     status: string | null; // 'upcoming' | 'live' | 'ended'
     recordingUrl: string | null;
+    presenterVideoUrl: string | null;
     position: number | null;
 }
 
@@ -480,6 +481,13 @@ const TreinamentosAoVivo: React.FC = () => {
                                             )}
 
                                             {selected.description && <p className="text-white/45 text-sm leading-relaxed mt-5">{selected.description}</p>}
+
+                                            {selected.presenterVideoUrl && (
+                                                <div className="mt-6">
+                                                    <span className="font-label text-[9px] tracking-[3px] uppercase text-white/30 flex items-center gap-1.5 mb-3"><span className="material-symbols-outlined text-[14px] text-primary/60">campaign</span>Recado do palestrante</span>
+                                                    <video src={selected.presenterVideoUrl} controls playsInline preload="metadata" className="w-full rounded-xl border border-white/10 bg-black max-h-[340px]" />
+                                                </div>
+                                            )}
 
                                             {/* Adicionar ao calendário */}
                                             <div className="mt-6 pt-5 border-t border-white/[0.06]">
