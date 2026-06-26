@@ -138,6 +138,7 @@ const TreinamentosAoVivo: React.FC = () => {
     const [filter, setFilter] = useState<Filter>('all');
     const [view, setView] = useState<View>('agenda');
     const [selected, setSelected] = useState<LiveTraining | null>(null);
+    const [dayList, setDayList] = useState<LiveTraining[] | null>(null);
     const [cursor, setCursor] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); });
     const didInitCursor = useRef(false);
     const [now, setNow] = useState(Date.now());
@@ -302,14 +303,11 @@ const TreinamentosAoVivo: React.FC = () => {
                                                 </button>
                                             </div>
                                         </div>
-                                        <div className="hidden md:block relative rounded-xl overflow-hidden border border-white/10 h-[210px] bg-black/50">
+                                        <div className="hidden md:flex items-center justify-center">
                                             {nextEvent.artUrl ? (
-                                                <>
-                                                    <img src={nextEvent.artUrl} alt="" aria-hidden className="absolute inset-0 w-full h-full object-cover blur-2xl scale-125 opacity-40" />
-                                                    <img src={nextEvent.artUrl} alt={nextEvent.title} className="relative z-10 w-full h-full object-contain" />
-                                                </>
+                                                <img src={nextEvent.artUrl} alt={nextEvent.title} className="max-w-full max-h-[240px] w-auto h-auto rounded-xl border border-white/10" />
                                             ) : (
-                                                <div className={`w-full h-full flex flex-col items-center justify-center gap-2 bg-gradient-to-br ${typeStyle(nextEvent.type).grad}`}><span className="material-symbols-outlined text-white/30 text-5xl">live_tv</span><span className="font-label text-[9px] tracking-widest uppercase text-white/30">ATL Academy</span></div>
+                                                <div className={`w-full aspect-video rounded-xl border border-white/10 bg-gradient-to-br ${typeStyle(nextEvent.type).grad} flex flex-col items-center justify-center gap-2`}><span className="material-symbols-outlined text-white/30 text-5xl">live_tv</span><span className="font-label text-[9px] tracking-widest uppercase text-white/30">ATL Academy</span></div>
                                             )}
                                         </div>
                                     </div>
@@ -338,7 +336,7 @@ const TreinamentosAoVivo: React.FC = () => {
                                         const isToday = sameDay(day, today);
                                         const has = dayEvents.length > 0;
                                         return (
-                                            <button key={i} onClick={() => { if (has) setSelected(dayEvents[0]); }} disabled={!has}
+                                            <button key={i} onClick={() => { if (dayEvents.length === 1) setSelected(dayEvents[0]); else if (dayEvents.length > 1) setDayList([...dayEvents].sort((a, b) => a.scheduledAt - b.scheduledAt)); }} disabled={!has}
                                                 className={`min-h-[58px] rounded-xl flex flex-col items-center justify-start pt-1.5 gap-1 relative transition-all duration-200 border ${has ? 'bg-white/[0.03] border-white/10 hover:bg-primary/10 hover:border-primary/30 cursor-pointer' : 'border-transparent cursor-default'} ${isToday ? 'ring-1 ring-primary/50' : ''}`}>
                                                 <span className={`text-xs md:text-sm font-mono ${has ? 'text-white font-bold' : isToday ? 'text-primary' : 'text-white/40'}`}>{day.getDate()}</span>
                                                 {has && (
@@ -397,6 +395,48 @@ const TreinamentosAoVivo: React.FC = () => {
                     </>
                 )}
             </main>
+
+            {/* Seletor de eventos do dia (quando há mais de um) */}
+            <AnimatePresence>
+                {dayList && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setDayList(null)}
+                        className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+                        <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }} onClick={ev => ev.stopPropagation()}
+                            className="relative w-full max-w-md rounded-3xl border border-white/10 p-6" style={{ background: 'rgba(5,8,15,0.97)', backdropFilter: 'blur(40px)' }}>
+                            <div className="flex items-center justify-between mb-4">
+                                <div>
+                                    <span className="font-label text-[9px] tracking-[3px] uppercase text-primary/70 block mb-1">{dayList.length} eventos neste dia</span>
+                                    <h3 className="font-headline text-lg font-bold text-white">{new Date(dayList[0].scheduledAt).getDate()} de {MESES[new Date(dayList[0].scheduledAt).getMonth()]}</h3>
+                                </div>
+                                <button onClick={() => setDayList(null)} className="w-9 h-9 rounded-full bg-black/40 border border-white/10 flex items-center justify-center hover:bg-black/70 transition-colors"><span className="material-symbols-outlined text-white text-[18px]">close</span></button>
+                            </div>
+                            <div className="space-y-2 max-h-[60vh] overflow-y-auto custom-scrollbar-premium pr-1">
+                                {dayList.map(e => {
+                                    const st = getStatus(e, now); const ts = typeStyle(e.type);
+                                    return (
+                                        <button key={e.id} onClick={() => { setSelected(e); setDayList(null); }}
+                                            className="w-full text-left liquid-glass-soft rounded-2xl border-white/5 hover:border-primary/20 transition-all duration-300 p-3 flex items-center gap-3 group">
+                                            <div className="flex flex-col items-center justify-center w-14 h-14 rounded-xl bg-black/30 border border-white/10 shrink-0">
+                                                <span className="material-symbols-outlined text-primary/70 text-[18px]">schedule</span>
+                                                <span className="font-mono text-[10px] font-bold text-white mt-0.5">{formatTime(e.scheduledAt)}</span>
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-1.5 mb-1">
+                                                    <span className={`px-2 py-0.5 rounded-full font-label text-[8px] font-bold tracking-wider uppercase border ${ts.badge}`}>{e.type}</span>
+                                                    <span className={`px-2 py-0.5 rounded-full font-label text-[8px] font-bold tracking-wider uppercase border ${st.cls} flex items-center gap-1`}>{st.pulse && <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />}{st.label}</span>
+                                                </div>
+                                                <h4 className="font-headline text-sm font-bold text-white leading-tight truncate">{e.title}</h4>
+                                                <p className="text-white/35 text-xs mt-0.5 truncate">{e.presenter}</p>
+                                            </div>
+                                            <span className="material-symbols-outlined text-white/20 group-hover:text-primary transition-colors text-[18px] shrink-0">chevron_right</span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Modal */}
             <AnimatePresence>
