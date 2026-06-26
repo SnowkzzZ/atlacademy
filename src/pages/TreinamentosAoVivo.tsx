@@ -140,6 +140,8 @@ const TreinamentosAoVivo: React.FC = () => {
     const [view, setView] = useState<View>('agenda');
     const [selected, setSelected] = useState<LiveTraining | null>(null);
     const [dayList, setDayList] = useState<LiveTraining[] | null>(null);
+    const [shared, setShared] = useState(false);
+    const didDeepLink = useRef(false);
     const [cursor, setCursor] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); });
     const didInitCursor = useRef(false);
     const [now, setNow] = useState(Date.now());
@@ -164,6 +166,23 @@ const TreinamentosAoVivo: React.FC = () => {
         if (target) { const d = new Date(target.scheduledAt); setCursor(new Date(d.getFullYear(), d.getMonth(), 1)); }
         didInitCursor.current = true;
     }, [events]);
+
+    // Deep-link: abre automaticamente o evento de ?ev=ID
+    useEffect(() => {
+        if (didDeepLink.current || events.length === 0) return;
+        const ev = new URLSearchParams(window.location.search).get('ev');
+        if (ev) { const found = events.find(e => e.id === ev); if (found) setSelected(found); }
+        didDeepLink.current = true;
+    }, [events]);
+
+    const shareEvent = async (e: LiveTraining) => {
+        const url = `${window.location.origin}/treinamentos?ev=${e.id}`;
+        const text = `${e.type}: ${e.title} — ${formatFullDate(e.scheduledAt)} às ${formatTime(e.scheduledAt)}`;
+        try {
+            if (navigator.share) { await navigator.share({ title: e.title, text, url }); }
+            else { await navigator.clipboard.writeText(`${text}\n${url}`); setShared(true); setTimeout(() => setShared(false), 2000); }
+        } catch { /* cancelado pelo usuário */ }
+    };
 
     const filtered = useMemo(() => filter === 'all' ? events : events.filter(e => e.type === filter), [events, filter]);
 
@@ -453,6 +472,7 @@ const TreinamentosAoVivo: React.FC = () => {
                                         <div className={`relative aspect-video overflow-hidden bg-gradient-to-br ${ts.grad}`}>
                                             {selected.artUrl ? <img src={selected.artUrl} alt={selected.title} className="w-full h-full object-cover" />
                                                 : <div className="w-full h-full flex flex-col items-center justify-center gap-3"><span className="material-symbols-outlined text-white/30 text-7xl">live_tv</span><span className="font-label text-[10px] tracking-widest uppercase text-white/30">ATL Academy</span></div>}
+                                            <button onClick={() => shareEvent(selected)} title="Compartilhar" className="absolute top-4 right-16 w-10 h-10 rounded-full bg-black/50 border border-white/10 flex items-center justify-center hover:bg-black/80 transition-colors backdrop-blur-md"><span className="material-symbols-outlined text-white text-[18px]">{shared ? 'check' : 'share'}</span></button>
                                             <button onClick={() => setSelected(null)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/50 border border-white/10 flex items-center justify-center hover:bg-black/80 transition-colors backdrop-blur-md"><span className="material-symbols-outlined text-white text-[20px]">close</span></button>
                                             <div className="absolute top-4 left-4 flex items-center gap-2">
                                                 <span className={`px-3 py-1 rounded-full font-label text-[9px] font-bold tracking-[2px] uppercase backdrop-blur-md border ${ts.badge}`}>{selected.type}</span>
