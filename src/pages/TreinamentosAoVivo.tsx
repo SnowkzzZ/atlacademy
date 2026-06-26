@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { supabase } from '../lib/supabase';
 
@@ -439,10 +438,6 @@ const TreinamentosAoVivo: React.FC = () => {
                                                 {selected.liveUrl && <a href={selected.liveUrl} target="_blank" rel="noopener noreferrer" className="flex-1 min-w-[160px] bg-primary text-black hover:bg-white font-label text-[10px] font-bold tracking-[2px] uppercase py-3.5 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(0,240,255,0.25)]"><span className="material-symbols-outlined text-[16px]">sensors</span>Entrar na live</a>}
                                                 {selected.recordingUrl && <a href={selected.recordingUrl} target="_blank" rel="noopener noreferrer" className="flex-1 min-w-[160px] bg-white/[0.04] hover:bg-white/[0.1] border border-white/10 text-white font-label text-[10px] font-bold tracking-[2px] uppercase py-3.5 rounded-xl transition-all duration-300 flex items-center justify-center gap-2"><span className="material-symbols-outlined text-[16px]">play_circle</span>Assistir gravação</a>}
                                             </div>
-
-                                            <Link to={`/treinamentos/${selected.id}`} className="mt-4 inline-flex items-center gap-1.5 font-label text-[10px] tracking-widest uppercase text-primary/80 hover:text-primary transition-colors">
-                                                Abrir página completa <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
-                                            </Link>
                                         </div>
                                     </>
                                 );
