@@ -277,7 +277,7 @@ const TreinamentosAoVivo: React.FC = () => {
                                 <motion.div key={nextEvent.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                                     className="liquid-glass-soft rounded-2xl overflow-hidden border-white/5 mb-8 relative">
                                     <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-blue-500/10 pointer-events-none" />
-                                    <div className="relative grid md:grid-cols-[1.5fr_1fr] gap-5 p-5 md:p-6 items-center">
+                                    <div className="relative grid md:grid-cols-[1.4fr_1fr] gap-5 p-5 md:p-6 items-center">
                                         <div className="flex flex-col justify-center">
                                             <div className="flex items-center gap-2 mb-2">
                                                 <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shadow-[0_0_10px_#00F0FF]" />
@@ -297,8 +297,8 @@ const TreinamentosAoVivo: React.FC = () => {
                                                 </button>
                                             </div>
                                         </div>
-                                        <div className={`hidden md:block relative rounded-xl overflow-hidden border border-white/10 h-[150px] bg-gradient-to-br ${typeStyle(nextEvent.type).grad}`}>
-                                            {nextEvent.artUrl ? <img src={nextEvent.artUrl} alt={nextEvent.title} className="w-full h-full object-cover" />
+                                        <div className={`hidden md:flex items-center justify-center relative rounded-xl overflow-hidden border border-white/10 h-[210px] bg-black/40 bg-gradient-to-br ${typeStyle(nextEvent.type).grad}`}>
+                                            {nextEvent.artUrl ? <img src={nextEvent.artUrl} alt={nextEvent.title} className="w-full h-full object-contain" />
                                                 : <div className="w-full h-full flex flex-col items-center justify-center gap-2"><span className="material-symbols-outlined text-white/30 text-5xl">live_tv</span><span className="font-label text-[9px] tracking-widest uppercase text-white/30">ATL Academy</span></div>}
                                         </div>
                                     </div>
