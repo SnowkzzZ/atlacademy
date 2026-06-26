@@ -170,6 +170,11 @@ const TreinamentosAoVivo: React.FC = () => {
         [filtered]
     );
 
+    const agendaList = useMemo(
+        () => [...filtered].filter(e => getStatus(e, now).label !== 'Finalizado').sort((a, b) => a.scheduledAt - b.scheduledAt).slice(0, 6),
+        [filtered, now]
+    );
+
     const nextEvent = useMemo(() => {
         return [...filtered].filter(e => e.scheduledAt >= now).sort((a, b) => a.scheduledAt - b.scheduledAt)[0] ?? null;
     }, [filtered, now]);
@@ -297,9 +302,15 @@ const TreinamentosAoVivo: React.FC = () => {
                                                 </button>
                                             </div>
                                         </div>
-                                        <div className={`hidden md:flex items-center justify-center relative rounded-xl overflow-hidden border border-white/10 h-[210px] bg-black/40 bg-gradient-to-br ${typeStyle(nextEvent.type).grad}`}>
-                                            {nextEvent.artUrl ? <img src={nextEvent.artUrl} alt={nextEvent.title} className="w-full h-full object-contain" />
-                                                : <div className="w-full h-full flex flex-col items-center justify-center gap-2"><span className="material-symbols-outlined text-white/30 text-5xl">live_tv</span><span className="font-label text-[9px] tracking-widest uppercase text-white/30">ATL Academy</span></div>}
+                                        <div className="hidden md:block relative rounded-xl overflow-hidden border border-white/10 h-[210px] bg-black/50">
+                                            {nextEvent.artUrl ? (
+                                                <>
+                                                    <img src={nextEvent.artUrl} alt="" aria-hidden className="absolute inset-0 w-full h-full object-cover blur-2xl scale-125 opacity-40" />
+                                                    <img src={nextEvent.artUrl} alt={nextEvent.title} className="relative z-10 w-full h-full object-contain" />
+                                                </>
+                                            ) : (
+                                                <div className={`w-full h-full flex flex-col items-center justify-center gap-2 bg-gradient-to-br ${typeStyle(nextEvent.type).grad}`}><span className="material-symbols-outlined text-white/30 text-5xl">live_tv</span><span className="font-label text-[9px] tracking-widest uppercase text-white/30">ATL Academy</span></div>
+                                            )}
                                         </div>
                                     </div>
                                 </motion.div>
@@ -351,14 +362,14 @@ const TreinamentosAoVivo: React.FC = () => {
                             {/* Agenda lateral */}
                             <div>
                                 <h3 className="font-headline text-lg md:text-xl font-bold text-white mb-5">Agenda</h3>
-                                {filtered.length === 0 ? (
+                                {agendaList.length === 0 ? (
                                     <div className="liquid-glass-soft p-12 text-center border-white/5 rounded-3xl">
                                         <span className="material-symbols-outlined text-white/10 text-5xl block mb-3">event_busy</span>
                                         <p className="text-white/30 font-label text-[11px] tracking-widest uppercase">Nenhum evento agendado</p>
                                     </div>
                                 ) : (
                                     <div className="space-y-3 max-h-[560px] overflow-y-auto custom-scrollbar-premium pr-1">
-                                        {[...filtered].sort((a, b) => a.scheduledAt - b.scheduledAt).map((e, i) => {
+                                        {agendaList.map((e, i) => {
                                             const st = getStatus(e, now); const ts = typeStyle(e.type);
                                             return (
                                                 <motion.button key={e.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4, delay: Math.min(i * 0.05, 0.4) }} onClick={() => setSelected(e)}
