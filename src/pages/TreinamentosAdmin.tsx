@@ -59,6 +59,7 @@ const TreinamentosAdmin: React.FC = () => {
     const [saving, setSaving] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [uploadingVideo, setUploadingVideo] = useState(false);
+    const [importing, setImporting] = useState(false);
     const [msg, setMsg] = useState<string | null>(null);
 
     const load = async () => {
@@ -171,6 +172,85 @@ const TreinamentosAdmin: React.FC = () => {
         await load();
     };
 
+    const SHEET_CDN = 'https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.mjs';
+
+    const rowDateTime = (dataCell: unknown, horaCell: unknown): number | null => {
+        let y = 0, m = 0, d = 0, hh = 0, mi = 0;
+        if (dataCell instanceof Date) { y = dataCell.getFullYear(); m = dataCell.getMonth(); d = dataCell.getDate(); hh = dataCell.getHours(); mi = dataCell.getMinutes(); }
+        else {
+            const str = String(dataCell || '').trim();
+            let mm = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+            if (mm) { d = +mm[1]; m = +mm[2] - 1; y = +mm[3]; if (y < 100) y += 2000; }
+            else { mm = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/); if (mm) { y = +mm[1]; m = +mm[2] - 1; d = +mm[3]; } else return null; }
+        }
+        if (horaCell instanceof Date) { hh = horaCell.getHours(); mi = horaCell.getMinutes(); }
+        else { const hm = String(horaCell || '').trim().match(/(\d{1,2}):(\d{2})/); if (hm) { hh = +hm[1]; mi = +hm[2]; } }
+        const dt = new Date(y, m, d, hh, mi, 0, 0);
+        return isNaN(dt.getTime()) ? null : dt.getTime();
+    };
+
+    const downloadTemplate = async () => {
+        setMsg(null);
+        try {
+            const XLSX: any = await import(/* @vite-ignore */ SHEET_CDN);
+            const rows = [{ titulo: 'Treinamento de Vendas', tipo: 'Treinamento', palestrante: 'Tiago Passarine', data: '15/07/2026', hora: '20:00', descricao: 'Tudo sobre o novo produto', link_live: '', link_gravacao: '', arte_url: '', video_url: '', status: 'upcoming' }];
+            const ws = XLSX.utils.json_to_sheet(rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Eventos');
+            XLSX.writeFile(wb, 'modelo-treinamentos.xlsx');
+        } catch (err) {
+            setMsg('Nao consegui gerar o modelo (sem internet?): ' + (err instanceof Error ? err.message : 'erro'));
+        }
+    };
+
+    const handleImport = async (file: File) => {
+        setImporting(true); setMsg(null);
+        try {
+            const XLSX: any = await import(/* @vite-ignore */ SHEET_CDN);
+            const buf = await file.arrayBuffer();
+            const wb = XLSX.read(buf, { cellDates: true });
+            const ws = wb.Sheets[wb.SheetNames[0]];
+            const rows: Record<string, unknown>[] = XLSX.utils.sheet_to_json(ws, { defval: '' });
+            const get = (r: Record<string, unknown>, keys: string[]) => {
+                const k = Object.keys(r).find(h => keys.includes(h.trim().toLowerCase()));
+                return k ? String(r[k] ?? '').trim() : '';
+            };
+            const toInsert: Record<string, unknown>[] = [];
+            let ignored = 0;
+            rows.forEach((r) => {
+                const titulo = get(r, ['titulo', 'título', 'title']);
+                const palestrante = get(r, ['palestrante', 'presenter']);
+                const dataKey = Object.keys(r).find(h => ['data', 'date'].includes(h.trim().toLowerCase()));
+                const horaKey = Object.keys(r).find(h => ['hora', 'horario', 'horário', 'time'].includes(h.trim().toLowerCase()));
+                const ts = rowDateTime(dataKey ? r[dataKey] : '', horaKey ? r[horaKey] : '');
+                if (!titulo || !palestrante || ts == null) { ignored++; return; }
+                const tipoRaw = get(r, ['tipo', 'type']).toLowerCase();
+                toInsert.push({
+                    title: titulo,
+                    type: tipoRaw.startsWith('event') ? 'Evento' : 'Treinamento',
+                    presenter: palestrante,
+                    description: get(r, ['descricao', 'descrição', 'description']),
+                    scheduledAt: ts,
+                    liveUrl: get(r, ['link_live', 'liveurl']),
+                    recordingUrl: get(r, ['link_gravacao', 'recordingurl', 'gravacao', 'gravação']),
+                    artUrl: get(r, ['arte_url', 'arturl', 'arte']),
+                    presenterVideoUrl: get(r, ['video_url', 'videourl', 'recado']),
+                    status: get(r, ['status']) || 'upcoming',
+                    position: 0,
+                });
+            });
+            if (toInsert.length === 0) { setMsg('Nenhuma linha válida. Confira titulo, palestrante, data e hora.'); setImporting(false); return; }
+            const { error } = await supabaseAdmin.from('live_trainings').insert(toInsert);
+            if (error) throw error;
+            setMsg(`${toInsert.length} evento(s) importado(s)${ignored ? `, ${ignored} linha(s) ignorada(s).` : '.'}`);
+            await load();
+        } catch (err) {
+            setMsg('Erro na importacao: ' + (err instanceof Error ? err.message : 'desconhecido'));
+        } finally {
+            setImporting(false);
+        }
+    };
+
     return (
         <section className="space-y-6 border-t border-white/10 pt-10">
             <div className="flex items-center justify-between flex-wrap gap-3">
@@ -179,6 +259,23 @@ const TreinamentosAdmin: React.FC = () => {
                     <h2 className="font-headline text-xl font-bold uppercase tracking-tight">Treinamentos ao Vivo</h2>
                 </div>
                 <span className="font-label text-[9px] tracking-[2px] uppercase text-white/30">{list.length} evento(s)</span>
+            </div>
+
+            {/* Importar em massa por planilha */}
+            <div className="liquid-glass-soft rounded-2xl border-white/5 p-4 flex flex-wrap items-center gap-3">
+                <span className="material-symbols-outlined text-primary text-[22px]">upload_file</span>
+                <div className="flex-1 min-w-[180px]">
+                    <p className="font-headline text-sm font-bold text-white">Importar vários de uma vez</p>
+                    <p className="text-white/35 text-xs mt-0.5">Baixe o modelo, preencha no Excel e faça o upload. Aceita .xlsx e .csv. Colunas: titulo, tipo, palestrante, data (DD/MM/AAAA), hora (HH:MM), descricao, link_live, link_gravacao, arte_url, video_url, status.</p>
+                </div>
+                <button onClick={downloadTemplate} disabled={importing} className="bg-white/[0.04] hover:bg-white/[0.1] border border-white/10 hover:border-primary/30 text-white font-label text-[10px] font-bold tracking-[1px] uppercase py-2.5 px-4 rounded-xl transition-all duration-300 flex items-center gap-2 disabled:opacity-50">
+                    <span className="material-symbols-outlined text-[15px] text-primary">download</span>Baixar modelo
+                </button>
+                <label className="cursor-pointer bg-primary text-black hover:bg-white font-label text-[10px] font-bold tracking-[1px] uppercase py-2.5 px-4 rounded-xl transition-all duration-300 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[15px]">{importing ? 'progress_activity' : 'upload'}</span>
+                    {importing ? 'Importando...' : 'Importar planilha'}
+                    <input type="file" accept=".xlsx,.xls,.csv" className="hidden" disabled={importing} onChange={e => { const f = e.target.files?.[0]; if (f) handleImport(f); e.target.value = ''; }} />
+                </label>
             </div>
 
             <div className="grid lg:grid-cols-[1fr_1fr] gap-6">
@@ -251,101 +348,3 @@ const TreinamentosAdmin: React.FC = () => {
                                 ) : (
                                     <span className="material-symbols-outlined text-white/15 text-2xl">image</span>
                                 )}
-                            </div>
-                            <label className="flex-1 cursor-pointer bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-primary/30 text-white/70 font-label text-[10px] font-bold tracking-[1px] uppercase py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2">
-                                <span className="material-symbols-outlined text-[16px] text-primary">{uploading ? 'progress_activity' : 'upload'}</span>
-                                {uploading ? 'Subindo...' : (form.artUrl ? 'Trocar imagem' : 'Subir imagem')}
-                                <input type="file" accept="image/*" className="hidden" disabled={uploading}
-                                    onChange={e => { const f = e.target.files?.[0]; if (f) handleUpload(f); e.target.value = ''; }} />
-                            </label>
-                            {form.artUrl && (
-                                <button onClick={() => set('artUrl', '')} className="text-white/30 hover:text-red-400 transition-colors" title="Remover">
-                                    <span className="material-symbols-outlined text-[18px]">delete</span>
-                                </button>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Recado do palestrante (vídeo) */}
-                    <div>
-                        <label className={labelClass}>Recado do palestrante (vídeo, opcional)</label>
-                        <div className="flex items-center gap-3">
-                            <div className="relative w-24 h-16 rounded-xl overflow-hidden bg-black/40 border border-white/10 shrink-0 flex items-center justify-center">
-                                {form.presenterVideoUrl ? (
-                                    <video src={form.presenterVideoUrl} className="w-full h-full object-cover" muted playsInline />
-                                ) : (
-                                    <span className="material-symbols-outlined text-white/15 text-2xl">smart_display</span>
-                                )}
-                            </div>
-                            <label className="flex-1 cursor-pointer bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-primary/30 text-white/70 font-label text-[10px] font-bold tracking-[1px] uppercase py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2">
-                                <span className="material-symbols-outlined text-[16px] text-primary">{uploadingVideo ? 'progress_activity' : 'upload'}</span>
-                                {uploadingVideo ? 'Subindo...' : (form.presenterVideoUrl ? 'Trocar vídeo' : 'Subir vídeo')}
-                                <input type="file" accept="video/*" className="hidden" disabled={uploadingVideo}
-                                    onChange={e => { const f = e.target.files?.[0]; if (f) handleVideoUpload(f); e.target.value = ''; }} />
-                            </label>
-                            {form.presenterVideoUrl && (
-                                <button onClick={() => set('presenterVideoUrl', '')} className="text-white/30 hover:text-red-400 transition-colors" title="Remover">
-                                    <span className="material-symbols-outlined text-[18px]">delete</span>
-                                </button>
-                            )}
-                        </div>
-                        <p className="text-white/25 text-[10px] mt-1.5">Clipe curto (15-40s). Recomendado até ~60MB para não pesar.</p>
-                    </div>
-
-                    {msg && <p className="text-[11px] text-primary/80 font-label tracking-wide">{msg}</p>}
-
-                    <button
-                        onClick={save}
-                        disabled={saving || uploading || uploadingVideo}
-                        className="w-full bg-primary text-black hover:bg-white font-label text-[10px] font-bold tracking-[2px] uppercase py-3.5 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(0,240,255,0.2)] disabled:opacity-50"
-                    >
-                        <span className="material-symbols-outlined text-[16px]">{saving ? 'progress_activity' : (editingId ? 'save' : 'add_circle')}</span>
-                        {saving ? 'Salvando...' : (editingId ? 'Salvar alterações' : 'Criar evento')}
-                    </button>
-                </div>
-
-                {/* Lista */}
-                <div className="space-y-3">
-                    {loading ? (
-                        <div className="py-16 flex flex-col items-center gap-3">
-                            <div className="w-10 h-10 rounded-full border-t-2 border-primary border-r-2 animate-spin" />
-                            <p className="text-white/30 font-label text-[10px] uppercase tracking-widest">Carregando...</p>
-                        </div>
-                    ) : list.length === 0 ? (
-                        <div className="liquid-glass-soft p-12 text-center border-white/5 rounded-3xl">
-                            <span className="material-symbols-outlined text-white/10 text-5xl block mb-3">event_busy</span>
-                            <p className="text-white/30 font-label text-[11px] tracking-widest uppercase">Nenhum evento ainda</p>
-                            <p className="text-white/20 text-xs mt-2">Crie o primeiro no formulário ao lado.</p>
-                        </div>
-                    ) : (
-                        list.map(e => (
-                            <div key={e.id} className={`liquid-glass-soft rounded-2xl border p-4 flex items-center gap-4 transition-all duration-300 ${editingId === e.id ? 'border-primary/40' : 'border-white/5'}`}>
-                                <div className="relative w-16 h-12 rounded-lg overflow-hidden bg-black/40 border border-white/10 shrink-0 flex items-center justify-center">
-                                    {e.artUrl ? <img src={e.artUrl} alt="" className="w-full h-full object-cover" /> : <span className="material-symbols-outlined text-white/15 text-lg">live_tv</span>}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className={`px-2 py-0.5 rounded-full font-label text-[8px] font-bold tracking-wider uppercase border ${e.type === 'Evento' ? 'bg-purple-500/15 text-purple-300 border-purple-400/30' : 'bg-primary/15 text-primary border-primary/30'}`}>{e.type}</span>
-                                    </div>
-                                    <h4 className="font-headline text-sm font-bold text-white leading-tight truncate">{e.title}</h4>
-                                    <p className="text-white/35 text-xs mt-0.5 truncate">{e.presenter} · {fmt(e.scheduledAt)}</p>
-                                </div>
-                                <div className="flex items-center gap-1 shrink-0">
-                                    <button onClick={() => startEdit(e)} className="w-8 h-8 rounded-lg border border-white/10 flex items-center justify-center bg-white/[0.03] hover:bg-primary/10 hover:border-primary/30 text-white/50 hover:text-primary transition-all" title="Editar">
-                                        <span className="material-symbols-outlined text-[16px]">edit</span>
-                                    </button>
-                                    <button onClick={() => remove(e)} className="w-8 h-8 rounded-lg border border-white/10 flex items-center justify-center bg-white/[0.03] hover:bg-red-500/10 hover:border-red-500/30 text-white/50 hover:text-red-400 transition-all" title="Excluir">
-                                        <span className="material-symbols-outlined text-[16px]">delete</span>
-                                    </button>
-                                </div>
-                            </div>
-                        ))
-                    )}
-                </div>
-            </div>
-        </section>
-    );
-};
-
-export default TreinamentosAdmin;
-
