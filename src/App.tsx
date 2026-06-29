@@ -7,6 +7,7 @@ import Admin from './pages/Admin';
 import Intelligence from './pages/Intelligence';
 import MateriaisApoio from './pages/MateriaisApoio';
 import TreinamentosAoVivo from './pages/TreinamentosAoVivo';
+import AtlasKnowledge from './pages/AtlasKnowledge';
 import { DataProvider } from './context/DataContext';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -28,6 +29,7 @@ function App() {
             <Route path="/intel" element={<Intelligence />} />
             <Route path="/materiais" element={<MateriaisApoio />} />
             <Route path="/treinamentos" element={<TreinamentosAoVivo />} />
+            <Route path="/atlas" element={<AtlasKnowledge />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Router>

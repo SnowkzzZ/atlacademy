@@ -76,6 +76,7 @@ const Navbar: React.FC<{ isFixed?: boolean }> = ({ isFixed = true }) => {
                             { name: 'CURSOS',       path: '/explore' },
                             { name: 'MATERIAIS',    path: '/materiais' },
                             { name: 'TREINAMENTOS', path: '/treinamentos' },
+                            { name: 'ATLAS',        path: '/atlas' },
                             { name: 'INTELIGÊNCIA', path: '/intel' },
                         ].map(link => (
                             <Link
@@ -267,6 +268,7 @@ const Navbar: React.FC<{ isFixed?: boolean }> = ({ isFixed = true }) => {
                                     { name: 'CURSOS',       path: '/explore' },
                                     { name: 'MATERIAIS',    path: '/materiais' },
                                     { name: 'TREINAMENTOS', path: '/treinamentos' },
+                                    { name: 'ATLAS',        path: '/atlas' },
                                     { name: 'INTELIGÊNCIA', path: '/intel' },
                                 ].map((link, i) => (
                                     <motion.div
