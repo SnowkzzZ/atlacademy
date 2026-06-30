@@ -145,7 +145,6 @@ const TreinamentosAoVivo: React.FC = () => {
     const [filter, setFilter] = useState<Filter>('all');
     const [view, setView] = useState<View>('agenda');
     const [selected, setSelected] = useState<LiveTraining | null>(null);
-    const [videoOpen, setVideoOpen] = useState(false);
     const [dayList, setDayList] = useState<LiveTraining[] | null>(null);
     const didDeepLink = useRef(false);
     const [cursor, setCursor] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); });
@@ -177,8 +176,6 @@ const TreinamentosAoVivo: React.FC = () => {
         if (ev) { const found = events.find(e => e.id === ev); if (found) setSelected(found); }
         didDeepLink.current = true;
     }, [events]);
-    // Fecha videoOpen quando modal fecha
-    useEffect(() => { if (!selected) setVideoOpen(false); }, [selected]);
     const filtered = useMemo(() => filter === 'all' ? events : events.filter(e => e.type === filter), [events, filter]);
     const recordings = useMemo(
         () => [...filtered].filter(e => e.recordingUrl && e.recordingUrl.trim()).sort((a, b) => b.scheduledAt - a.scheduledAt),
@@ -453,43 +450,25 @@ const TreinamentosAoVivo: React.FC = () => {
                                             {selected.artUrl
                                                 ? <img src={selected.artUrl} alt={selected.title} className="w-full h-auto block" />
                                                 : <div className="w-full min-h-[200px] flex flex-col items-center justify-center gap-3"><span className="material-symbols-outlined text-white/30 text-7xl">live_tv</span><span className="font-label text-[10px] tracking-widest uppercase text-white/30">ATL Academy</span></div>}
-                                            {/* Vídeo do palestrante flutuando sobre a arte */}
-                                            <AnimatePresence>
-                                                {videoOpen && selected.presenterVideoUrl && (
-                                                    <motion.div
-                                                        initial={{ opacity: 0 }}
-                                                        animate={{ opacity: 1 }}
-                                                        exit={{ opacity: 0 }}
-                                                        className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm"
-                                                    >
-                                                        <motion.div
-                                                            initial={{ opacity: 0, scale: 0.9, y: 10 }}
-                                                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                                                            exit={{ opacity: 0, scale: 0.9, y: 10 }}
-                                                            transition={{ duration: 0.25 }}
-                                                            className="relative w-[72%] max-w-[280px]"
-                                                        >
-                                                            <video
-                                                                src={selected.presenterVideoUrl}
-                                                                controls
-                                                                autoPlay
-                                                                playsInline
-                                                                className="w-full rounded-2xl shadow-2xl bg-black"
-                                                                style={{ maxHeight: '75%' }}
-                                                            />
-                                                            <p className="text-white/50 font-label text-[8px] tracking-widest uppercase text-center mt-2">
-                                                                Recado do palestrante · {selected.presenter}
-                                                            </p>
-                                                        </motion.div>
-                                                        <button
-                                                            onClick={() => setVideoOpen(false)}
-                                                            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 border border-white/20 flex items-center justify-center hover:bg-black/90 transition-colors"
-                                                        >
-                                                            <span className="material-symbols-outlined text-white text-[16px]">close</span>
-                                                        </button>
-                                                    </motion.div>
-                                                )}
-                                            </AnimatePresence>
+                                            {/* Vídeo do palestrante — preview automático canto inferior direito */}
+                                            {selected.presenterVideoUrl && (
+                                                <motion.div
+                                                    key={selected.id + '-video'}
+                                                    initial={{ opacity: 0, scale: 0.85, y: 8 }}
+                                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                    transition={{ duration: 0.3, delay: 0.15 }}
+                                                    className="absolute bottom-4 right-4 w-[38%] max-w-[155px] z-10"
+                                                >
+                                                    <video
+                                                        key={selected.id}
+                                                        src={selected.presenterVideoUrl}
+                                                        autoPlay
+                                                        playsInline
+                                                        controls
+                                                        className="w-full rounded-xl shadow-2xl border border-white/20 bg-black"
+                                                    />
+                                                </motion.div>
+                                            )}
                                             {/* Botões top-right: fechar / compartilhar */}
                                             <div className="absolute top-4 right-4 flex items-center gap-2">
                                                 <a href={buildWhatsAppUrl(selected)} target="_blank" rel="noopener noreferrer" title="Compartilhar"
@@ -499,7 +478,7 @@ const TreinamentosAoVivo: React.FC = () => {
                                                 <button onClick={() => setSelected(null)} className="w-10 h-10 rounded-full bg-black/50 border border-white/10 flex items-center justify-center hover:bg-black/80 transition-colors backdrop-blur-md"><span className="material-symbols-outlined text-white text-[20px]">close</span></button>
                                             </div>
                                             {selected.artUrl && (
-                                                <button onClick={() => downloadArt(selected)} className="absolute bottom-4 right-4 px-3 py-2 rounded-xl bg-black/55 hover:bg-black/80 border border-white/15 backdrop-blur-md text-white font-label text-[10px] font-bold tracking-[1px] uppercase flex items-center gap-2 transition-colors">
+                                                <button onClick={() => downloadArt(selected)} className="absolute bottom-4 left-4 px-3 py-2 rounded-xl bg-black/55 hover:bg-black/80 border border-white/15 backdrop-blur-md text-white font-label text-[10px] font-bold tracking-[1px] uppercase flex items-center gap-2 transition-colors">
                                                     <span className="material-symbols-outlined text-[15px]">download</span>Baixar arte
                                                 </button>
                                             )}
@@ -525,22 +504,6 @@ const TreinamentosAoVivo: React.FC = () => {
                                                     <a href={googleCalUrl(selected)} target="_blank" rel="noopener noreferrer" className="bg-white/[0.04] hover:bg-white/[0.1] border border-white/10 hover:border-primary/30 text-white font-label text-[10px] font-bold tracking-[1px] uppercase py-2.5 px-4 rounded-xl transition-all duration-300 flex items-center gap-2"><span className="material-symbols-outlined text-[15px] text-primary">calendar_add_on</span>Google Agenda</a>
                                                 </div>
                                             </div>
-                                            {/* Recado do palestrante */}
-                                            {selected.presenterVideoUrl && (
-                                                <div className="mt-4">
-                                                    <button
-                                                        onClick={() => setVideoOpen(true)}
-                                                        className="w-full flex items-center gap-3 bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-primary/30 text-white py-3 px-4 rounded-xl transition-all duration-300 group"
-                                                    >
-                                                        <span className="material-symbols-outlined text-[20px] text-primary/70 shrink-0">videocam</span>
-                                                        <div className="flex-1 text-left">
-                                                            <span className="font-label text-[10px] font-bold tracking-[1px] uppercase block">Recado do palestrante</span>
-                                                            <span className="font-label text-[9px] text-white/30 tracking-wide">{selected.presenter}</span>
-                                                        </div>
-                                                        <span className="material-symbols-outlined text-primary text-[18px] shrink-0">play_circle</span>
-                                                    </button>
-                                                </div>
-                                            )}
                                             {/* Ações */}
                                             <div className="flex flex-wrap gap-3 mt-6">
                                                 {selected.liveUrl && <a href={selected.liveUrl} target="_blank" rel="noopener noreferrer" className="flex-1 min-w-[160px] bg-primary text-black hover:bg-white font-label text-[10px] font-bold tracking-[2px] uppercase py-3.5 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(0,240,255,0.25)]"><span className="material-symbols-outlined text-[16px]">sensors</span>Entrar na live</a>}
