@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useData, type Course, type Lesson, type Newsletter, type SupportMaterial } from '../context/DataContext';
 import Navbar from '../components/Navbar';
+import TreinamentosAdmin from '../pages/TreinamentosAdmin';
 import { getYouTubeId, getYouTubeThumbnail, getYouTubeDuration, loadYouTubeAPI, fmtDuration } from '../lib/youtube';
 import { Reorder } from 'framer-motion';
 
@@ -1340,6 +1341,9 @@ const Admin: React.FC = () => {
                         </>
                     )}
                 </section>
+
+                {/* Treinamentos ao Vivo */}
+                <TreinamentosAdmin />
 
             </main>
             <footer className="mt-20 py-10 border-t border-white/[0.05] relative z-10 px-6">

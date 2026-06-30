@@ -75,7 +75,7 @@ const Navbar: React.FC<{ isFixed?: boolean }> = ({ isFixed = true }) => {
                             { name: 'PAINEL',       path: '/' },
                             { name: 'CURSOS',       path: '/explore' },
                             { name: 'MATERIAIS',    path: '/materiais' },
-                            { name: 'AGENDA', path: '/treinamentos' },
+                            { name: 'AGENDA',       path: '/treinamentos' },
                             { name: 'INTELIGÊNCIA', path: '/intel' },
                         ].map(link => (
                             <Link
@@ -259,14 +259,14 @@ const Navbar: React.FC<{ isFixed?: boolean }> = ({ isFixed = true }) => {
                             initial={{ opacity: 0, y: -20 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -20 }}
-                            className="md:hidden fixed inset-0 top-0 left-0 w-full h-[100dvh] bg-black/95 backdrop-blur-3xl z-40 flex flex-col items-center justify-center p-12"
+                            className="md:hidden fixed inset-0 top-0 left-0 w-full h-[100dvh] bg-black/95 backdrop-blur-3xl z-40 overflow-y-auto"
                         >
-                            <div className="flex flex-col items-center space-y-10 w-full">
+                            <div className="min-h-full flex flex-col items-center justify-center space-y-6 w-full px-8 py-16">
                                 {[
                                     { name: 'PAINEL',       path: '/' },
                                     { name: 'CURSOS',       path: '/explore' },
                                     { name: 'MATERIAIS',    path: '/materiais' },
-                                    { name: 'AGENDA', path: '/treinamentos' },
+                                    { name: 'AGENDA',       path: '/treinamentos' },
                                     { name: 'INTELIGÊNCIA', path: '/intel' },
                                 ].map((link, i) => (
                                     <motion.div
@@ -278,7 +278,7 @@ const Navbar: React.FC<{ isFixed?: boolean }> = ({ isFixed = true }) => {
                                     >
                                         <Link
                                             onClick={() => setIsMenuOpen(false)}
-                                            className={`text-4xl font-headline font-bold tracking-[0.2em] transition-all duration-500 block py-2 uppercase ${isActive(link.path) ? 'text-primary drop-shadow-[0_0_15px_rgba(0,240,255,0.4)] font-black' : 'text-white/40 hover:text-white'}`}
+                                            className={`text-3xl font-headline font-bold tracking-[0.2em] transition-all duration-500 block py-1.5 uppercase ${isActive(link.path) ? 'text-primary drop-shadow-[0_0_15px_rgba(0,240,255,0.4)] font-black' : 'text-white/40 hover:text-white'}`}
                                             to={link.path}
                                         >
                                             {link.name}
@@ -298,13 +298,13 @@ const Navbar: React.FC<{ isFixed?: boolean }> = ({ isFixed = true }) => {
                                     </motion.div>
                                 )}
 
-                                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="pt-12 flex gap-8">
-                                    <button className="w-16 h-16 rounded-full border border-white/10 flex items-center justify-center bg-white/[0.03]">
+                                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="pt-8 flex gap-6">
+                                    <button className="w-14 h-14 rounded-full border border-white/10 flex items-center justify-center bg-white/[0.03]">
                                         <span className="material-symbols-outlined text-white/50 text-2xl">search</span>
                                     </button>
                                     <button
                                         onClick={() => { setIsMenuOpen(false); setNotifOpen(true); }}
-                                        className="w-16 h-16 rounded-full border border-white/10 flex items-center justify-center bg-white/[0.03] relative"
+                                        className="w-14 h-14 rounded-full border border-white/10 flex items-center justify-center bg-white/[0.03] relative"
                                     >
                                         {unreadCount > 0 && (
                                             <span className="absolute top-3 right-3 min-w-[20px] h-[20px] px-1 bg-primary text-black text-[10px] font-black rounded-full flex items-center justify-center shadow-[0_0_10px_#00F0FF]">
