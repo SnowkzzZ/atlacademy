@@ -145,6 +145,7 @@ const TreinamentosAoVivo: React.FC = () => {
     const [filter, setFilter] = useState<Filter>('all');
     const [view, setView] = useState<View>('agenda');
     const [selected, setSelected] = useState<LiveTraining | null>(null);
+    const [videoOpen, setVideoOpen] = useState(false);
     const [dayList, setDayList] = useState<LiveTraining[] | null>(null);
     const [shared, setShared] = useState(false);
     const didDeepLink = useRef(false);
@@ -177,6 +178,8 @@ const TreinamentosAoVivo: React.FC = () => {
         if (ev) { const found = events.find(e => e.id === ev); if (found) setSelected(found); }
         didDeepLink.current = true;
     }, [events]);
+    // Fecha videoOpen quando modal fecha
+    useEffect(() => { if (!selected) setVideoOpen(false); }, [selected]);
     const shareEvent = async (e: LiveTraining) => {
         const url = `${window.location.origin}/treinamentos?ev=${e.id}`;
         const text = `${e.type}: ${e.title} — ${formatFullDate(e.scheduledAt)} às ${formatTime(e.scheduledAt)}`;
@@ -474,12 +477,6 @@ const TreinamentosAoVivo: React.FC = () => {
                                                 <span className={`px-3 py-1 rounded-full font-label text-[9px] font-bold tracking-[2px] uppercase backdrop-blur-md border ${ts.badge}`}>{selected.type}</span>
                                                 <span className={`px-3 py-1 rounded-full font-label text-[9px] font-bold tracking-[2px] uppercase backdrop-blur-md border ${st.cls} flex items-center gap-1.5`}>{st.pulse && <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />}{st.label}</span>
                                             </div>
-                                            {/* Vídeo do palestrante — mini player canto inferior esquerdo */}
-                                            {selected.presenterVideoUrl && (
-                                                <div className="absolute bottom-3 left-3 w-28 rounded-xl overflow-hidden border border-white/20 shadow-xl backdrop-blur-sm bg-black/40" style={{ aspectRatio: '16/9' }}>
-                                                    <video src={selected.presenterVideoUrl} controls playsInline preload="metadata" className="w-full h-full object-cover" />
-                                                </div>
-                                            )}
                                             {selected.artUrl && (
                                                 <button onClick={() => downloadArt(selected)} className="absolute bottom-4 right-4 px-3 py-2 rounded-xl bg-black/55 hover:bg-black/80 border border-white/15 backdrop-blur-md text-white font-label text-[10px] font-bold tracking-[1px] uppercase flex items-center gap-2 transition-colors">
                                                     <span className="material-symbols-outlined text-[15px]">download</span>Baixar arte
@@ -507,6 +504,22 @@ const TreinamentosAoVivo: React.FC = () => {
                                                     <a href={googleCalUrl(selected)} target="_blank" rel="noopener noreferrer" className="bg-white/[0.04] hover:bg-white/[0.1] border border-white/10 hover:border-primary/30 text-white font-label text-[10px] font-bold tracking-[1px] uppercase py-2.5 px-4 rounded-xl transition-all duration-300 flex items-center gap-2"><span className="material-symbols-outlined text-[15px] text-primary">calendar_add_on</span>Google Agenda</a>
                                                 </div>
                                             </div>
+                                            {/* Recado do palestrante */}
+                                            {selected.presenterVideoUrl && (
+                                                <div className="mt-4">
+                                                    <button
+                                                        onClick={() => setVideoOpen(true)}
+                                                        className="w-full flex items-center gap-3 bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-primary/30 text-white py-3 px-4 rounded-xl transition-all duration-300 group"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[20px] text-primary/70 shrink-0">videocam</span>
+                                                        <div className="flex-1 text-left">
+                                                            <span className="font-label text-[10px] font-bold tracking-[1px] uppercase block">Recado do palestrante</span>
+                                                            <span className="font-label text-[9px] text-white/30 tracking-wide">{selected.presenter}</span>
+                                                        </div>
+                                                        <span className="material-symbols-outlined text-white/20 group-hover:text-primary transition-colors text-[18px] shrink-0">play_circle</span>
+                                                    </button>
+                                                </div>
+                                            )}
                                             {/* Ações */}
                                             <div className="flex flex-wrap gap-3 mt-6">
                                                 {selected.liveUrl && <a href={selected.liveUrl} target="_blank" rel="noopener noreferrer" className="flex-1 min-w-[160px] bg-primary text-black hover:bg-white font-label text-[10px] font-bold tracking-[2px] uppercase py-3.5 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(0,240,255,0.25)]"><span className="material-symbols-outlined text-[16px]">sensors</span>Entrar na live</a>}
@@ -516,6 +529,45 @@ const TreinamentosAoVivo: React.FC = () => {
                                     </>
                                 );
                             })()}
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+            {/* Overlay vídeo do palestrante em tela cheia */}
+            <AnimatePresence>
+                {videoOpen && selected?.presenterVideoUrl && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setVideoOpen(false)}
+                        className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/95 backdrop-blur-md"
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ duration: 0.25 }}
+                            onClick={e => e.stopPropagation()}
+                            className="relative w-full max-w-sm"
+                        >
+                            <button
+                                onClick={() => setVideoOpen(false)}
+                                className="absolute -top-4 -right-4 z-10 w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors"
+                            >
+                                <span className="material-symbols-outlined text-white text-[20px]">close</span>
+                            </button>
+                            <video
+                                src={selected.presenterVideoUrl}
+                                controls
+                                autoPlay
+                                playsInline
+                                className="w-full rounded-2xl border border-white/10 bg-black"
+                                style={{ maxHeight: '80vh' }}
+                            />
+                            <p className="text-white/30 font-label text-[9px] tracking-widest uppercase text-center mt-3">
+                                Recado do palestrante · {selected.presenter}
+                            </p>
                         </motion.div>
                     </motion.div>
                 )}
