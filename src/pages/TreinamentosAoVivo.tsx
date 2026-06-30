@@ -453,6 +453,43 @@ const TreinamentosAoVivo: React.FC = () => {
                                             {selected.artUrl
                                                 ? <img src={selected.artUrl} alt={selected.title} className="w-full h-auto block" />
                                                 : <div className="w-full min-h-[200px] flex flex-col items-center justify-center gap-3"><span className="material-symbols-outlined text-white/30 text-7xl">live_tv</span><span className="font-label text-[10px] tracking-widest uppercase text-white/30">ATL Academy</span></div>}
+                                            {/* Vídeo do palestrante flutuando sobre a arte */}
+                                            <AnimatePresence>
+                                                {videoOpen && selected.presenterVideoUrl && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0 }}
+                                                        animate={{ opacity: 1 }}
+                                                        exit={{ opacity: 0 }}
+                                                        className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm"
+                                                    >
+                                                        <motion.div
+                                                            initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                                                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                            exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                                                            transition={{ duration: 0.25 }}
+                                                            className="relative w-[72%] max-w-[280px]"
+                                                        >
+                                                            <video
+                                                                src={selected.presenterVideoUrl}
+                                                                controls
+                                                                autoPlay
+                                                                playsInline
+                                                                className="w-full rounded-2xl shadow-2xl bg-black"
+                                                                style={{ maxHeight: '75%' }}
+                                                            />
+                                                            <p className="text-white/50 font-label text-[8px] tracking-widest uppercase text-center mt-2">
+                                                                Recado do palestrante · {selected.presenter}
+                                                            </p>
+                                                        </motion.div>
+                                                        <button
+                                                            onClick={() => setVideoOpen(false)}
+                                                            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 border border-white/20 flex items-center justify-center hover:bg-black/90 transition-colors"
+                                                        >
+                                                            <span className="material-symbols-outlined text-white text-[16px]">close</span>
+                                                        </button>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
                                             {/* Botões top-right: fechar / compartilhar */}
                                             <div className="absolute top-4 right-4 flex items-center gap-2">
                                                 <a href={buildWhatsAppUrl(selected)} target="_blank" rel="noopener noreferrer" title="Compartilhar"
@@ -513,45 +550,6 @@ const TreinamentosAoVivo: React.FC = () => {
                                     </>
                                 );
                             })()}
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-            {/* Overlay vídeo do palestrante em tela cheia */}
-            <AnimatePresence>
-                {videoOpen && selected?.presenterVideoUrl && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        onClick={() => setVideoOpen(false)}
-                        className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/95 backdrop-blur-md"
-                    >
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            transition={{ duration: 0.25 }}
-                            onClick={e => e.stopPropagation()}
-                            className="relative w-full max-w-sm"
-                        >
-                            <button
-                                onClick={() => setVideoOpen(false)}
-                                className="absolute -top-4 -right-4 z-10 w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors"
-                            >
-                                <span className="material-symbols-outlined text-white text-[20px]">close</span>
-                            </button>
-                            <video
-                                src={selected.presenterVideoUrl}
-                                controls
-                                autoPlay
-                                playsInline
-                                className="w-full rounded-2xl border border-white/10 bg-black"
-                                style={{ maxHeight: '80vh' }}
-                            />
-                            <p className="text-white/30 font-label text-[9px] tracking-widest uppercase text-center mt-3">
-                                Recado do palestrante · {selected.presenter}
-                            </p>
                         </motion.div>
                     </motion.div>
                 )}
