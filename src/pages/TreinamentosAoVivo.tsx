@@ -457,7 +457,7 @@ const TreinamentosAoVivo: React.FC = () => {
                                                     initial={{ opacity: 0, scale: 0.85, y: 8 }}
                                                     animate={{ opacity: 1, scale: 1, y: 0 }}
                                                     transition={{ duration: 0.3, delay: 0.15 }}
-                                                    className="absolute bottom-4 right-4 w-[26%] max-w-[110px] z-10"
+                                                    className="absolute bottom-4 right-4 w-[18%] max-w-[75px] md:w-[26%] md:max-w-[110px] z-10"
                                                 >
                                                     <video
                                                         key={selected.id}
