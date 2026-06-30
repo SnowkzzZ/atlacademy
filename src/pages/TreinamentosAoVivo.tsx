@@ -147,6 +147,7 @@ const TreinamentosAoVivo: React.FC = () => {
     const [selected, setSelected] = useState<LiveTraining | null>(null);
     const [dayList, setDayList] = useState<LiveTraining[] | null>(null);
     const [shared, setShared] = useState(false);
+    const [videoOpen, setVideoOpen] = useState(false);
     const didDeepLink = useRef(false);
     const [cursor, setCursor] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); });
     const didInitCursor = useRef(false);
@@ -474,11 +475,19 @@ const TreinamentosAoVivo: React.FC = () => {
                                                 <span className={`px-3 py-1 rounded-full font-label text-[9px] font-bold tracking-[2px] uppercase backdrop-blur-md border ${ts.badge}`}>{selected.type}</span>
                                                 <span className={`px-3 py-1 rounded-full font-label text-[9px] font-bold tracking-[2px] uppercase backdrop-blur-md border ${st.cls} flex items-center gap-1.5`}>{st.pulse && <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />}{st.label}</span>
                                             </div>
-                                            {/* Vídeo do palestrante — mini player canto inferior esquerdo */}
+                                            {/* Vídeo do palestrante — mini player canto inferior direito */}
                                             {selected.presenterVideoUrl && (
-                                                <div className="absolute bottom-3 left-3 w-28 rounded-xl overflow-hidden border border-white/20 shadow-xl backdrop-blur-sm bg-black/40" style={{ aspectRatio: '16/9' }}>
-                                                    <video src={selected.presenterVideoUrl} controls playsInline preload="metadata" className="w-full h-full object-cover" />
-                                                </div>
+                                                <button
+                                                    onClick={() => setVideoOpen(true)}
+                                                    className="absolute bottom-3 right-3 w-24 rounded-xl overflow-hidden border-2 border-white/30 shadow-2xl hover:border-primary/60 transition-all duration-200 group"
+                                                    style={{ aspectRatio: '9/16' }}
+                                                    title="Ver recado do palestrante"
+                                                >
+                                                    <video src={selected.presenterVideoUrl} muted playsInline preload="metadata" className="w-full h-full object-cover pointer-events-none" />
+                                                    <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                                                        <span className="material-symbols-outlined text-white text-3xl drop-shadow-lg">play_circle</span>
+                                                    </div>
+                                                </button>
                                             )}
                                             {selected.artUrl && (
                                                 <button onClick={() => downloadArt(selected)} className="absolute bottom-4 right-4 px-3 py-2 rounded-xl bg-black/55 hover:bg-black/80 border border-white/15 backdrop-blur-md text-white font-label text-[10px] font-bold tracking-[1px] uppercase flex items-center gap-2 transition-colors">
@@ -516,6 +525,44 @@ const TreinamentosAoVivo: React.FC = () => {
                                     </>
                                 );
                             })()}
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Overlay vídeo palestrante em tela cheia */}
+            <AnimatePresence>
+                {videoOpen && selected?.presenterVideoUrl && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setVideoOpen(false)}
+                        className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/95 backdrop-blur-md"
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ duration: 0.25 }}
+                            onClick={e => e.stopPropagation()}
+                            className="relative w-full max-w-sm"
+                        >
+                            <button
+                                onClick={() => setVideoOpen(false)}
+                                className="absolute -top-4 -right-4 z-10 w-10 h-10 rounded-full bg-black/80 border border-white/20 flex items-center justify-center hover:bg-black transition-colors"
+                            >
+                                <span className="material-symbols-outlined text-white text-[20px]">close</span>
+                            </button>
+                            <video
+                                src={selected.presenterVideoUrl}
+                                controls
+                                autoPlay
+                                playsInline
+                                className="w-full rounded-2xl border border-white/10 bg-black"
+                                style={{ maxHeight: '80vh' }}
+                            />
+                            <p className="text-white/40 font-label text-[9px] tracking-widest uppercase text-center mt-3">Recado do palestrante</p>
                         </motion.div>
                     </motion.div>
                 )}
