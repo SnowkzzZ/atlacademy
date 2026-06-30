@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from '../components/Navbar';
 import { supabase } from '../lib/supabase';
-
 // ── Tipos ────────────────────────────────────────────────────────────────────
 export interface LiveTraining {
     id: string;
@@ -18,15 +17,12 @@ export interface LiveTraining {
     presenterVideoUrl: string | null;
     position: number | null;
 }
-
 type Filter = 'all' | 'Treinamento' | 'Evento';
 type View = 'agenda' | 'gravacoes';
-
 // ── Cores por tipo: verde (Treinamento) / âmbar (Evento) ─────────────────────
 export const typeStyle = (type: string) => type === 'Evento'
     ? { badge: 'bg-amber-500/15 text-amber-300 border-amber-400/30', dot: 'bg-amber-400', text: 'text-amber-300', grad: 'from-amber-500/30 via-orange-500/10 to-transparent' }
     : { badge: 'bg-emerald-500/15 text-emerald-300 border-emerald-400/30', dot: 'bg-emerald-400', text: 'text-emerald-300', grad: 'from-emerald-500/30 via-green-500/10 to-transparent' };
-
 // ── Status dinâmico ──────────────────────────────────────────────────────────
 export const getStatus = (e: LiveTraining, now: number = Date.now()) => {
     const start = e.scheduledAt;
@@ -37,22 +33,17 @@ export const getStatus = (e: LiveTraining, now: number = Date.now()) => {
     if (now < start) return { label: 'Próximo', cls: 'bg-primary/20 text-primary border-primary/40', pulse: false };
     return { label: 'Finalizado', cls: 'bg-white/10 text-white/40 border-white/20', pulse: false };
 };
-
 // ── Helpers de data ──────────────────────────────────────────────────────────
 const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-
 const sameDay = (a: Date, b: Date) =>
     a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
-
 export const formatFullDate = (ts: number) => {
     const d = new Date(ts);
     return `${d.getDate()} de ${MESES[d.getMonth()]} de ${d.getFullYear()}`;
 };
-
 export const formatTime = (ts: number) =>
     new Date(ts).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-
 // ── Add-to-calendar + download ───────────────────────────────────────────────
 const pad = (n: number) => String(n).padStart(2, '0');
 const toICSDate = (ts: number) => {
@@ -60,7 +51,6 @@ const toICSDate = (ts: number) => {
     return `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}00Z`;
 };
 const escapeICS = (s: string) => s.replace(/\\/g, '\\\\').replace(/([,;])/g, '\\$1').replace(/\n/g, '\\n');
-
 export const googleCalUrl = (e: LiveTraining) => {
     const start = toICSDate(e.scheduledAt);
     const end = toICSDate(e.scheduledAt + 3_600_000);
@@ -68,7 +58,6 @@ export const googleCalUrl = (e: LiveTraining) => {
     const params = new URLSearchParams({ action: 'TEMPLATE', text: e.title, dates: `${start}/${end}`, details });
     return `https://calendar.google.com/calendar/render?${params.toString()}`;
 };
-
 export const downloadICS = (e: LiveTraining) => {
     const desc = `${e.type} com ${e.presenter}${e.description ? ' — ' + e.description : ''}`;
     const lines = [
@@ -84,7 +73,6 @@ export const downloadICS = (e: LiveTraining) => {
     a.href = url; a.download = `${e.title.replace(/[^a-z0-9]/gi, '_')}.ics`;
     document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
 };
-
 export const downloadArt = async (e: LiveTraining) => {
     if (!e.artUrl) return;
     try {
@@ -96,7 +84,26 @@ export const downloadArt = async (e: LiveTraining) => {
         document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
     } catch { window.open(e.artUrl, '_blank'); }
 };
-
+// ── WhatsApp Share ────────────────────────────────────────────────────────────
+export const buildWhatsAppUrl = (e: LiveTraining) => {
+    const emoji = e.type === 'Evento' ? '🎉' : '🎓';
+    const st = getStatus(e);
+    const url = `${window.location.origin}/treinamentos?ev=${e.id}`;
+    const lines = [
+        `${emoji} *${e.type.toUpperCase()} ATL ACADEMY*`,
+        ``,
+        `📌 *${e.title}*`,
+        `👤 ${e.presenter}`,
+        `📅 ${formatFullDate(e.scheduledAt)} às ${formatTime(e.scheduledAt)}`,
+    ];
+    if (st.label === 'Ao Vivo') lines.push(``, `🔴 *Está acontecendo AGORA!*`);
+    else if (st.label === 'Hoje')  lines.push(``, `⏰ *Acontece hoje!*`);
+    if (e.liveUrl) lines.push(``, `▶️ Acesse: ${e.liveUrl}`);
+    else lines.push(``, `🔗 Saiba mais: ${url}`);
+    if (e.description) lines.push(``, e.description);
+    lines.push(``, `_ATL Academy — Conhecimento que transforma._`);
+    return `https://wa.me/?text=${encodeURIComponent(lines.join('\n'))}`;
+};
 // ── Countdown ────────────────────────────────────────────────────────────────
 const useCountdown = (target: number | null) => {
     const [now, setNow] = useState(Date.now());
@@ -114,7 +121,6 @@ const useCountdown = (target: number | null) => {
         ended: diff === 0,
     };
 };
-
 export const EventCountdown: React.FC<{ target: number; size?: 'sm' | 'lg' }> = ({ target, size = 'lg' }) => {
     const c = useCountdown(target);
     if (!c) return null;
@@ -131,7 +137,6 @@ export const EventCountdown: React.FC<{ target: number; size?: 'sm' | 'lg' }> = 
         </div>
     );
 };
-
 // ── Página ───────────────────────────────────────────────────────────────────
 const TreinamentosAoVivo: React.FC = () => {
     const [events, setEvents] = useState<LiveTraining[]>([]);
@@ -146,7 +151,6 @@ const TreinamentosAoVivo: React.FC = () => {
     const didInitCursor = useRef(false);
     const [now, setNow] = useState(Date.now());
     useEffect(() => { const id = setInterval(() => setNow(Date.now()), 30_000); return () => clearInterval(id); }, []);
-
     useEffect(() => {
         let active = true;
         (async () => {
@@ -157,7 +161,6 @@ const TreinamentosAoVivo: React.FC = () => {
         })();
         return () => { active = false; };
     }, []);
-
     useEffect(() => {
         if (didInitCursor.current || events.length === 0) return;
         const now = Date.now();
@@ -166,7 +169,6 @@ const TreinamentosAoVivo: React.FC = () => {
         if (target) { const d = new Date(target.scheduledAt); setCursor(new Date(d.getFullYear(), d.getMonth(), 1)); }
         didInitCursor.current = true;
     }, [events]);
-
     // Deep-link: abre automaticamente o evento de ?ev=ID
     useEffect(() => {
         if (didDeepLink.current || events.length === 0) return;
@@ -174,7 +176,6 @@ const TreinamentosAoVivo: React.FC = () => {
         if (ev) { const found = events.find(e => e.id === ev); if (found) setSelected(found); }
         didDeepLink.current = true;
     }, [events]);
-
     const shareEvent = async (e: LiveTraining) => {
         const url = `${window.location.origin}/treinamentos?ev=${e.id}`;
         const text = `${e.type}: ${e.title} — ${formatFullDate(e.scheduledAt)} às ${formatTime(e.scheduledAt)}`;
@@ -183,23 +184,18 @@ const TreinamentosAoVivo: React.FC = () => {
             else { await navigator.clipboard.writeText(`${text}\n${url}`); setShared(true); setTimeout(() => setShared(false), 2000); }
         } catch { /* cancelado pelo usuário */ }
     };
-
     const filtered = useMemo(() => filter === 'all' ? events : events.filter(e => e.type === filter), [events, filter]);
-
     const recordings = useMemo(
         () => [...filtered].filter(e => e.recordingUrl && e.recordingUrl.trim()).sort((a, b) => b.scheduledAt - a.scheduledAt),
         [filtered]
     );
-
     const agendaList = useMemo(
         () => [...filtered].filter(e => getStatus(e, now).label !== 'Finalizado').sort((a, b) => a.scheduledAt - b.scheduledAt).slice(0, 6),
         [filtered, now]
     );
-
     const nextEvent = useMemo(() => {
         return [...filtered].filter(e => e.scheduledAt >= now).sort((a, b) => a.scheduledAt - b.scheduledAt)[0] ?? null;
     }, [filtered, now]);
-
     const calendarDays = useMemo(() => {
         const year = cursor.getFullYear(); const month = cursor.getMonth();
         const firstWeekday = new Date(year, month, 1).getDay();
@@ -210,11 +206,9 @@ const TreinamentosAoVivo: React.FC = () => {
         while (cells.length % 7 !== 0) cells.push(null);
         return cells;
     }, [cursor]);
-
     const eventsOnDay = (day: Date) => filtered.filter(e => sameDay(new Date(e.scheduledAt), day));
     const goMonth = (delta: number) => setCursor(c => new Date(c.getFullYear(), c.getMonth() + delta, 1));
     const today = new Date();
-
     return (
         <div className="bg-[#030303] text-white/90 min-h-screen font-body relative overflow-x-hidden">
             <div className="fixed inset-0 z-0 pointer-events-none">
@@ -223,9 +217,7 @@ const TreinamentosAoVivo: React.FC = () => {
                 <div className="absolute bottom-[-10%] right-[-10%] w-[45%] h-[45%] rounded-full bg-blue-500/5 blur-3xl" />
                 <div className="dot-grid absolute inset-0 opacity-[0.03]" />
             </div>
-
             <Navbar />
-
             <main className="relative z-10 max-w-[1440px] mx-auto px-6 md:px-10 pt-32 md:pt-40 pb-24">
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }} className="mb-8">
                     <div className="flex items-center gap-2 mb-4">
@@ -235,7 +227,6 @@ const TreinamentosAoVivo: React.FC = () => {
                     <h1 className="font-headline text-4xl md:text-6xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-br from-white to-white/50">Treinamentos ao Vivo</h1>
                     <p className="text-white/40 text-sm md:text-base mt-4 max-w-2xl leading-relaxed">Acompanhe os próximos treinamentos e eventos da ATL. Marque na agenda, entre ao vivo e reveja as gravações.</p>
                 </motion.div>
-
                 {/* Tabs Agenda / Gravações */}
                 <div className="inline-flex p-1 rounded-full bg-black/30 border border-white/10 mb-8">
                     {([{ k: 'agenda', l: 'Agenda', i: 'calendar_month' }, { k: 'gravacoes', l: 'Gravações', i: 'video_library' }] as { k: View; l: string; i: string }[]).map(t => (
@@ -245,7 +236,6 @@ const TreinamentosAoVivo: React.FC = () => {
                         </button>
                     ))}
                 </div>
-
                 {/* Filtros */}
                 <div className="flex flex-wrap gap-2 mb-8">
                     {([{ key: 'all', label: 'Todos', icon: 'apps' }, { key: 'Treinamento', label: 'Treinamentos', icon: 'school' }, { key: 'Evento', label: 'Eventos', icon: 'celebration' }] as { key: Filter; label: string; icon: string }[]).map(f => (
@@ -255,7 +245,6 @@ const TreinamentosAoVivo: React.FC = () => {
                         </button>
                     ))}
                 </div>
-
                 {isLoading ? (
                     <div className="py-24 flex flex-col items-center gap-4">
                         <div className="w-12 h-12 rounded-full border-t-2 border-primary border-r-2 animate-spin" />
@@ -334,7 +323,6 @@ const TreinamentosAoVivo: React.FC = () => {
                                 </motion.div>
                             )}
                         </AnimatePresence>
-
                         <div className="grid lg:grid-cols-[1.4fr_1fr] gap-8">
                             {/* Calendário */}
                             <div className="liquid-glass-soft rounded-3xl border-white/5 p-5 md:p-7">
@@ -376,7 +364,6 @@ const TreinamentosAoVivo: React.FC = () => {
                                     <span className="flex items-center gap-2 font-label text-[9px] tracking-widest uppercase text-white/40"><span className="w-3 h-1.5 rounded-full bg-amber-400" />Evento</span>
                                 </div>
                             </div>
-
                             {/* Agenda lateral */}
                             <div>
                                 <h3 className="font-headline text-lg md:text-xl font-bold text-white mb-5">Agenda</h3>
@@ -415,7 +402,6 @@ const TreinamentosAoVivo: React.FC = () => {
                     </>
                 )}
             </main>
-
             {/* Seletor de eventos do dia (quando há mais de um) */}
             <AnimatePresence>
                 {dayList && (
@@ -457,7 +443,6 @@ const TreinamentosAoVivo: React.FC = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
-
             {/* Modal */}
             <AnimatePresence>
                 {selected && (
@@ -484,7 +469,6 @@ const TreinamentosAoVivo: React.FC = () => {
                                                 </button>
                                             )}
                                         </div>
-
                                         <div className="p-7 md:p-8">
                                             <h2 className="font-headline text-2xl md:text-3xl font-bold text-white leading-tight">{selected.title}</h2>
                                             <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-4 text-white/50 text-sm">
@@ -492,23 +476,19 @@ const TreinamentosAoVivo: React.FC = () => {
                                                 <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-[16px] text-primary/70">calendar_month</span>{formatFullDate(selected.scheduledAt)}</span>
                                                 <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-[16px] text-primary/70">schedule</span>{formatTime(selected.scheduledAt)}</span>
                                             </div>
-
                                             {future && (
                                                 <div className="mt-5">
                                                     <span className="font-label text-[9px] tracking-[3px] uppercase text-white/30 block mb-2">Começa em</span>
                                                     <EventCountdown target={selected.scheduledAt} size="sm" />
                                                 </div>
                                             )}
-
                                             {selected.description && <p className="text-white/45 text-sm leading-relaxed mt-5">{selected.description}</p>}
-
                                             {selected.presenterVideoUrl && (
                                                 <div className="mt-6">
                                                     <span className="font-label text-[9px] tracking-[3px] uppercase text-white/30 flex items-center gap-1.5 mb-3"><span className="material-symbols-outlined text-[14px] text-primary/60">campaign</span>Recado do palestrante</span>
                                                     <video src={selected.presenterVideoUrl} controls playsInline preload="metadata" className="w-full rounded-xl border border-white/10 bg-black max-h-[340px]" />
                                                 </div>
                                             )}
-
                                             {/* Adicionar ao calendário */}
                                             <div className="mt-6 pt-5 border-t border-white/[0.06]">
                                                 <span className="font-label text-[9px] tracking-[3px] uppercase text-white/30 flex items-center gap-1.5 mb-3"><span className="material-symbols-outlined text-[14px] text-primary/60">event_available</span>Adicionar ao meu calendário</span>
@@ -516,11 +496,18 @@ const TreinamentosAoVivo: React.FC = () => {
                                                     <a href={googleCalUrl(selected)} target="_blank" rel="noopener noreferrer" className="bg-white/[0.04] hover:bg-white/[0.1] border border-white/10 hover:border-primary/30 text-white font-label text-[10px] font-bold tracking-[1px] uppercase py-2.5 px-4 rounded-xl transition-all duration-300 flex items-center gap-2"><span className="material-symbols-outlined text-[15px] text-primary">calendar_add_on</span>Google Agenda</a>
                                                 </div>
                                             </div>
-
                                             {/* Ações */}
                                             <div className="flex flex-wrap gap-3 mt-6">
                                                 {selected.liveUrl && <a href={selected.liveUrl} target="_blank" rel="noopener noreferrer" className="flex-1 min-w-[160px] bg-primary text-black hover:bg-white font-label text-[10px] font-bold tracking-[2px] uppercase py-3.5 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(0,240,255,0.25)]"><span className="material-symbols-outlined text-[16px]">sensors</span>Entrar na live</a>}
                                                 {selected.recordingUrl && <a href={selected.recordingUrl} target="_blank" rel="noopener noreferrer" className="flex-1 min-w-[160px] bg-white/[0.04] hover:bg-white/[0.1] border border-white/10 text-white font-label text-[10px] font-bold tracking-[2px] uppercase py-3.5 rounded-xl transition-all duration-300 flex items-center justify-center gap-2"><span className="material-symbols-outlined text-[16px]">play_circle</span>Assistir gravação</a>}
+                                                {/* WhatsApp */}
+                                                <a href={buildWhatsAppUrl(selected)} target="_blank" rel="noopener noreferrer"
+                                                    className="flex-1 min-w-[160px] bg-[#25D366]/10 hover:bg-[#25D366] hover:text-black border border-[#25D366]/25 hover:border-[#25D366] text-[#25D366] font-label text-[10px] font-bold tracking-[2px] uppercase py-3.5 rounded-xl transition-all duration-300 flex items-center justify-center gap-2">
+                                                    <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                                                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                                                    </svg>
+                                                    Compartilhar no WhatsApp
+                                                </a>
                                             </div>
                                         </div>
                                     </>
@@ -533,5 +520,4 @@ const TreinamentosAoVivo: React.FC = () => {
         </div>
     );
 };
-
 export default TreinamentosAoVivo;
