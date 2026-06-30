@@ -88,9 +88,11 @@ export const downloadArt = async (e: LiveTraining) => {
 export const buildWhatsAppUrl = (e: LiveTraining) => {
     const emoji = e.type === 'Evento' ? '🎉' : '🎓';
     const st = getStatus(e);
-    // URL de preview com Open Graph — gera thumbnail no WhatsApp
+    // previewUrl PRIMEIRO — WhatsApp usa a 1ª URL para gerar o card com imagem
     const previewUrl = `${window.location.origin}/api/event-preview?ev=${e.id}`;
     const lines = [
+        previewUrl,
+        ``,
         `${emoji} *${e.type.toUpperCase()} ATL ACADEMY*`,
         ``,
         `📌 *${e.title}*`,
@@ -99,10 +101,8 @@ export const buildWhatsAppUrl = (e: LiveTraining) => {
     ];
     if (st.label === 'Ao Vivo') lines.push(``, `🔴 *Está acontecendo AGORA!*`);
     else if (st.label === 'Hoje')  lines.push(``, `⏰ *Acontece hoje!*`);
-    if (e.liveUrl) lines.push(``, `▶️ Acesse: ${e.liveUrl}`);
     if (e.description) lines.push(``, e.description);
-    // A URL de preview fica no final — o WhatsApp vai gerar o card com a imagem
-    lines.push(``, previewUrl);
+    lines.push(``, `_ATL Academy — Conhecimento que transforma._`);
     return `https://wa.me/?text=${encodeURIComponent(lines.join('\n'))}`;
 };
 // ── Countdown ────────────────────────────────────────────────────────────────
