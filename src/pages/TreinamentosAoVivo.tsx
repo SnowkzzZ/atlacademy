@@ -446,7 +446,7 @@ const TreinamentosAoVivo: React.FC = () => {
                         <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }} onClick={ev => ev.stopPropagation()}
                             className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto custom-scrollbar-premium rounded-3xl border border-white/10" style={{ background: 'rgba(5,8,15,0.97)', backdropFilter: 'blur(40px)' }}>
                             {(() => {
-                                const st = getStatus(selected, now); const ts = typeStyle(selected.type); const future = selected.scheduledAt > now;
+                                const ts = typeStyle(selected.type); const future = selected.scheduledAt > now;
                                 return (
                                     <>
                                         <div className={`relative overflow-hidden bg-gradient-to-br ${ts.grad}`}>
