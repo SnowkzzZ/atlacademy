@@ -89,25 +89,18 @@ export const buildWhatsAppUrl = (e: LiveTraining) => {
     const st = getStatus(e);
     // previewUrl PRIMEIRO — WhatsApp usa a 1a URL para gerar o card com imagem
     const previewUrl = `${window.location.origin}/api/event-preview?ev=${e.id}`;
-    const ico  = e.type === 'Evento' ? '\u{1F389}' : '\u{1F393}'; // 🎉 ou 🎓
-    const pin  = '\u{1F4CC}'; // 📌
-    const user = '\u{1F464}'; // 👤
-    const cal  = '\u{1F4C5}'; // 📅
-    const play = '▶️'; // ▶️
-    const red  = '\u{1F534}'; // 🔴
-    const clk  = '⏰';    // ⏰
     const lines = [
         previewUrl,
         ``,
-        `${ico} *${e.type.toUpperCase()} ATL ACADEMY*`,
+        `*${e.type.toUpperCase()} ATL ACADEMY*`,
         ``,
-        `${pin} *${e.title}*`,
-        `${user} ${e.presenter}`,
-        `${cal} ${formatFullDate(e.scheduledAt)} às ${formatTime(e.scheduledAt)}`,
+        `*${e.title}*`,
+        `Apresentador: ${e.presenter}`,
+        `Data: ${formatFullDate(e.scheduledAt)} as ${formatTime(e.scheduledAt)}`,
     ];
-    if (st.label === 'Ao Vivo') lines.push(``, `${red} *Está acontecendo AGORA!*`);
-    else if (st.label === 'Hoje') lines.push(``, `${clk} *Acontece hoje!*`);
-    if (e.liveUrl) lines.push(``, `${play} Entrar na live: ${e.liveUrl}`);
+    if (st.label === 'Ao Vivo') lines.push(``, `*Esta acontecendo AGORA!*`);
+    else if (st.label === 'Hoje') lines.push(``, `*Acontece hoje!*`);
+    if (e.liveUrl) lines.push(``, `Entrar na live: ${e.liveUrl}`);
     if (e.description) lines.push(``, e.description);
     lines.push(``, `_ATL Academy — Conhecimento que transforma._`);
     return `https://wa.me/?text=${encodeURIComponent(lines.join('\n'))}`;
