@@ -147,7 +147,6 @@ const TreinamentosAoVivo: React.FC = () => {
     const [selected, setSelected] = useState<LiveTraining | null>(null);
     const [videoOpen, setVideoOpen] = useState(false);
     const [dayList, setDayList] = useState<LiveTraining[] | null>(null);
-    const [shared, setShared] = useState(false);
     const didDeepLink = useRef(false);
     const [cursor, setCursor] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); });
     const didInitCursor = useRef(false);
@@ -180,14 +179,6 @@ const TreinamentosAoVivo: React.FC = () => {
     }, [events]);
     // Fecha videoOpen quando modal fecha
     useEffect(() => { if (!selected) setVideoOpen(false); }, [selected]);
-    const shareEvent = async (e: LiveTraining) => {
-        const url = `${window.location.origin}/treinamentos?ev=${e.id}`;
-        const text = `${e.type}: ${e.title} — ${formatFullDate(e.scheduledAt)} às ${formatTime(e.scheduledAt)}`;
-        try {
-            if (navigator.share) { await navigator.share({ title: e.title, text, url }); }
-            else { await navigator.clipboard.writeText(`${text}\n${url}`); setShared(true); setTimeout(() => setShared(false), 2000); }
-        } catch { /* cancelado pelo usuário */ }
-    };
     const filtered = useMemo(() => filter === 'all' ? events : events.filter(e => e.type === filter), [events, filter]);
     const recordings = useMemo(
         () => [...filtered].filter(e => e.recordingUrl && e.recordingUrl.trim()).sort((a, b) => b.scheduledAt - a.scheduledAt),
