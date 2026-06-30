@@ -474,6 +474,12 @@ const TreinamentosAoVivo: React.FC = () => {
                                                 <span className={`px-3 py-1 rounded-full font-label text-[9px] font-bold tracking-[2px] uppercase backdrop-blur-md border ${ts.badge}`}>{selected.type}</span>
                                                 <span className={`px-3 py-1 rounded-full font-label text-[9px] font-bold tracking-[2px] uppercase backdrop-blur-md border ${st.cls} flex items-center gap-1.5`}>{st.pulse && <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />}{st.label}</span>
                                             </div>
+                                            {/* Vídeo do palestrante — mini player canto inferior esquerdo */}
+                                            {selected.presenterVideoUrl && (
+                                                <div className="absolute bottom-3 left-3 w-28 rounded-xl overflow-hidden border border-white/20 shadow-xl backdrop-blur-sm bg-black/40" style={{ aspectRatio: '16/9' }}>
+                                                    <video src={selected.presenterVideoUrl} controls playsInline preload="metadata" className="w-full h-full object-cover" />
+                                                </div>
+                                            )}
                                             {selected.artUrl && (
                                                 <button onClick={() => downloadArt(selected)} className="absolute bottom-4 right-4 px-3 py-2 rounded-xl bg-black/55 hover:bg-black/80 border border-white/15 backdrop-blur-md text-white font-label text-[10px] font-bold tracking-[1px] uppercase flex items-center gap-2 transition-colors">
                                                     <span className="material-symbols-outlined text-[15px]">download</span>Baixar arte
@@ -494,12 +500,6 @@ const TreinamentosAoVivo: React.FC = () => {
                                                 </div>
                                             )}
                                             {selected.description && <p className="text-white/45 text-sm leading-relaxed mt-5">{selected.description}</p>}
-                                            {selected.presenterVideoUrl && (
-                                                <div className="mt-6">
-                                                    <span className="font-label text-[9px] tracking-[3px] uppercase text-white/30 flex items-center gap-1.5 mb-3"><span className="material-symbols-outlined text-[14px] text-primary/60">campaign</span>Recado do palestrante</span>
-                                                    <video src={selected.presenterVideoUrl} controls playsInline preload="metadata" className="w-full rounded-xl border border-white/10 bg-black max-h-[340px]" />
-                                                </div>
-                                            )}
                                             {/* Adicionar ao calendário */}
                                             <div className="mt-6 pt-5 border-t border-white/[0.06]">
                                                 <span className="font-label text-[9px] tracking-[3px] uppercase text-white/30 flex items-center gap-1.5 mb-3"><span className="material-symbols-outlined text-[14px] text-primary/60">event_available</span>Adicionar ao meu calendário</span>
