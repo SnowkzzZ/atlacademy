@@ -5,25 +5,21 @@ interface ProtectedRouteProps {
     children: React.ReactNode;
 }
 
+// IPs autorizados a acessar a Central de Comando
+const ALLOWED_IPS: string[] = [
+    '179.101.159.181',
+];
+
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     const [isChecking, setIsChecking] = useState(true);
     const [isAllowed, setIsAllowed] = useState(false);
 
     useEffect(() => {
         const checkIP = async () => {
-            const allowedIP = import.meta.env.VITE_ALLOWED_ADMIN_IP;
-            
             try {
-                // Fetch public IP of the user
                 const response = await fetch('https://api.ipify.org?format=json');
                 const data = await response.json();
-                
-                // If it matches the allowed IP, or if it hasn't been configured yet (dev mode fallback)
-                if (data.ip === allowedIP || !allowedIP || allowedIP === "COLOQUE_O_SEU_IP_AQUI") {
-                     setIsAllowed(true);
-                } else {
-                     setIsAllowed(false);
-                }
+                setIsAllowed(ALLOWED_IPS.includes(data.ip));
             } catch (err) {
                 console.error("IP Check Failed", err);
                 setIsAllowed(false);
@@ -31,7 +27,6 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
                 setIsChecking(false);
             }
         };
-        
         checkIP();
     }, []);
 
@@ -45,7 +40,6 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     }
 
     if (!isAllowed) {
-        // Redireciona para a Home se o IP for diferente
         return <Navigate to="/" replace />;
     }
 
