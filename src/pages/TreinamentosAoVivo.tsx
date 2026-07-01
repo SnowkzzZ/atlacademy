@@ -510,7 +510,7 @@ const TreinamentosAoVivo: React.FC = () => {
                                                 {selected.recordingUrl && <a href={selected.recordingUrl} target="_blank" rel="noopener noreferrer" className="flex-1 min-w-[160px] bg-white/[0.04] hover:bg-white/[0.1] border border-white/10 text-white font-label text-[10px] font-bold tracking-[2px] uppercase py-3.5 rounded-xl transition-all duration-300 flex items-center justify-center gap-2"><span className="material-symbols-outlined text-[16px]">play_circle</span>Assistir gravação</a>}
                                             </div>
                                             {selected.liveUrl && (
-                                                <p className="mt-2 text-white/35 font-label text-[10px] tracking-wide flex items-center gap-1.5">
+                                                <p className="mt-2 text-white/35 font-label text-[10px] tracking-wide flex items-center justify-center gap-1.5">
                                                     <span className="material-symbols-outlined text-[13px] text-white/25">lock</span>
                                                     Senha da sala: <span className="text-white/60 font-bold">123</span>
                                                 </p>
