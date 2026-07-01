@@ -100,7 +100,7 @@ export const buildWhatsAppUrl = (e: LiveTraining) => {
     ];
     if (st.label === 'Ao Vivo') lines.push(``, `*Esta acontecendo AGORA!*`);
     else if (st.label === 'Hoje') lines.push(``, `*Acontece hoje!*`);
-    if (e.liveUrl) lines.push(``, `Entrar na live: ${e.liveUrl}`);
+    if (e.liveUrl) lines.push(``, `Entrar na live: ${e.liveUrl}`, `Senha da sala: 123`);
     if (e.description) lines.push(``, e.description);
     lines.push(``, `_ATL Academy — Conhecimento que transforma._`);
     return `https://wa.me/?text=${encodeURIComponent(lines.join('\n'))}`;
